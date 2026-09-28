@@ -485,3 +485,12 @@ Count 14 → `normal` (z 1.98); 15 → `above`; 0 → `below`. (Under the wrong 
 - **Empty `?week=`** (present but empty) → 400, like `?type=`. "Latest complete week" is requested by omitting the parameter; the UI never emits `week=`.
 - **Account 20's empty-state page** still shows the full footnote, including "Data as of Mon Jul 27, 2026"; the "Data as of" line is hidden only when `dataAsOf` is null.
 
+### 2026-09-28 — Calendar contract simplified (user decision at contract review, proposed by the architect)
+
+**Reason.** User at contract review: `IWeekCalendar` was *"a little bit overengineered"*. Supersedes the `IWeekCalendar` row in §6.
+- `IWeekCalendar` has three members: `Window(weekStart, timeZoneId)` (DST-correct local Monday → UTC half-open window), `WeekContaining(instantUtc, timeZoneId)`,
+  `LatestCompleteWeek(dataAnchorUtc, timeZoneId)`. The time-zone id stays a string resolved inside the calendar.
+- The Monday check (`InvalidWeek(NotAWeekStart)`) and the list of 8 baseline windows (oldest first, one `Window` per preceding Monday) live in `ActivityHealthService`.
+- Failure contract: an invalid IANA id → `TimeZoneNotFoundException`; a non-Monday `weekStart` passed to `Window` → `ArgumentException`. No custom exception type.
+- Rejected: dropping `LatestCompleteWeek` (moves a named domain rule into the service); a per-time-zone calendar factory (two interfaces to remove one argument).
+
