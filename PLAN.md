@@ -559,3 +559,15 @@ Angular app, API and seeded SQL Server work together. Adds §7 layer 6 and a Pha
 - **Cut line:** first item cut in §10, ahead of the frontend component tests.
 - **README:** `docker compose up -d db && cd web && npx playwright install chromium && npm run e2e` (with `ConnectionStrings__Relay` set).
 
+### 2026-09-28 — OS-agnostic local configuration via DotNetEnv (user decision, validated by the architect)
+
+**Reason.** The run steps required `set -a; source .env; set +a` (bash/zsh only). User: *"We must find an env agnostic solution"* and *"Avoid hand written as much as possible;
+if there is already a library for that, do not reinvent the wheel"* (the architect's first proposal was a hand-written reader).
+- In Development only, the API adds the repo-root `.env` as a configuration source with **DotNetEnv 3.2.0** (`AddDotNetEnv(…, LoadOptions.TraversePath().NoClobber().NoEnvVars())`).
+  `.env` is unchanged: its `ConnectionStrings__Relay` line is interpolated from `RELAY_DB_PORT` / `RELAY_DB_SA_PASSWORD`, the same file Docker Compose reads. Real environment variables and
+  test configuration still win; the process environment is not modified; Production never reads `.env`.
+- `RelayDesignTimeDbContextFactory` is removed; `dotnet ef … --startup-project src/Relay.Api` uses the same configuration (Api references `Microsoft.EntityFrameworkCore.Design`, private).
+- Run steps are identical on Windows, macOS and Linux: `cp .env.example .env` → set the password → `docker compose up -d --wait db` → `dotnet run --project src/Relay.Api` →
+  `cd web && npm start`. A password containing `$` must be single-quoted in `.env`.
+- Test-first: four startup tests (interpolated connection string from `.env`; real env var wins; Production ignores `.env`; process environment untouched).
+

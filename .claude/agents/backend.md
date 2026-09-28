@@ -16,8 +16,8 @@ Structure only; no contracts, no logic (the architect adds contracts afterwards)
 - `Relay.sln` with `src/Relay.Core`, `src/Relay.Infrastructure`, `src/Relay.Api`, `tests/Relay.Core.Tests`, `tests/Relay.Infrastructure.Tests`, `tests/Relay.Api.Tests`.
 - `Directory.Build.props`: `net10.0`, `Nullable=enable`, `ImplicitUsings=enable`, `TreatWarningsAsErrors=true`, `AnalysisLevel=latest-recommended`.
 - `Directory.Packages.props` (central package management):
-  - Infrastructure: `Microsoft.EntityFrameworkCore.SqlServer`, `Microsoft.EntityFrameworkCore.Design`.
-  - Api: `Microsoft.AspNetCore.OpenApi` only if needed; nothing else.
+  - Infrastructure: `Microsoft.EntityFrameworkCore.SqlServer`.
+  - Api: `Microsoft.EntityFrameworkCore.Design` (`PrivateAssets=all`, EF tools startup project); `Microsoft.AspNetCore.OpenApi` only if needed; nothing else.
   - Tests: `xunit.v3`, `xunit.runner.visualstudio`, `Microsoft.NET.Test.Sdk`, `Shouldly`, `Testcontainers.MsSql`, `Microsoft.AspNetCore.Mvc.Testing`.
   - **Not allowed:** FluentAssertions ≥ 8, AutoMapper/any mapper, MediatR/any mediator, Moq.
 - References: Core → none; Infrastructure → Core; Api → Core + Infrastructure; each test project → only the project it tests. No `InternalsVisibleTo`.

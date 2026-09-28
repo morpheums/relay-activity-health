@@ -17,7 +17,7 @@ top correctness criterion — the counting SQL is where that is won or lost.
 ## 1. Local database — Phase 1
 - `docker-compose.yml` service `db`: `mcr.microsoft.com/mssql/server:2022-latest` (`platform: linux/amd64`), SA password **only** from a git-ignored `.env` (`${RELAY_DB_SA_PASSWORD:?…}`; committed `.env.example` holds a placeholder — never a real value), port 1433 → configurable host port,
   healthcheck using `sqlcmd`, named volume. Document the one command in the handoff (`docker compose up -d db`).
-- Connection string key `ConnectionStrings:Relay`, supplied **only** by the environment (`ConnectionStrings__Relay`) — never committed (PLAN §13).
+- Connection string key `ConnectionStrings:Relay`, supplied by the environment (`ConnectionStrings__Relay`) or, in Development, by the git-ignored repo-root `.env` that `Relay.Api` loads via DotNetEnv (real env vars win) — never committed (PLAN §13).
 
 ## 2. EF Core model — Phase 1
 - `RelayDbContext` with `DbSet<Account>`, `DbSet<ActivityEvent>`; one `IEntityTypeConfiguration<T>` per entity.

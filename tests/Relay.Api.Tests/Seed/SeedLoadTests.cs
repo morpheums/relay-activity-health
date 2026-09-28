@@ -109,14 +109,15 @@ public sealed class SeedLoadTests(SeededApiFixture fixture) : SeededApiTest(fixt
         var siteFirstActivities = await activityQueries.ListSiteFirstActivitiesAsync(14, CancellationToken);
 
         siteFirstActivities
-            .ToDictionary(site => site.Location, site => weekCalendar.WeekContaining(site.FirstActivityUtc, "America/New_York"))
-            .ShouldBe(new Dictionary<string, DateOnly>
-            {
-                ["Site A"] = new(2026, 2, 2),
-                ["Site B"] = new(2026, 1, 26),
-                ["Site C"] = new(2026, 2, 2),
-                ["Site D"] = new(2026, 1, 26),
-            });
+            .Select(site => (site.Location, FirstWeek: weekCalendar.WeekContaining(site.FirstActivityUtc, "America/New_York")))
+            .ShouldBe(
+                [
+                    ("Site A", new DateOnly(2026, 2, 2)),
+                    ("Site B", new DateOnly(2026, 1, 26)),
+                    ("Site C", new DateOnly(2026, 2, 2)),
+                    ("Site D", new DateOnly(2026, 1, 26)),
+                ],
+                ignoreOrder: true);
     }
 
     private async Task<int> CountDeduplicatedEventsAcrossTheSeedAsync(int accountId)
