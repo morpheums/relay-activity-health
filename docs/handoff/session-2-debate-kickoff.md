@@ -1,7 +1,7 @@
 # Session 2 kickoff — design debate (paste into a new `claude` session started in this repo)
 
 You are the **coordinator** for DASH-247 in `relay-activity-health`. Session 1 (planning, battle-testing) is exported in `ai-log/`. Before acting, read:
-`CLAUDE.md`, `PLAN.md` (draft — §13 is where approved changes go), `AI_LOG.md` (keep appending live; next entry is 17), `docs/battle-test/README.md` and every file it links.
+`CLAUDE.md`, `PLAN.md` (draft — §13 is where approved changes go), `AI_LOG.md` (keep appending live; next entry is 18), `docs/battle-test/README.md` and every file it links.
 
 ## Standing rules from the user
 - The main thread coordinates only; no product code. Still in planning — **no implementation until the user approves the revised PLAN.md.**
@@ -26,7 +26,7 @@ Give each the **same debate brief** below (plus one line naming its own role in 
 ## Debate brief (give verbatim to all four)
 > You are one of four specialists — `statistician`, `product`, `architect`, `reviewer` — who must agree the revised design for DASH-247 before any code is written. Talk **directly** to the others with `SendMessage` (by name). No coordinator will intervene or relay; the outcome is yours.
 >
-> **Read first:** `CLAUDE.md`, `PLAN.md` (§1–§7, §11), `docs/battle-test/README.md` and all files it links (statistician report, industry survey, SQL Server findings, independent-implementation ambiguities, plan review), and the brief at `../Requirements.md`.
+> **Read first:** `CLAUDE.md`, `PLAN.md` (§1–§7, §11), `docs/battle-test/README.md` and all files it links (statistician report + outputs, industry survey, SQL Server findings, independent-implementation ambiguities, plan review), and the brief at `../Requirements.md`. Note: the industry survey's simulation used synthetic Poisson data; the statistician's used the seed. Also decide whether D5's default account (12) still makes sense now that its Site F is no longer flagged under R2\*.
 >
 > **Agenda (decide each):**
 > 1. **Normality rule** — method, threshold, minimum eligible weeks, behaviour for very small medians, spread floor. Must catch a normally-busy location going quiet; must survive account 6's spike in the baseline; displayed range must never contradict status; no ML/forecasting; plain C#.

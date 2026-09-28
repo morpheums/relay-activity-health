@@ -2,8 +2,7 @@ import sqlite3, collections, statistics as st, math, csv, json
 from datetime import datetime, timezone, date, timedelta, time
 from zoneinfo import ZoneInfo
 from pathlib import Path
-repo_root=Path(__file__).resolve().parent.parent
-sql_dir=next(d for d in (repo_root/'db', repo_root) if (d/'seed.sql').exists())
+sql_dir=next(d for p in Path(__file__).resolve().parents for d in (p/'db', p) if (d/'seed.sql').exists())
 db=sqlite3.connect(':memory:')
 db.executescript((sql_dir/'schema.sql').read_text()); db.executescript((sql_dir/'seed.sql').read_text())
 TYPES=('all','call_received','lead_created','appointment_set')

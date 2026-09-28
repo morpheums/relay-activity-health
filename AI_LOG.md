@@ -51,6 +51,11 @@ Legend: **ACCEPTED** (AI proposal taken as is) · **REDIRECTED** (human changed 
     The coordinator only launches the debate (inputs, protocol, stopping rule) and brings the agreed design plus any recorded dissent to the user; it does not relay or steer messages.
     Inputs: statistician report, industry survey (17 products; recommends ±3 band, ≥6 weeks, "too few to judge" below median 2 — simulated on synthetic Poisson data, not the seed), independent-implementation ambiguities, SQL Server findings, adversarial review.
 
+17. **ACCEPTED as input to the debate / AI CAUGHT** — Statistician (literature: c-charts, XmR, EARS, Farrington/Noufaily, Iglewicz–Hoaglin, Anscombe, Freeman–Tukey; simulations on the seed) recommends R2\* (Anscombe robust z, k = 2, floor 1).
+    It **caught a bug in the coordinator's own comparison script** (`alt.py` back-transform used `floor(lo)+1`/`ceil(hi)-1` instead of `ceil`/`floor`; harmless on this data) and a trap any implementer would hit
+    (squaring a negative lower edge produces a false positive bound → mandatory guard). Consequence the user must weigh: account 12's Site F (default account D5) is no longer flagged in the default week.
+    The coordinator re-ran the statistician's golden script from the repo copy: output identical. Not applied to PLAN.md — goes to the agent debate (session 2).
+
 ## Reflection
 _(written at the end)_
 

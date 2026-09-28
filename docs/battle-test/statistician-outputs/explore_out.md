@@ -1,0 +1,8 @@
+site all series 69 var/mean quartiles [0.78, 0.98, 1.24] | median-of-series deciles [4.0, 5.0, 5.0, 6.0, 7.0, 7.0, 8.0, 8.0, 9.0]
+site call_received series 69 var/mean quartiles [0.74, 0.9, 1.23] | median-of-series deciles [2.5, 3.0, 3.0, 4.0, 4.0, 4.0, 5.0, 5.0, 5.5]
+site lead_created series 69 var/mean quartiles [0.75, 0.93, 1.16] | median-of-series deciles [1.0, 1.0, 1.0, 1.0, 1.5, 2.0, 2.0, 2.0, 2.0]
+site appointment_set series 69 var/mean quartiles [0.79, 0.99, 1.19] | median-of-series deciles [0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+account all series 19 var/mean quartiles [0.53, 0.96, 1.23] | median-of-series deciles [8.0, 11.0, 13.0, 17.0, 19.5, 24.0, 31.5, 34.0, 53.0]
+account call_received series 19 var/mean quartiles [0.66, 0.82, 1.16] | median-of-series deciles [5.0, 6.0, 7.0, 10.0, 12.0, 14.0, 18.0, 22.0, 32.0]
+account lead_created series 19 var/mean quartiles [0.76, 0.96, 1.07] | median-of-series deciles [2.0, 2.5, 3.5, 4.0, 5.0, 5.5, 6.0, 8.0, 13.0]
+account appointment_set series 19 var/mean quartiles [0.84, 1.0, 1.18] | median-of-series deciles [1.0, 1.5, 2.0, 2.0, 3.0, 3.0, 4.0, 4.0, 7.0]

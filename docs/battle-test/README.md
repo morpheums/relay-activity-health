@@ -9,6 +9,6 @@ PLAN.md draft at commit `7ca4f8a` was checked by independent agents before imple
 | Does the plan meet the brief? | reviewer (Sonnet) | All golden values reproduced; 7 findings (drop-to-zero blind spot, `weeksUsed`, `earliestWeek`, unowned README sections, DB time risk, ranking symmetry, 4-week calibration) | `plan-review.md` |
 | Full sweep of the band rule | coordinator | Lower band edge is 0 for 73.5 % of site-weeks → drops to zero never flagged for leads/appointments, 37 % for calls | `analysis/rule_comparison.py` |
 | What do analytics products do? | general-purpose (Opus), web research | Expected value + band is the norm; weekly grain uses simple robust statistics; no product documents count-specific bands; recommends ±3 / ≥6 weeks (on synthetic data) | `industry-survey.md` |
-| Which normality rule? | statistician | see `statistician-report.md` | `statistician-report.md` |
+| Which normality rule? | statistician (Opus) | Recommends **R2\***: robust z on the Anscombe scale `2√(x+3/8)`, k = 2, spread floor 1, integer range back-transformed (0 contradictions in 253,149 checks). Site false flags 1.4 % ↑ / 2.9 % ↓, drop-to-0 caught 98 % (all) / 96 % (calls); spike still 15/15. New golden values; account 12's Site F no longer flagged in the default week | `statistician-report.md`, `statistician-outputs/`, `analysis/statistician/` |
 
 Outcome: the design is settled in `docs/design-consensus.md` by a direct agent debate, then applied to PLAN.md §13 after user approval.
