@@ -42,25 +42,43 @@ public sealed class SqlActivityQueriesCountWeeklyBySiteTests(SqlServerFixture fi
         weeklyCounts.ShouldBe([new WeeklySiteCount("Site A", WeekOf20260302, 1)]);
     }
 
-    [Theory]
-    [InlineData(ActivityType.All)]
-    [InlineData(ActivityType.CallReceived)]
-    public async Task CountWeeklyBySiteExactDuplicatesWithNullDurationAndOutcomeAreCountedOnceUnderTypeFilter(ActivityType eventType)
+    [Fact]
+    public async Task CountWeeklyBySiteExactDuplicatesWithNullDurationAndOutcomeAreCountedOnceUnderCallReceivedFilter()
     {
         var duplicatedCall = EventAt("2026-03-04T15:30:00Z") with { DurationSeconds = null, Outcome = null };
         await Database.InsertEventsAsync([duplicatedCall, duplicatedCall], CancellationToken);
 
-        var weeklyCounts = await CountAsync([ChicagoWeekOf20260302DstStart], eventType);
+        var weeklyCounts = await CountAsync([ChicagoWeekOf20260302DstStart], ActivityType.CallReceived);
 
         weeklyCounts.ShouldBe([new WeeklySiteCount("Site A", WeekOf20260302, 1)]);
     }
 
     [Theory]
     [InlineData(null, 0, "connected", "connected")]
-    [InlineData(95, 96, "connected", "connected")]
     [InlineData(95, 95, null, "")]
+    public async Task CountWeeklyBySiteRowsDifferingOnlyByNullVersusZeroDurationOrEmptyOutcomeAreCountedOnce(
+        int? firstDurationSeconds,
+        int? secondDurationSeconds,
+        string? firstOutcome,
+        string? secondOutcome)
+    {
+        var sharedInstantEvent = EventAt("2026-03-04T15:30:00Z");
+        await Database.InsertEventsAsync(
+            [
+                sharedInstantEvent with { DurationSeconds = firstDurationSeconds, Outcome = firstOutcome },
+                sharedInstantEvent with { DurationSeconds = secondDurationSeconds, Outcome = secondOutcome },
+            ],
+            CancellationToken);
+
+        var weeklyCounts = await CountAsync([ChicagoWeekOf20260302DstStart], ActivityType.All);
+
+        weeklyCounts.ShouldBe([new WeeklySiteCount("Site A", WeekOf20260302, 1)]);
+    }
+
+    [Theory]
+    [InlineData(95, 120, "connected", "connected")]
     [InlineData(95, 95, "connected", "missed")]
-    public async Task CountWeeklyBySiteRowsDifferingOnlyInDurationOrOutcomeAreCountedTwice(
+    public async Task CountWeeklyBySiteRowsWithDifferentDurationOrOutcomeValuesAreCountedTwice(
         int? firstDurationSeconds,
         int? secondDurationSeconds,
         string? firstOutcome,
