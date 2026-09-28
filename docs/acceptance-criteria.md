@@ -189,7 +189,7 @@ How to verify: run `dotnet test tests/Relay.Api.Tests`, then `curl` the running 
 
 | Id | Given / When | Then | Tag |
 |---|---|---|---|
-| API-01b | `GET …/accounts/14/activity-health` (JSON names) | Top level exactly: `account{id,name,timezone}`, `eventType`, `week{start,end}`, `dataAsOf`, `latestCompleteWeek`, `earliestWeek`, `baselineWeeks`, `minimumEligibleWeeks`, `summary`, `locations`. Summary and each location: `count`, `baseline{weeksUsed,median,low,high}`, `status`, `deviation`; locations also `location`. camelCase as in the PLAN §13 §5.2 example | SPEC §13 §5.2 |
+| API-01b | `GET …/accounts/14/activity-health` (JSON names) | Top level exactly: `account{id,name,timezone}`, `eventType`, `week{start,end}`, `dataAsOf` (a string, or null only for an empty database, API-32), `latestCompleteWeek`, `earliestWeek`, `baselineWeeks`, `minimumEligibleWeeks`, `summary`, `locations`. Summary and each location: `count`, `baseline{weeksUsed,median,low,high}`, `status`, `deviation`; locations also `location`. camelCase as in the PLAN §13 §5.2 example | SPEC §13 §5.2 |
 | API-01c | Every response in §3 | `status` is exactly one of `above`, `below`, `normal`, `insufficient_data` (lower case, underscore) | SPEC §13 §5.2 |
 | API-01d | `…/accounts/14/activity-health?week=2026-07-20` with **no** `type` | Same body as `type=all`; `eventType` `all` | SPEC §13 §5.2 (default `all`) |
 | API-10 | Default: `GET $API/api/accounts/14/activity-health` | 200. `week.start` `2026-07-20`, `week.end` `2026-07-26`, `eventType` `all`, `dataAsOf` exactly the string `"2026-07-27T22:20:34Z"` (a `Z` suffix, not `+00:00`, and no fractional seconds), `latestCompleteWeek` `2026-07-20`, `earliestWeek` `2026-01-26`, `baselineWeeks` 8, `minimumEligibleWeeks` 4. Summary: count 26, median 27, low 18, high 38, `normal`. `locations[0]` = Site B, count 2, low 3, high 12, `below`, deviation −2.16. Sites C, A, D all `normal` | GOLDEN; SPEC §13 "Contract decisions" (exact `dataAsOf` string) |
@@ -217,7 +217,7 @@ How to verify: run `dotnet test tests/Relay.Api.Tests`, then `curl` the running 
 |---|---|---|---|
 | API-30 | `GET …/accounts/20/activity-health` | 200. `summary.count` 0, `insufficient_data`, `baseline.weeksUsed` 0 with null median/low/high, `deviation` null, `locations` `[]`, `earliestWeek` = `latestCompleteWeek` = `2026-07-20` | GOLDEN |
 | API-31 | `GET …/accounts/20/activity-health?week=2026-03-02` | 400 ProblemDetails (before earliestWeek) | GOLDEN |
-| API-32 | Empty **database** (no events at all; `activity_events` empty), `GET …/accounts/14/activity-health` | 200 empty state as in API-30, with `dataAsOf` **null**. `latestCompleteWeek` comes from the current clock via the injected `TimeProvider` (a test pins it, e.g. 2026-09-28 in America/New_York → 2026-09-21) | SPEC §13 "Contract decisions" (empty database) |
+| API-32 | Empty **database** (no events at all; `activity_events` empty), `GET …/accounts/14/activity-health` | 200 empty state as in API-30, with `dataAsOf` **null**. `latestCompleteWeek` comes from the current clock via the injected `TimeProvider`. With the clock pinned at `2026-09-28T12:00:00-04:00` (Mon, America/New_York), `latestCompleteWeek` = `earliestWeek` = `2026-09-21` | SPEC §13 "Contract decisions" (empty database); consensus §3 (latest complete week rule) |
 
 ### 3.4 Invalid input (all errors are `ProblemDetails`, `Content-Type: application/problem+json`)
 
