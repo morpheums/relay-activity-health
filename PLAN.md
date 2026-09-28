@@ -409,3 +409,37 @@ Count 14 → `normal` (z 1.98); 15 → `above`; 0 → `below`. (Under the wrong 
 - 400 for a week before `earliestWeek`.
 - 400 for `type=ALL` / `Call_Received` (case-sensitive).
 - Account 20: default week → 200 empty with `earliestWeek` 2026-07-20; `week=2026-03-02` → 400.
+
+### 2026-09-28 — Phase 0 split by specialty; project-file ownership per stack (user decision)
+
+**Reason.** The user: *"architect is not an implementer"* — scaffolding belongs to the stack specialists. Supersedes the Phase 0 line in §9 and the "Writes/Owns" split in §8.
+- **Phase 0** now runs as: `backend` (.NET solution, projects, `Directory.*.props`, central packages, `global.json`, minimal `Program.cs`, `git mv` of the starter files to `db/`)
+  ‖ `frontend` (Angular shell, Vitest, dev proxy, `dashboard` route) in parallel worktrees → merge → `architect` adds **contracts only** (interfaces, records, DTOs, DI extension
+  signatures, TS models, abstract API tokens) with `NotImplementedException` stubs → reviewer → **user reviews contracts**.
+  In parallel, `product` writes `docs/acceptance-criteria.md`.
+- **Ownership after Phase 0:** `backend` owns `.sln`, `*.csproj`, `Directory.*.props`, `global.json`; `frontend` owns `package.json`, `angular.json`; `architect` owns public contracts
+  and never edits project files. Other agents request package/project changes through the coordinator.
+- **Every** agent task runs in its own worktree (not only parallel ones); after each feature the `reviewer` runs and its findings are fixed, with unclear ones escalated to the user first.
+
+### 2026-09-28 — Phase 0 decisions and promoted golden values (user decisions)
+
+**Reason.** Raised by the scaffold and acceptance-criteria reviews; decided by the user.
+- **API port 5080** (fixed, in `launchSettings.json` and `web/proxy.conf.json`): macOS AirPlay Receiver holds :5000 on the dev machine.
+- **C# test names are PascalCase** (`MethodConditionExpectedOutcome`); CA1707 stays enabled for tests.
+- **`dotnet test` exit code 8 with zero tests is accepted** until each red suite lands; it is not suppressed.
+- **Promoted golden values.** Seed scenarios verified independently by the reviewer and recomputed by the coordinator are added to §7 goldens (R2\*; the §13 ranking rule).
+  Source: `analysis/goldens/promoted_goldens.py` → `promoted_goldens_out.md`.
+
+| Scenario | Expected |
+|---|---|
+| Account 6, week 2026-06-08, all (week after the spike) | total 102, median 66, range 37–104, `normal`; Site C 11 vs 1–8 `above` (ranked 1st), Site J 11 vs 2–10 `above` (2nd); the other 13 sites `normal` |
+| Account 6, week 2026-06-29, all (location going silent) | total 69, range 41–111, `normal`; Site G 0 vs 2–9 `below` (dev −3.19), ranked first |
+| Account 8, week 2026-07-20, all (single-site account) | total 7, median 10, range 5–17, `normal`; Site A identical |
+| Account 8, week 2026-03-02, all | count 8, `insufficient_data`, `weeksUsed` 3 |
+| Account 14, week 2026-01-26, all (earliest week) | total 2, `insufficient_data`; only Sites B and D listed (1 each), both `insufficient_data` |
+| Account 14, week 2026-02-02, all | total 27, `insufficient_data`; all four sites listed, all `insufficient_data` (0 eligible weeks) |
+| Account 14, week 2026-03-02, all (mixed history) | total 40, median 25, range 16–36, `above`; Site D 16 vs 2–11 `above` (1st), Site B 9 vs 2–10 `normal` (2nd), Sites A and C `insufficient_data` (last, by name) |
+| Account 14, week 2026-07-20, all | ranking order B, C, A, D |
+| Account 14, week 2026-07-20, `appointment_set` (ties) | total 2, range 1–8, `normal`; Site A 0 vs 0–4 (dev −1.12) first; Sites B, C, D have deviation 0 → ordered by name B, C, D |
+| Account 18, week 2026-03-23, all (7 eligible weeks) | total 18, median 23, range 15–33, `normal`; Site C 0 vs 1–9 `below` (dev −2.90), ranked first |
+

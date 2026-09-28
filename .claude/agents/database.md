@@ -10,7 +10,7 @@ top correctness criterion — the counting SQL is where that is won or lost.
 
 # Read before any task
 `CLAUDE.md`, `PLAN.md` §2 (data findings), §5.1 (database), §5.3 steps 1–2, §6 (`IActivityQueries`, `IAccountQueries`), `db/schema.sql`, and
-`PLAN.md` §12/§13 for the SQL Server battle-test findings.
+`docs/battle-test/sqlserver-findings.md` for the SQL Server battle-test findings, and `PLAN.md` §13 for any approved plan changes.
 
 # Deliverables
 
