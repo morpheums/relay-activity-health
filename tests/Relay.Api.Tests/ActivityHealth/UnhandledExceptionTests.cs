@@ -1,5 +1,6 @@
 using System.Net;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Relay.Api.Tests.Fixtures;
 using Relay.Core.ActivityHealth;
 
@@ -29,10 +30,23 @@ public sealed class UnhandledExceptionTests(SeededApiFixture fixture) : SeededAp
         response.Body.ShouldNotContain("stack", Case.Insensitive);
     }
 
-    private async Task<ApiResponse> GetWithThrowingServiceAsync()
+    [Fact]
+    public async Task GetActivityHealthServiceThrowsInProductionReturnsProblemWithoutExceptionDetails()
     {
-        await using var factory = Fixture.CreateFactory(services =>
-            services.AddScoped<IActivityHealthService, ThrowingActivityHealthService>());
+        var response = await GetWithThrowingServiceAsync(Environments.Production);
+
+        response.ShouldBeProblem(HttpStatusCode.InternalServerError);
+        response.Body.ShouldNotContain(ThrowingActivityHealthService.SensitiveMessage);
+        response.Body.ShouldNotContain(nameof(InvalidOperationException));
+        response.Body.ShouldNotContain(nameof(ThrowingActivityHealthService));
+        response.Body.ShouldNotContain("stack", Case.Insensitive);
+    }
+
+    private async Task<ApiResponse> GetWithThrowingServiceAsync(string? environmentName = null)
+    {
+        await using var factory = Fixture.CreateFactory(
+            environmentName ?? Environments.Development,
+            services => services.AddScoped<IActivityHealthService, ThrowingActivityHealthService>());
         using var client = factory.CreateClient();
         return await ApiResponse.GetAsync(client, "/api/accounts/14/activity-health?week=2026-07-20", CancellationToken);
     }

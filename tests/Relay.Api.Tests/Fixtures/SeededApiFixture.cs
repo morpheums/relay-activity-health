@@ -44,7 +44,10 @@ public sealed class SeededApiFixture : IAsyncLifetime
     }
 
     public RelayApiFactory CreateFactory(Action<IServiceCollection> overrideServices) =>
-        new(SeededConnectionString, Environments.Development, overrideServices);
+        CreateFactory(Environments.Development, overrideServices);
+
+    public RelayApiFactory CreateFactory(string environmentName, Action<IServiceCollection> overrideServices) =>
+        new(SeededConnectionString, environmentName, overrideServices);
 
     public async ValueTask InitializeAsync()
     {

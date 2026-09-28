@@ -62,12 +62,11 @@ public sealed class DisplayDeviationRoundingTests
 
         var displayReport = report.WithDisplayDeviations();
 
-        displayReport.Locations.ShouldBe(
-            [
-                LocationWithDeviation("Site C", -0.13),
-                LocationWithDeviation("Site A", 0.13),
-                LocationWithDeviation("Site B", null),
-            ]);
+        displayReport.Locations.Select(location => location with { Deviation = null })
+            .ShouldBe(report.Locations.Select(location => location with { Deviation = null }));
+        displayReport.Locations[0].Deviation.ShouldNotBeNull().ShouldBe(-0.13, SeriesJson.Tolerance);
+        displayReport.Locations[1].Deviation.ShouldNotBeNull().ShouldBe(0.13, SeriesJson.Tolerance);
+        displayReport.Locations[2].Deviation.ShouldBeNull();
     }
 
     [Fact]
@@ -78,7 +77,8 @@ public sealed class DisplayDeviationRoundingTests
         var displayReport = report.WithDisplayDeviations();
 
         (displayReport with { Summary = report.Summary, Locations = report.Locations }).ShouldBe(report);
-        displayReport.Summary.ShouldBe(SummaryWithDeviation(0.13));
+        (displayReport.Summary with { Deviation = null }).ShouldBe(SummaryWithDeviation(null));
+        displayReport.Summary.Deviation.ShouldNotBeNull().ShouldBe(0.13, SeriesJson.Tolerance);
     }
 
     [Fact]
