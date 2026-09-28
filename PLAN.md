@@ -254,3 +254,158 @@ Never cut: aggregate correctness, BL + SQL tests, golden tests, README, AI log. 
 
 ## 13. Plan changes
 _(append-only, dated, with reason)_
+
+### 2026-09-28 — Revised design from the four-agent debate (approved by the user)
+
+**Reason.** Battle-testing showed the original band (median ± 2·spread, √median floor) never flags a location dropping to zero for leads/appointments
+and only 37 % of the time for calls (AI_LOG 8). `statistician`, `product`, `architect` and `reviewer` debated the fix directly and all signed
+`docs/design-consensus.md` AGREE with no dissent; every number in it is backed by a script in `analysis/` whose output was re-run and reproduced
+byte-for-byte by the coordinator. The user approved the design as written.
+
+**This entry supersedes**, for implementation purposes: §5.1 index/de-dup bullet, §5.2 in full, §5.3 in full, the §5.4 status labels and footnote,
+the §7 Evaluator / Ranking / API edge-case bullets and golden-values table, D5's default account and D7's numbers. Everything not listed stays in force,
+including the §7 Calendar, Grid and SQL edge cases. Rationale, rejected options and evidence per item: `docs/design-consensus.md` §1–§4.
+
+**Decision changes in short**
+- D2/D7: the normality rule is R2\* — robust z on the Anscombe scale `T(x) = 2√(x + 3/8)`, k = 2, spread floor 1.0, minimum 4 eligible weeks,
+  status read from the back-transformed integer range. Flags 4.3 % of site-weeks (was 4.8 %); drop-to-0 caught 98 % all / 96 % calls (was 78 / 37 %);
+  account 6's spike week still 15/15 `above`; 0 status/range contradictions in 253,149 checks.
+- D5: default account **14** (Beacon Home Security, 4 sites) instead of 12 — under R2\* account 12 flags nothing in 2026-07-20, and account 14's
+  Site B (2 vs usually 3–12, `below`) is the only flagged series in the whole seed that week.
+- Starter files: `schema.sql` and `seed.sql` are currently at the repo root; Phase 0 moves them to `db/` with `git mv`, content untouched (user-approved).
+- README must carry the known limits in `docs/design-consensus.md` §1 verbatim and state the ≈ 4 % design flag rate.
+
+#### §5.1 — index and de-duplication (replaces the index bullet)
+**No unique constraint** (it would reject the duplicate rows). Index `IX_activity_events_account_occurred` on
+`(account_id, occurred_at) INCLUDE (location, event_type, duration_seconds, outcome)` — covers the de-duplication so the weekly query seeks.
+Exact duplicates are removed only by `DISTINCT`/`GROUP BY` over every non-id column (never `=` on nullable columns). Windows are sent as
+UTC (`Z`) JSON; instants read back are marked `DateTimeKind.Utc`. Columns are explicit `varchar(n)`.
+
+#### §5.2 — API (replaces §5.2)
+`GET /api/accounts` → `[{ id, name, timezone }]` (includes account 20).
+
+`GET /api/accounts/{accountId}/activity-health?week=YYYY-MM-DD&type=all`
+
+| Param | Rule |
+|---|---|
+| `week` | Optional local Monday. Default = latest complete week. Not a Monday → 400. After `latestCompleteWeek` → 400. Before `earliestWeek` → 400 |
+| `type` | Exactly `all` (default) \| `call_received` \| `lead_created` \| `appointment_set`, case-sensitive; else 400 |
+| `accountId` | Unknown → 404 |
+
+Errors are `ProblemDetails`. Response (account 6, 2026-07-20, all):
+```json
+{
+  "account": { "id": 6, "name": "Metro Collision Centers", "timezone": "America/New_York" },
+  "eventType": "all",
+  "week": { "start": "2026-07-20", "end": "2026-07-26" },
+  "dataAsOf": "2026-07-27T22:20:34Z",
+  "latestCompleteWeek": "2026-07-20",
+  "earliestWeek": "2026-01-26",
+  "baselineWeeks": 8,
+  "minimumEligibleWeeks": 4,
+  "summary": { "count": 87, "baseline": { "weeksUsed": 8, "median": 72.5, "low": 30, "high": 134 }, "status": "normal", "deviation": 0.53 },
+  "locations": [ { "location": "Site M", "count": 7, "baseline": { "weeksUsed": 8, "median": 3.5, "low": 1, "high": 9 }, "status": "normal", "deviation": 1.30 } ]
+}
+```
+- `status ∈ above | below | normal | insufficient_data`.
+- `baseline` is always present. When `insufficient_data`, `baseline = { weeksUsed: 0–3, median: null, low: null, high: null }` and `deviation: null`.
+- `earliestWeek` = local Monday of the week containing the account's first event (any type); for an account with no events it equals `latestCompleteWeek` (never null).
+- `deviation` is a z-score on the Anscombe scale, rounded to 2 dp (away from zero). `median` is unrounded (x or x.5). `low`/`high` are integers.
+- `locations` is returned sorted (§5.3 step 9).
+- Empty account → 200, `summary.count = 0`, `insufficient_data`, `baseline.weeksUsed = 0`, `earliestWeek = latestCompleteWeek`, `locations: []`.
+
+#### §5.3 — normality rules (replaces §5.3)
+Notation: T(x) = 2·√(x + 0.375) (Anscombe transform; makes small counts roughly equal-variance). T(0) = 2·√0.375 = 1.224744871391589.
+
+For the account total and for each site, for selected week `W`:
+1. **Sites** = distinct locations whose first event (any type) is before the end of `W` (local next-Monday 00:00 in UTC, exclusive). The type filter never changes the site list.
+2. **Baseline weeks** = the 8 local weeks before `W`, **zero-filled**. A week is *eligible* only if it starts **after** the week containing the series'
+   first event of any type (site → site's first event; account total → account's first event = MIN over its sites). `weeksUsed` = number of eligible weeks.
+3. Fewer than **4** eligible weeks → `insufficient_data`: count shown; median, low, high and deviation are null.
+4. `median` = median of the eligible weeks' counts only (mean of the middle two when even). This is the displayed median.
+5. `centre = T(median)` — T of the raw median, **not** the median of the transformed values (they differ for even counts); `madT` = median of |T(cᵢ) − centre| over the eligible counts; `spread = max(1.4826 × madT, 1.0)`
+   (1.4826 makes the MAD comparable to a standard deviation; 1.0 is the Poisson SD on this scale).
+6. `lowT = centre − 2·spread`, `highT = centre + 2·spread`.
+   `low = lowT ≤ T(0) ? 0 : ⌈(lowT/2)² − 0.375⌉` (the guard is mandatory: squaring a negative `lowT` would create a false lower edge);
+   `high = ⌊(highT/2)² − 0.375⌋`.
+7. Status from the integers only: `count < low` → `below`; `count > high` → `above`; otherwise `normal` (a count equal to `low` or `high` is `normal`).
+   The displayed range "usually low–high" therefore can never contradict the status.
+8. `deviation = (T(count) − centre) / spread`, full precision internally; rounded to 2 dp (away from zero) only in the API response.
+9. Ranking of locations: `insufficient_data` last (among themselves by name); then flagged (`above`/`below`) before `normal`; then |deviation|
+   descending on the unrounded value; then `below` before `above`; then location name ascending (ordinal).
+
+Constants live in `NormalityOptions { BaselineWeeks = 8, MinimumEligibleWeeks = 4, BandWidth = 2.0, SpreadFloor = 1.0 }`.
+Known limit: a series whose usual median is ≤ 2 can never be `below` (a drop to 0 is within normal variation there).
+
+#### §5.4 — status copy and footnote (replaces the two §5.4 bullets on status and footnote)
+| Status | Label |
+|---|---|
+| above | ▲ Higher than usual |
+| below | ▼ Lower than usual |
+| normal | Within usual range |
+| insufficient_data | Not enough history yet (N of 4 weeks needed) |
+
+Symbol and text are always shown together, never colour alone.
+
+- **Range line:** "Usually X–Y a week", where X–Y is the API's `low`–`high`, never recomputed in the UI. Account row: "54 inbound events · usually 40–74 a week".
+- **On screen:** no deviation, z, σ, "±" or median.
+- **Severity tier:** none; stays deferred (§11).
+- **Insufficient data:** the count is shown, with no range, and the label above. N is `baseline.weeksUsed` and 4 is `minimumEligibleWeeks`.
+- **Account with no events:** "No activity recorded for this account yet." Shown when `locations == [] && summary.baseline.weeksUsed == 0`. The week stepper is disabled because `earliestWeek == latestCompleteWeek`.
+- **Median:** not shown on screen (no "typical ~N"); "Usually X–Y" answers the question.
+- The word "Normal" never appears alone on screen; "Within usual range" is used in the table, the summary and the footnote.
+- **Footnote** (plain English):
+  - method: "compared with the last 8 full weeks at this location";
+  - "inbound events, not unique customers";
+  - "exact duplicates counted once";
+  - "Locations that usually get 2 or fewer events a week can't show 'lower than usual'";
+  - "Data as of Mon Jul 27, 2026", with `dataAsOf` rendered in the account timezone.
+- **Type ≠ all:** one extra line, "Per-type counts at a single location are small; only large changes show up."
+
+#### §7 — golden values and Evaluator / Ranking / API edge cases (replace the corresponding parts of §7)
+**Golden values (R2\*, from the independent Python model)**
+| Scenario | Expected |
+|---|---|
+| Account 6, week 2026-06-01, all | total 880, median 66, range 39–101, `above`, dev 22.37; **all 15 sites `above`**; top = Site C (67, median 3, range 1–7, dev 12.74) |
+| Account 6, week 2026-07-20, all | total 87, median 72.5, range 30–134, `normal`, dev 0.53 (baseline contains the 880 week); all 15 sites `normal`; Site M 7, median 3.5, range 1–9, dev 1.30 |
+| Account 6, week 2026-07-20, `call_received` | total 51, median 42, range 17–79, `normal`, dev 0.54 |
+| Account 12, week 2026-07-20, all | total 54, median 56, range 40–74, `normal`; Site F 11 vs 2–11 → `normal` (dev 1.90), ranked first |
+| Account 14, week 2026-07-20, all (default account) | total 26, median 27, range 18–38, `normal`; **Site B 2 vs 3–12 → `below` (dev −2.16), ranked first**; Sites C, A, D `normal` |
+| Account 1, week 2026-07-06, Site C | 4 (raw rows 5 — one exact duplicate) |
+| Account 8, week 2026-03-02 | `insufficient_data`, `weeksUsed` 3 |
+| Account 8, week 2026-03-09 | baseline 11,11,11,8 → median 11, madT 0, spread 1.0 (floor), range 6–18, `normal` |
+| Account 20 | default week → 200 empty state, `earliestWeek` = `latestCompleteWeek` = 2026-07-20; `week=2026-03-02` → 400 |
+| Default week (any account) | 2026-07-20 |
+| `earliestWeek` | 2026-01-26 for accounts 1, 4, 5, 6, 7, 12, 14, 18; 2026-02-02 for 2, 3, 8–11, 13, 15–17, 19; 2026-07-20 for 20 |
+
+Hand derivation, account 8 on 2026-03-09: median 11; centre = 2√11.375 = 6.745369; three of the four |T(cᵢ) − centre| are 0, so madT = 0 and spread = 1.0;
+lowT = 4.745369 > T(0), so low = ⌈2.3726845² − 0.375⌉ = ⌈5.2546⌉ = 6; highT = 8.745369, so high = ⌊4.3726845² − 0.375⌋ = ⌊18.745⌋ = 18.
+
+Even-count centre case (pins centre = T(raw median)), baseline [2,4,6,20]: median 5, centre 4.636809, madT 1.004056 (gaps 1.554602, 0.453509, 0.412943,
+4.390926 → middle two average), spread 1.488613, lowT 1.659583 > T(0) → low ⌈0.3136⌉ = 1, highT 7.614035 → high ⌊14.118⌋ = 14.
+Count 14 → `normal` (z 1.98); 15 → `above`; 0 → `below`. (Under the wrong centre = median of T the range is 1–13 and 14 reads `above`.)
+
+**Evaluator edge cases (unit, no DB)**
+- Fewer than 4 eligible weeks.
+- madT = 0, so the floor applies.
+- Even-count median.
+- Spike inside the baseline.
+- Count exactly `low` or `high` → `normal`.
+- Rows from `statistician_evidence_out.md` §2:
+  - [0,0,0,0]→0 gives 0–2 normal.
+  - [0,0,0,0]→3 gives above.
+  - [2,2,2,2]→0 gives 0–6 normal.
+  - [3,3,3,3]→0 gives 1–7 **below** (z −2.45).
+  - [11,11,11,8]→6 gives normal (edge).
+  - [11,11,11,8]→5 gives below.
+- **Low guard:** a case with lowT < 0 (e.g. median 1 with spread 3 → low 0), one with lowT in (0, T(0)] → low 0, and one just above T(0) ([2,4,6,20], lowT 1.6596 → low 1).
+  Concrete discriminating baselines (`analysis/debate/statistician_guard_case.py` → `_out.md`): lowT < 0: [0,1,5,9] → median 3, lowT −1.927794, range **0–21**
+  (without the guard the false edge gives low 1 — prefer this test); 0 < lowT ≤ T(0): [1,1,1,1] → lowT 0.345208, range 0–4; just above T(0): [2,4,6,20] → low 1, or [3,3,3,3] → 1–7.
+  With the T(0) guard the ceiling argument is always > 0 (lowT > T(0) ⇒ (lowT/2)² − 0.375 > 0), so low ≥ 1 in that branch; a `Math.Max(0, …)` is defensive only.
+
+**Ranking:** insufficient last (by name); flagged before normal; above and below by |deviation| together; equal |deviation| → below before above, then name.
+
+**API:**
+- 400 for a week before `earliestWeek`.
+- 400 for `type=ALL` / `Call_Received` (case-sensitive).
+- Account 20: default week → 200 empty with `earliestWeek` 2026-07-20; `week=2026-03-02` → 400.
