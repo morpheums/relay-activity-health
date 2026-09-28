@@ -533,3 +533,12 @@ disagreed with `WeekContaining`. Time zones whose DST transition falls at local 
 and a repeated one uses .NET's standard-time reading; no seed zone is affected (the US zones switch at 02:00). No tests are added for out-of-scope behaviour; the §7 US DST, Phoenix
 and UTC cases stay covered. The README's known limits carry this line.
 
+### 2026-09-28 — Phase 2 review decisions (user decisions, validated by the architect)
+
+- **Filters without a report:** "Viewing as" and "Activity type" render even before a report has loaded (e.g. the first load fails); only the week stepper waits for data.
+  Contract: `DashboardFilters` inputs `week`, `earliestWeek`, `latestCompleteWeek` are optional (`null` by default); the stepper is hidden until all three are set.
+- **Page heading** `Activity health` (the page's only `<h1>`) is approved copy (C-23).
+- **Insufficient rows** leave the "Usual range" cell empty (no placeholder).
+- **Accepted as is (reviewer notes):** the global data-anchor query scans the index (fine at seed scale; a README "another day" item); windows with `DateTimeKind.Unspecified`
+  are treated as UTC (Core always sends UTC); a failed account-list load leaves "Viewing as" empty without an error.
+
