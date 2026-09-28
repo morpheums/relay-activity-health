@@ -15,7 +15,7 @@ Every test suite, how to run it, what it needs and what it checks.
 | Data | `dotnet test --project tests/Relay.Infrastructure.Tests` | Docker | The counting SQL against a real SQL Server 2022 in Testcontainers (never InMemory or SQLite): de-duplication, window boundaries, type filter, other accounts ignored |
 | API + golden values | `dotnet test --project tests/Relay.Api.Tests` | Docker | The endpoints against the real seed: golden values from the independent Python model (PLAN §7, §13), contract shape, 400/404/500 rules, migrate-on-start, missing connection string, seed-file checksums |
 | Frontend | `cd web && npm test` | Node, after `npm ci` | Vitest via `ng test`: URL-as-state round trip and normalisation, request sequencing, component states and copy |
-| End-to-end smoke (**planned, not in the repo yet**) | `docker compose up -d --wait db && cd web && npx playwright install chromium && npm run e2e`, with `ConnectionStrings__Relay` exported | Docker, Chromium | Browser, Angular, API and seeded DB together (PLAN §13, "End-to-end smoke layer") |
+| End-to-end smoke (**planned, not in the repo yet**) | `docker compose up -d --wait db && cd web && npx playwright install chromium && npm run e2e`, with the API running from `.env` as in [running.md](running.md) | Docker, Chromium | Browser, Angular, API and seeded DB together (PLAN §13, "End-to-end smoke layer") |
 
 - **Where expectations come from.** Test expectations come from PLAN.md and the independent Python models in `analysis/`. They were never taken from running the code under test.
 - **Build settings.** The build uses `TreatWarningsAsErrors` and `AnalysisLevel latest-recommended`, so an analyzer warning fails the build.

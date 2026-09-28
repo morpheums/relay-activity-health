@@ -12,13 +12,13 @@ Open http://localhost:4200/dashboard. The URL is rewritten to `/dashboard?accoun
 
 ## Quick start
 
-```bash
-cp .env.example .env                    # then set RELAY_DB_SA_PASSWORD in .env
-docker compose up -d --wait db
-set -a; source .env; set +a      # ENV-SETUP: bash/zsh only, to be replaced with an OS-agnostic step
-dotnet run --project src/Relay.Api      # terminal 1, http://localhost:5080
-cd web && npm ci && npm start           # terminal 2, http://localhost:4200/dashboard
-```
+The same five steps on macOS, Linux and Windows. No shell-specific setup: in Development the API reads the repo-root `.env` itself.
+
+1. `cp .env.example .env` (on Windows: `copy .env.example .env`)
+2. Set `RELAY_DB_SA_PASSWORD` in `.env`. If it contains `$`, single-quote it: `RELAY_DB_SA_PASSWORD='Pa$w0rd…'`.
+3. `docker compose up -d --wait db`
+4. `dotnet run --project src/Relay.Api` (terminal 1, http://localhost:5080)
+5. `cd web && npm start` (terminal 2, http://localhost:4200/dashboard; run `npm ci` in `web` once first)
 
 Tests: `dotnet test` (Docker running) and `cd web && npm test`.
 
@@ -28,7 +28,7 @@ Full setup, configuration and troubleshooting: [docs/running.md](docs/running.md
 
 | File | What it covers |
 |---|---|
-| [docs/running.md](docs/running.md) | Prerequisites and versions, environment variables, running, stopping and resetting the app, troubleshooting |
+| [docs/running.md](docs/running.md) | Prerequisites and versions, `.env` configuration and precedence, running, stopping and resetting the app, EF Core commands, troubleshooting |
 | [docs/testing.md](docs/testing.md) | Every test suite, its command, what it needs (Docker or not) and what it checks; the planned E2E smoke layer |
 | [docs/api.md](docs/api.md) | `GET /api/accounts` and `GET /api/accounts/{id}/activity-health`: parameters, validation order, status codes, example response |
 | [docs/interpretation.md](docs/interpretation.md) | How the ticket was read, how "normal" is decided, key assumptions with seed evidence, data handling, known limits |
