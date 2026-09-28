@@ -457,3 +457,25 @@ Count 14 → `normal` (z 1.98); 15 → `above`; 0 → `below`. (Under the wrong 
 - **Nouns by type:** "N calls" / "N leads" / "N appointments" (singular for 1) when filtered; "inbound events" / "1 inbound event" only for `all`.
 - **Footnote lines** render with the first letter capitalised (wording unchanged). "Not enough history yet (0 of 4 weeks needed)" is kept for 0 weeks.
 
+### 2026-09-28 — Contract decisions from the Phase 0 contract review (user decisions, validated by the architect)
+
+**Reason.** Raised by the reviewer on the architect's contracts; decided by the user; validated by the `architect`.
+- **Core stays package-free:** `AddRelayCore` lives in `Relay.Api/Composition`; Core receives `NormalityOptions` as plain data (still bound and `ValidateOnStart`-validated).
+- **Wire names owned by Core:** one mapping for `ActivityType` (`all|call_received|lead_created|appointment_set`) and `HealthStatus` (`above|below|normal|insufficient_data`),
+  used by the API mapper, the API `type` validation (pattern derived from it) and Infrastructure SQL.
+- **Malformed `week` → 400** via a `yyyy-MM-dd` validation attribute on a `string? Week` (the architect's choice, delegated by the user): same validation-problem shape as `type`;
+  `07/20/2026` and `2026-7-20` are rejected too.
+- **Instants stay `DateTime` (UTC)** in Core and the API response, serialised as `…Z` exactly as §13 §5.2; an API golden test asserts the exact `dataAsOf` string. (`DateTimeOffset` was rejected: it serialises as `+00:00`.)
+- **Empty database (no events at all):** 200 empty state; `dataAsOf` is **null** (the UI hides "Data as of"); the latest complete week falls back to the current clock via an injected
+  `TimeProvider`. D1 still holds whenever data exists. Contract change: `dataAsOf` nullable in C#, TypeScript and §5.2 for this case only.
+- **Account method line** is capitalised: "Compared with the last 8 full weeks for this account".
+- **More promoted golden values** (source `analysis/goldens/promoted_goldens.py` → `promoted_goldens_out.md`):
+
+| Scenario | Expected |
+|---|---|
+| De-duplicated events per account, all weeks | 1: 1221 · 2: 729 · 3: 477 · 4: 796 · 5: 884 · 6: 2637 · 7: 437 · 8: 260 · 9: 546 · 10: 342 · 11: 354 · 12: 1303 · 13: 205 · 14: 638 · 15: 499 · 16: 167 · 17: 323 · 18: 586 · 19: 210 · 20: 0 · total 12614 |
+| Account 14 site first-activity weeks | Sites B and D: 2026-01-26; Sites A and C: 2026-02-02 |
+| Account 14, week 2026-07-20, `appointment_set` | Site B 0, median 0, range 0–2, `normal` |
+| Account 14, week 2026-07-20, `call_received` / `lead_created` | totals 16 (range 9–24, `normal`) / 8 (range 2–12, `normal`) |
+| Account 6, week 2026-07-20, all | Site M is `locations[0]` (7, range 1–9, dev 1.30) |
+
