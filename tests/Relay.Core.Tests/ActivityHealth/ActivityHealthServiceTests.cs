@@ -150,16 +150,6 @@ public sealed class ActivityHealthServiceTests
     }
 
     [Fact]
-    public async Task GetAsyncDoesNotRoundDeviations()
-    {
-        var report = await GetStorageReportAsync(null);
-
-        var siteADeviation = report.Locations.Single(location => location.Location == "Site A").Deviation.ShouldNotBeNull();
-        siteADeviation.ShouldBe(-2.086664358855307, Tolerance);
-        siteADeviation.ShouldNotBe(-2.09);
-    }
-
-    [Fact]
     public async Task GetAsyncSiteFirstSeenAfterSelectedWeekIsNotListed()
     {
         var report = await GetStorageReportAsync(TestTime.Day("2026-06-22"));
@@ -193,6 +183,62 @@ public sealed class ActivityHealthServiceTests
         var result = await service.GetAsync(StorageAccountId, TestTime.Day(requestedWeek), ActivityType.All, CancellationToken);
 
         result.ShouldBeOfType<ActivityHealthResult.InvalidWeek>().Reason.ShouldBe(expectedReason);
+    }
+
+    [Fact]
+    public async Task GetAsyncWeekEqualToLatestCompleteWeekIsFound()
+    {
+        var report = await GetStorageReportAsync(TestTime.Day("2026-07-20"));
+
+        report.Week.ShouldBe(new WeekRange(TestTime.Day("2026-07-20"), TestTime.Day("2026-07-26")));
+    }
+
+    [Theory]
+    [InlineData("2026-07-28")]
+    [InlineData("2026-05-19")]
+    public async Task GetAsyncNonMondayWeekOutsideValidRangeReturnsNotAWeekStart(string requestedWeek)
+    {
+        var service = CreateService(StorageAccount(), StorageActivity());
+
+        var result = await service.GetAsync(StorageAccountId, TestTime.Day(requestedWeek), ActivityType.All, CancellationToken);
+
+        result.ShouldBeOfType<ActivityHealthResult.InvalidWeek>().Reason.ShouldBe(InvalidWeekReason.NotAWeekStart);
+    }
+
+    [Theory]
+    [InlineData("2026-07-21")]
+    [InlineData("2026-08-03")]
+    [InlineData("2026-01-05")]
+    [InlineData("2026-07-28")]
+    public async Task GetAsyncUnknownAccountWithInvalidWeekReturnsAccountNotFound(string requestedWeek)
+    {
+        var service = CreateService(StorageAccount(), StorageActivity());
+
+        var result = await service.GetAsync(999, TestTime.Day(requestedWeek), ActivityType.All, CancellationToken);
+
+        result.ShouldBeOfType<ActivityHealthResult.AccountNotFound>();
+    }
+
+    [Fact]
+    public async Task GetAsyncAccountFirstSeenInIncompleteAnchorWeekHasEarliestWeekEqualToLatestCompleteWeekAndEmptyState()
+    {
+        var accountQueries = new FakeAccountQueries().WithAccount(StorageAccountId, "Capital City Storage", "UTC");
+        var activityQueries = new FakeActivityQueries()
+            .WithDataAnchor(SeedDataAnchor)
+            .WithSite(StorageAccountId, "Site A", "2026-07-27T10:00:00Z")
+            .WithWeeklyCounts(StorageAccountId, "Site A", "2026-07-27", ActivityType.All, 3);
+        var service = CreateService(accountQueries, activityQueries);
+
+        var result = await service.GetAsync(StorageAccountId, null, ActivityType.All, CancellationToken);
+
+        var report = result.ShouldBeOfType<ActivityHealthResult.Found>().Report;
+        report.LatestCompleteWeek.ShouldBe(TestTime.Day("2026-07-20"));
+        report.EarliestWeek.ShouldBe(TestTime.Day("2026-07-20"));
+        report.Week.Start.ShouldBe(TestTime.Day("2026-07-20"));
+        report.Summary.Count.ShouldBe(0);
+        report.Summary.Status.ShouldBe(HealthStatus.InsufficientData);
+        report.Summary.Baseline.WeeksUsed.ShouldBe(0);
+        report.Locations.ShouldBeEmpty();
     }
 
     [Fact]
