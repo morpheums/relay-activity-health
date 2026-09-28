@@ -111,15 +111,14 @@ describe('DashboardPage', () => {
     it('shows Beacon Home Security selected under "Viewing as"', async () => {
       const { root } = await openPage('/dashboard');
 
-      expect(selectedOptionText(getSelect(root, 'Viewing as'))).toContain('Beacon Home Security');
+      expect(selectedOptionText(getSelect(root, 'Viewing as'))).toBe('Beacon Home Security');
     });
 
     it('lists every account in the Viewing-as select, including the empty account Quiet Harbor Spa', async () => {
       const { root } = await openPage('/dashboard');
 
-      const accountOptions = optionTexts(getSelect(root, 'Viewing as')).join(' | ');
-      ['Metro Collision Centers', 'Lakeside Physio', 'Redline Tire & Service', 'Beacon Home Security', 'Quiet Harbor Spa'].forEach((accountName) =>
-        expect(accountOptions).toContain(accountName),
+      expect([...optionTexts(getSelect(root, 'Viewing as'))].sort()).toEqual(
+        ['Beacon Home Security', 'Lakeside Physio', 'Metro Collision Centers', 'Quiet Harbor Spa', 'Redline Tire & Service'],
       );
     });
 
@@ -237,13 +236,14 @@ describe('DashboardPage', () => {
       rows.forEach((row) => expect(collapsedText(row)).toContain(WITHIN));
     });
 
-    it('choosing Calls writes type=call_received and shows "51 calls · usually 17–79 a week" plus the per-type footnote line', async () => {
-      const { root, harness } = await openPage('/dashboard?account=6&week=2026-07-20&type=all');
+    it('choosing Calls writes type=call_received as a new history entry and shows "51 calls · usually 17–79 a week" plus the per-type footnote line', async () => {
+      const { root, navigations, harness } = await openPage('/dashboard?account=6&week=2026-07-20&type=all');
 
       chooseOption(getSelect(root, 'Activity type'), 'Calls');
       await settle(harness);
 
       expect(currentQueryParams()).toEqual({ account: '6', week: '2026-07-20', type: 'call_received' });
+      expect(navigations.at(-1)?.replaceUrl).toBe(false);
       expect(textOutsideTables(root)).toContain('51 calls · usually 17–79 a week');
       expect(pageText(root)).not.toContain('inbound event');
       expect(pageText(root)).toContain(PER_TYPE_LINE);
@@ -326,17 +326,17 @@ describe('DashboardPage', () => {
     });
 
     it.each([
-      '/dashboard?account=6&week=2026-06-01&type=all',
-      '/dashboard?account=6&week=2026-06-08&type=all',
-      '/dashboard?account=6&week=2026-07-20&type=call_received',
-      '/dashboard?account=8&week=2026-03-02&type=all',
-      '/dashboard?account=14&week=2026-03-02&type=all',
-      '/dashboard?account=14&week=2026-07-20&type=appointment_set',
-      '/dashboard?account=20',
-    ])('never shows deviation, z, σ, ±, median, typical or a standalone "Normal" at %s', async (url) => {
+      { url: '/dashboard?account=6&week=2026-06-01&type=all', anchor: '880 inbound events · usually 39–101 a week' },
+      { url: '/dashboard?account=6&week=2026-06-08&type=all', anchor: '102 inbound events · usually 37–104 a week' },
+      { url: '/dashboard?account=6&week=2026-07-20&type=call_received', anchor: '51 calls · usually 17–79 a week' },
+      { url: '/dashboard?account=8&week=2026-03-02&type=all', anchor: 'Not enough history yet (3 of 4 weeks needed)' },
+      { url: '/dashboard?account=14&week=2026-03-02&type=all', anchor: '40 inbound events · usually 16–36 a week' },
+      { url: '/dashboard?account=14&week=2026-07-20&type=appointment_set', anchor: '2 appointments · usually 1–8 a week' },
+      { url: '/dashboard?account=20', anchor: EMPTY_ACCOUNT_MESSAGE },
+    ])('never shows deviation, z, σ, ±, median, typical or a standalone "Normal" at $url', async ({ url, anchor }) => {
       const { root } = await openPage(url);
 
-      expect(pageText(root).length).toBeGreaterThan(0);
+      expect(pageText(root)).toContain(anchor);
       FORBIDDEN_ON_SCREEN.forEach((forbidden) => expect(pageText(root)).not.toMatch(forbidden));
     });
   });
@@ -454,33 +454,36 @@ describe('DashboardPage', () => {
   });
 
   describe('controls write the URL', () => {
-    it('"◀ Previous week" from the default writes week=2026-07-13 and enables "Next week ▶"', async () => {
-      const { root, harness } = await openPage('/dashboard?account=14&week=2026-07-20&type=all');
+    it('"◀ Previous week" from the default writes week=2026-07-13 as a new history entry and enables "Next week ▶"', async () => {
+      const { root, navigations, harness } = await openPage('/dashboard?account=14&week=2026-07-20&type=all');
 
       getButton(root, PREVIOUS_WEEK).click();
       await settle(harness);
 
       expect(currentQueryParams()).toEqual({ account: '14', week: '2026-07-13', type: 'all' });
+      expect(navigations.at(-1)?.replaceUrl).toBe(false);
       expect(isDisabled(getButton(root, NEXT_WEEK))).toBe(false);
       expect(pageText(root)).toContain('Mon Jul 13 – Sun Jul 19, 2026');
     });
 
-    it('"Next week ▶" from 2026-07-13 writes week=2026-07-20', async () => {
-      const { root, harness } = await openPage('/dashboard?account=14&week=2026-07-13&type=all');
+    it('"Next week ▶" from 2026-07-13 writes week=2026-07-20 as a new history entry', async () => {
+      const { root, navigations, harness } = await openPage('/dashboard?account=14&week=2026-07-13&type=all');
 
       getButton(root, NEXT_WEEK).click();
       await settle(harness);
 
       expect(currentQueryParams()).toEqual({ account: '14', week: '2026-07-20', type: 'all' });
+      expect(navigations.at(-1)?.replaceUrl).toBe(false);
     });
 
-    it('switching "Viewing as" keeps week and type (14 to 6 at 2026-03-02, calls)', async () => {
-      const { root, harness } = await openPage('/dashboard?account=14&week=2026-03-02&type=call_received');
+    it('switching "Viewing as" keeps week and type (14 to 6 at 2026-03-02, calls) as a new history entry', async () => {
+      const { root, navigations, harness } = await openPage('/dashboard?account=14&week=2026-03-02&type=call_received');
 
       chooseOption(getSelect(root, 'Viewing as'), 'Metro Collision Centers');
       await settle(harness);
 
       expect(currentQueryParams()).toEqual({ account: '6', week: '2026-03-02', type: 'call_received' });
+      expect(navigations.at(-1)?.replaceUrl).toBe(false);
     });
 
     it('switching "Viewing as" to an account that rejects the kept week falls back to the latest complete week with replaceUrl and no error', async () => {
@@ -507,7 +510,7 @@ describe('DashboardPage', () => {
       const reopened = await openPage(writtenUrl);
 
       expect(currentQueryParams()).toEqual({ account: '6', week: '2026-06-01', type: 'call_received' });
-      expect(selectedOptionText(getSelect(reopened.root, 'Viewing as'))).toContain('Metro Collision Centers');
+      expect(selectedOptionText(getSelect(reopened.root, 'Viewing as'))).toBe('Metro Collision Centers');
       expect(selectedOptionText(getSelect(reopened.root, 'Activity type'))).toBe('Calls');
       expect(reopened.activityHealthApi.requests.at(-1)).toEqual({ accountId: 6, week: '2026-06-01', eventType: 'call_received' });
     });
@@ -596,6 +599,28 @@ describe('DashboardPage', () => {
 
       expect(pageText(root)).toContain('Not enough history yet (3 of 6 weeks needed)');
       expect(pageText(root)).not.toContain('of 4 weeks needed');
+    });
+  });
+
+  describe('PLAN §13 "Phase 1 red-suite decisions" (SPEC)', () => {
+    it('with no week in the URL and a failed first load, keeps account=14&type=all without a week and shows the load error with "Try again"', async () => {
+      const { root } = await openPage('/dashboard?account=14&type=all', (api) => api.failNext(serverError()));
+
+      expect(currentQueryParams()).toEqual({ account: '14', type: 'all' });
+      expect(pageText(root)).toContain(LOAD_ERROR_MESSAGE);
+      expect(getButton(root, 'Try again')).toBeTruthy();
+    });
+
+    it('with no week in the URL, "Try again" loads the data and fills in week=2026-07-20 with replaceUrl', async () => {
+      const { root, navigations, harness } = await openPage('/dashboard?account=14&type=all', (api) => api.failNext(serverError()));
+
+      getButton(root, 'Try again').click();
+      await settle(harness);
+
+      expect(currentQueryParams()).toEqual({ account: '14', week: '2026-07-20', type: 'all' });
+      expect(navigations.at(-1)?.replaceUrl).toBe(true);
+      expect(pageText(root)).not.toContain(LOAD_ERROR_MESSAGE);
+      expect(textOutsideTables(root)).toContain('26 inbound events · usually 18–38 a week');
     });
   });
 });

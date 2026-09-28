@@ -151,7 +151,11 @@ describe('DashboardState', () => {
       expectNormalisedWithReplaceUrl(navigations);
     });
 
-    it.each(['abc', '', '6.5'])('rewrites a non-numeric account "%s" to account 14', async (invalidAccount) => {
+    it.each([
+      { label: 'abc', invalidAccount: 'abc' },
+      { label: '(empty value)', invalidAccount: '' },
+      { label: '6.5', invalidAccount: '6.5' },
+    ])('rewrites a non-integer account $label to account 14', async ({ invalidAccount }) => {
       const { navigations } = await openState(`/dashboard?account=${invalidAccount}&week=2026-07-20&type=all`);
 
       expect(currentQueryParams()).toEqual(DEFAULT_QUERY_PARAMS);
@@ -190,7 +194,13 @@ describe('DashboardState', () => {
       expectNormalisedWithReplaceUrl(navigations);
     });
 
-    it.each(['abc', '2026-13-01', '20260720', '2026-7-20', ''])('rewrites a malformed week "%s" to the latest complete week', async (malformedWeek) => {
+    it.each([
+      { label: 'abc', malformedWeek: 'abc' },
+      { label: '2026-13-01', malformedWeek: '2026-13-01' },
+      { label: '20260720', malformedWeek: '20260720' },
+      { label: '2026-7-20', malformedWeek: '2026-7-20' },
+      { label: '(empty value)', malformedWeek: '' },
+    ])('rewrites a malformed week $label to the latest complete week', async ({ malformedWeek }) => {
       const { navigations } = await openState(`/dashboard?account=14&week=${malformedWeek}&type=all`);
 
       expect(currentQueryParams()).toEqual(DEFAULT_QUERY_PARAMS);
@@ -206,19 +216,17 @@ describe('DashboardState', () => {
       expectNormalisedWithReplaceUrl(navigations);
     });
 
-    it.each(['ALL', 'foo', 'Call_Received', ''])('rewrites an invalid type "%s" to all', async (invalidType) => {
+    it.each([
+      { label: 'ALL', invalidType: 'ALL' },
+      { label: 'foo', invalidType: 'foo' },
+      { label: 'Call_Received', invalidType: 'Call_Received' },
+      { label: '(empty value)', invalidType: '' },
+    ])('rewrites an invalid type $label to all', async ({ invalidType }) => {
       const { state, navigations } = await openState(`/dashboard?account=14&week=2026-07-20&type=${invalidType}`);
 
       expect(currentQueryParams()).toEqual(DEFAULT_QUERY_PARAMS);
       expect(state.eventType()).toBe('all');
       expectNormalisedWithReplaceUrl(navigations);
-    });
-
-    it('never sends an invalid type to the API', async () => {
-      const { activityHealthApi } = await openState('/dashboard?account=14&week=2026-07-20&type=ALL');
-
-      expect(activityHealthApi.requests.length).toBeGreaterThan(0);
-      expect(activityHealthApi.requests.every((request) => (EVENT_TYPES as readonly string[]).includes(request.eventType))).toBe(true);
     });
 
     it('rewrites only the invalid param and keeps the valid account and week', async () => {
@@ -244,6 +252,36 @@ describe('DashboardState', () => {
       expect(currentQueryParams()).toEqual({ account: '14', week: '2026-07-13', type: 'call_received' });
       expect(state.week()).toBe('2026-07-13');
       expect(activityHealthApi.requests.at(-1)).toEqual({ accountId: 14, week: '2026-07-13', eventType: 'call_received' });
+    });
+
+    it('selectWeek adds a history entry (no replaceUrl) so Back returns to the previous week', async () => {
+      const { state, navigations, harness } = await openState(DEFAULT_URL);
+
+      state.selectWeek('2026-07-13');
+      await settle(harness);
+
+      expect(navigationsAfterOpening(navigations)).toHaveLength(1);
+      expect(navigations.at(-1)?.replaceUrl).toBe(false);
+    });
+
+    it('selectEventType adds a history entry (no replaceUrl)', async () => {
+      const { state, navigations, harness } = await openState(DEFAULT_URL);
+
+      state.selectEventType('call_received');
+      await settle(harness);
+
+      expect(navigationsAfterOpening(navigations)).toHaveLength(1);
+      expect(navigations.at(-1)?.replaceUrl).toBe(false);
+    });
+
+    it('selectAccount adds a history entry (no replaceUrl) when the kept week is valid', async () => {
+      const { state, navigations, harness } = await openState(DEFAULT_URL);
+
+      state.selectAccount(6);
+      await settle(harness);
+
+      expect(navigationsAfterOpening(navigations)).toHaveLength(1);
+      expect(navigations.at(-1)?.replaceUrl).toBe(false);
     });
 
     it('selectEventType writes the type and keeps account and week', async () => {
@@ -276,6 +314,7 @@ describe('DashboardState', () => {
 
       expect(activityHealthApi.requests).toContainEqual({ accountId: 8, week: '2026-01-26', eventType: 'call_received' });
       expect(currentQueryParams()).toEqual({ account: '8', week: '2026-07-20', type: 'call_received' });
+      expect(navigationsAfterOpening(navigations)[0]?.replaceUrl).toBe(false);
       expect(navigations.at(-1)?.replaceUrl).toBe(true);
       expect(state.error()).toBeNull();
       expect(state.report()?.account.id).toBe(8);
@@ -388,6 +427,40 @@ describe('DashboardState', () => {
       expect(activityHealthApi.requests).toHaveLength(requestsBeforeReload + 1);
       expect(activityHealthApi.requests.at(-1)).toEqual({ accountId: 8, week: '2026-07-20', eventType: 'all' });
       expect(state.report()).toEqual(lakesideDefaultWeekReport());
+    });
+  });
+
+  describe('PLAN §13 "Phase 1 red-suite decisions" (SPEC)', () => {
+    it('checks the type against EVENT_TYPES on the client and never sends an invalid type to the API', async () => {
+      const { activityHealthApi } = await openState('/dashboard?account=14&week=2026-07-20&type=ALL');
+
+      expect(currentQueryParams()).toEqual(DEFAULT_QUERY_PARAMS);
+      expect(activityHealthApi.requests.length).toBeGreaterThan(0);
+      expect(activityHealthApi.requests.every((request) => (EVENT_TYPES as readonly string[]).includes(request.eventType))).toBe(true);
+    });
+
+    it.each([
+      { label: '5xx', failure: serverError },
+      { label: 'network failure', failure: networkFailure },
+    ])('with no week in the URL and a first-load $label, keeps account=14&type=all without a week param and exposes the error', async ({ failure }) => {
+      const { state } = await openState('/dashboard?account=14&type=all', (api) => api.failNext(failure()));
+
+      expect(currentQueryParams()).toEqual({ account: '14', type: 'all' });
+      expect(state.error()).not.toBeNull();
+      expect(state.isLoading()).toBe(false);
+    });
+
+    it('with no week in the URL, fills in the latest complete week with replaceUrl after a successful reload', async () => {
+      const { state, activityHealthApi, navigations, harness } = await openState('/dashboard?account=14&type=all', (api) => api.failNext(serverError()));
+
+      state.reload();
+      await settle(harness);
+
+      expect(activityHealthApi.requests[1]).toEqual({ accountId: 14, week: null, eventType: 'all' });
+      expect(currentQueryParams()).toEqual(DEFAULT_QUERY_PARAMS);
+      expect(navigations.at(-1)?.replaceUrl).toBe(true);
+      expect(state.error()).toBeNull();
+      expect(state.report()).toEqual(beaconDefaultWeekReport());
     });
   });
 });
