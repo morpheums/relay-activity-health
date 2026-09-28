@@ -46,7 +46,7 @@ Sources: PLAN §13 §5.4, D5, and §13 "Input handling and UI copy".
 | C-06a | `{noun}` by type, plural / singular (count = 1) | all: `inbound events` / `inbound event` · call_received: `calls` / `call` · lead_created: `leads` / `lead` · appointment_set: `appointments` / `appointment` | SPEC §13 "Input handling and UI copy" |
 | C-06b | Account summary line, `insufficient_data` | `{count} {noun}`, with no "usually" part, followed by C-04 (e.g. `8 inbound events` + `Not enough history yet (3 of 4 weeks needed)`) | SPEC §13 "Input handling and UI copy" |
 | C-07 | Empty account | `No activity recorded for this account yet.` It replaces both the summary and the table. Filters stay visible, and both week stepper buttons are disabled | §13 §5.4; SPEC §13 "Input handling and UI copy" (placement) |
-| C-08 | Method line, account summary | `Compared with the last 8 full weeks for this account` | consensus §9; SPEC §13 "Input handling and UI copy" |
+| C-08 | Method line, account summary | `Compared with the last 8 full weeks for this account` | consensus §9; SPEC §13 "Input handling and UI copy" (wording); capital first letter: user decision 2026-09-28 (coordinator adding it to PLAN §13) |
 | C-09 | Method line, locations (footnote) | `Compared with the last 8 full weeks at this location` | §13 §5.4 |
 | C-10 | Footnote | `Inbound events, not unique customers` | §13 §5.4 |
 | C-11 | Footnote | `Exact duplicates counted once` | §13 §5.4 |
