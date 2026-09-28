@@ -23,7 +23,7 @@ top correctness criterion — the counting SQL is where that is won or lost.
 - `RelayDbContext` with `DbSet<Account>`, `DbSet<ActivityEvent>`; one `IEntityTypeConfiguration<T>` per entity.
 - Exact mapping to `db/schema.sql`: table and column names snake_case, `varchar` lengths as in the file, `datetime2` for timestamps, keys `ValueGeneratedNever`, FK `account_id`.
 - A UTC `ValueConverter` so every `DateTime` read back has `Kind = Utc`.
-- Index `IX_activity_events_account_occurred` on `(account_id, occurred_at) INCLUDE (location, event_type)`. **No unique constraint** (it would reject the seed's duplicate rows).
+- Index `IX_activity_events_account_occurred` on `(account_id, occurred_at) INCLUDE (location, event_type, duration_seconds, outcome)` (covers the de-duplication so the weekly query seeks — PLAN §13). **No unique constraint** (it would reject the seed's duplicate rows).
 
 ## 3. Migrations — Phase 1
 - `InitialCreate`: schema + index only.
@@ -32,8 +32,8 @@ top correctness criterion — the counting SQL is where that is won or lost.
 
 ## 4. Query implementations — Phase 2 (red suite already written by test-author)
 - `SqlActivityQueries : IActivityQueries`, `SqlAccountQueries : IAccountQueries`, via `Database.SqlQuery<T>` into keyless result records; `AsNoTracking` semantics.
-- Data anchor: `MIN`/`MAX(occurred_at)` over all events.
-- Sites: location + first `occurred_at` for an account, events before a given UTC instant.
+- Data anchor: global `MAX(occurred_at)` over all events (`null` when there are none).
+- Sites: location + first `occurred_at` (any type) for an account, **unbounded** — Core filters by the selected week (PLAN §13).
 - Weekly counts: for one account, the UTC windows passed **as a parameter** (the battle-tested mechanism in PLAN), optional `event_type` filter,
   exact-duplicate removal, grouped by location and window start. Only non-zero rows — zero-fill is Core's job.
 
