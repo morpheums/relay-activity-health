@@ -5,7 +5,8 @@ import { ActivatedRoute, Params, Router } from '@angular/router';
 import { Observable, catchError, of, tap, throwError } from 'rxjs';
 import { AccountsApi } from '../../core/api/accounts.api';
 import { ActivityHealthApi, ActivityHealthRequest } from '../../core/api/activity-health.api';
-import { Account, ActivityHealthReport, EVENT_TYPES, EventType, ProblemDetails } from '../../core/models';
+import { Account, ActivityHealthReport, EventType, ProblemDetails } from '../../core/models';
+import { isEventType } from './event-type-guard';
 import { isIsoMonday } from './week';
 
 export const DEFAULT_ACCOUNT_ID = 14;
@@ -16,10 +17,6 @@ const ACCOUNT_ID_PATTERN = /^[1-9]\d*$/;
 interface ServerResolution {
   requested: ActivityHealthRequest;
   shown: ActivityHealthRequest;
-}
-
-function isEventType(candidate: string | null): candidate is EventType {
-  return (EVENT_TYPES as readonly (string | null)[]).includes(candidate);
 }
 
 function sameRequest(first: ActivityHealthRequest, second: ActivityHealthRequest): boolean {

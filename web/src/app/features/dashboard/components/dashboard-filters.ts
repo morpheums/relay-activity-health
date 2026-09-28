@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
 import { Account, EVENT_TYPES, EventType, WeekRange } from '../../../core/models';
+import { isEventType } from '../event-type-guard';
 import { EVENT_TYPE_LABELS } from '../health-copy';
 import { addWeeks, formatWeekRange } from '../week';
 
@@ -69,17 +70,13 @@ export class DashboardFilters {
   });
 
   protected onAccountChange(event: Event): void {
-    const selectedAccountId = Number((event.target as HTMLSelectElement).value);
-    if (Number.isInteger(selectedAccountId)) {
-      this.accountSelected.emit(selectedAccountId);
-    }
+    this.accountSelected.emit(Number((event.target as HTMLSelectElement).value));
   }
 
   protected onEventTypeChange(event: Event): void {
     const selectedValue = (event.target as HTMLSelectElement).value;
-    const selectedEventType = EVENT_TYPES.find((eventType) => eventType === selectedValue);
-    if (selectedEventType) {
-      this.eventTypeSelected.emit(selectedEventType);
+    if (isEventType(selectedValue)) {
+      this.eventTypeSelected.emit(selectedValue);
     }
   }
 
