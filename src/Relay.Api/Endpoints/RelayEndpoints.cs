@@ -10,19 +10,21 @@ public static class RelayEndpoints
 {
     public static IEndpointRouteBuilder MapRelayEndpoints(this IEndpointRouteBuilder routes)
     {
-        routes.MapGet("/api/accounts", ListAccounts);
-        routes.MapGet("/api/accounts/{accountId:int}/activity-health", GetActivityHealth);
+        var accounts = routes.MapGroup("/api/accounts");
+        accounts.MapGet("/", ListAccounts);
+        accounts.MapGet("/{accountId:int}/activity-health", GetActivityHealth);
         return routes;
     }
 
-    private static Task<Ok<IReadOnlyList<AccountListItem>>> ListAccounts(
+    private static async Task<Ok<IReadOnlyList<AccountListItem>>> ListAccounts(
         IAccountService accountService,
         CancellationToken cancellationToken) =>
-        throw new NotImplementedException();
+        TypedResults.Ok(await accountService.ListAsync(cancellationToken));
 
-    private static Task<Results<Ok<ActivityHealthReport>, ProblemHttpResult>> GetActivityHealth(
+    private static async Task<Results<Ok<ActivityHealthReport>, ProblemHttpResult>> GetActivityHealth(
         [AsParameters] ActivityHealthRequest request,
         IActivityHealthService activityHealthService,
         CancellationToken cancellationToken) =>
-        throw new NotImplementedException();
+        (await activityHealthService.GetAsync(request.AccountId, request.ParsedWeek(), request.ParsedEventType(), cancellationToken))
+            .ToHttpResult();
 }
