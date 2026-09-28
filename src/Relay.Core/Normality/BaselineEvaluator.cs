@@ -4,6 +4,6 @@ public sealed class BaselineEvaluator(NormalityOptions normalityOptions) : IBase
 {
     private readonly NormalityOptions _normalityOptions = normalityOptions;
 
-    public BaselineAssessment Evaluate(IReadOnlyList<int> eligibleWeekCounts, int selectedWeekCount) =>
+    public SeriesHealth Evaluate(IReadOnlyList<int> eligibleWeekCounts, int selectedWeekCount) =>
         throw new NotImplementedException();
 }

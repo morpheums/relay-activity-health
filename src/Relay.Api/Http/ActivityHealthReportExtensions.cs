@@ -4,6 +4,6 @@ namespace Relay.Api.Http;
 
 public static class ActivityHealthReportExtensions
 {
-    public static ActivityHealthResponse ToResponse(this ActivityHealthReport report) =>
+    public static ActivityHealthReport WithDisplayDeviations(this ActivityHealthReport report) =>
         throw new NotImplementedException();
 }
