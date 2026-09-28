@@ -159,7 +159,7 @@ Other options rejected in the debate: k = 1.75 (false "below" doubles to 5.5 %);
 | Messy part | What the app does |
 |---|---|
 | **Exact duplicates** | 12 pairs (adjacent ids, every column equal) are counted once at query time. The raw rows are kept, so the data is used as-is: 12,626 rows give 12,614 events. The footnote says "exact duplicates counted once" |
-| **Near-duplicates** | 27 pairs within 60 seconds look like ordinary traffic and are **kept** |
+| **Near-duplicates** | 27 near-duplicates within 60 seconds look like ordinary traffic and are **kept** |
 | **Account 6 spike** | 880 events in the week of Jun 1 (805 on Jun 3) against about 70 a week. That week shows ▲ Higher than usual at all 15 sites. It is never removed. Because the baseline uses the median, the week of Jul 20 still reads 87 vs usually 30–134, within range. A mean baseline would have been 171 |
 | **Empty account (20)** | Zero events is a valid state, not an error. The API returns 200 with count 0, and the page shows "No activity recorded for this account yet." with the week stepper disabled |
 | **Partial weeks** | Only complete weeks are shown. The data ends on a Monday, so the week of Jul 27 is never compared |
@@ -197,7 +197,7 @@ From PLAN §11 and the design debate.
 | Outcome rates (missed-call rate, lead conversion, no-shows) | These are more actionable, but the small-number problem is worse for rates, and about 400 NULL outcomes and "missed" calls that have durations need product decisions first |
 | A second severity tier (e.g. "very unusual") | It adds a threshold to calibrate and explain. With neutral labels and ranking, the worst row is already on top |
 | A sibling-share statistic | Confounded when the whole account moves, and meaningless for single-site accounts (D2) |
-| A near-duplicate policy | 27 pairs within 60 seconds look like real traffic. Merging them would be a guess |
+| A near-duplicate policy | 27 near-duplicates within 60 seconds look like real traffic. Merging them would be a guess |
 | Spike root-cause notes | The data can't say whether Jun 3 was a storm or a bad import. That is for a human to annotate |
 | Trend sparklines | Useful context, but "Usually X–Y" already answers the Monday question |
 | Auth | Out of scope per the brief. "Viewing as" is impersonation for the demo |
