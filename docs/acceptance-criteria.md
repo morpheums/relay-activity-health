@@ -14,6 +14,7 @@ User: a customer admin of one Relay account, on Monday morning, who has to act o
 - **"Last Phase 0 clarifications (user decisions, validated by the architect)"** covers when `dataAsOf` may be null, an empty `?week=`, and the footnote on the empty-account page. It is cited below as §13 "Last Phase 0 clarifications".
 - **"Calendar contract simplified"** reduces `IWeekCalendar` to `Window`, `WeekContaining` and `LatestCompleteWeek`; the Monday check and the 8 baseline windows move into `ActivityHealthService`. It is cited below as §13 "Calendar contract simplified".
 - **"Contract simplification (/simplify)"** keeps the §13 §5.2 JSON unchanged but serialises the Core report records directly (no separate API response types) with a snake_case enum converter, and rounds `deviation` at the API boundary. It is cited below as §13 "Contract simplification".
+- **"Phase 2 review decisions"** (user decisions 2026-09-28, Phase 2 web review) approves the page heading, keeps the filters usable when the first load fails, and confirms the empty "Usual range" cell for rows with insufficient history. It is cited below as §13 "Phase 2 review decisions".
 
 Everything else in PLAN.md still applies, including the §5.4 URL-state rules and the §7 Calendar, Grid and SQL edge cases. The rationale is in `docs/design-consensus.md`.
 
@@ -37,7 +38,7 @@ Everything else in PLAN.md still applies, including the §5.4 URL-state rules an
 
 ### 0.1 Approved copy
 
-Sources: PLAN §13 §5.4, D5, and §13 "Input handling and UI copy".
+Sources: PLAN §13 §5.4, D5, §13 "Input handling and UI copy" and §13 "Phase 2 review decisions".
 
 | Id | Where | Exact string | Source |
 |---|---|---|---|
@@ -45,7 +46,7 @@ Sources: PLAN §13 §5.4, D5, and §13 "Input handling and UI copy".
 | C-02 | Status `below` | `▼ Lower than usual` | §13 §5.4 |
 | C-03 | Status `normal` | `Within usual range` | §13 §5.4 |
 | C-04 | Status `insufficient_data` | `Not enough history yet (N of 4 weeks needed)`. N = `baseline.weeksUsed`; 4 = `minimumEligibleWeeks` from the response. N = 0 renders `(0 of 4 weeks needed)` | §13 §5.4; SPEC §13 "Input handling and UI copy" (0 case kept) |
-| C-05 | Location row range | `Usually X–Y a week`. X–Y = API `low`–`high`, with an en dash (–) | §13 §5.4 |
+| C-05 | Location row range | `Usually X–Y a week`. X–Y = API `low`–`high`, with an en dash (–). For `insufficient_data` rows the "Usual range" cell is left empty (UI-45) | §13 §5.4; §13 "Phase 2 review decisions" (empty cell) |
 | C-06 | Account summary line, sufficient history | `{count} {noun} · usually X–Y a week`, e.g. `26 inbound events · usually 18–38 a week`, `51 calls · usually 17–79 a week` | §13 §5.4; SPEC §13 "Input handling and UI copy" (noun) |
 | C-06a | `{noun}` by type, plural / singular (count = 1) | all: `inbound events` / `inbound event` · call_received: `calls` / `call` · lead_created: `leads` / `lead` · appointment_set: `appointments` / `appointment` | SPEC §13 "Input handling and UI copy" |
 | C-06b | Account summary line, `insufficient_data` | `{count} {noun}`, with no "usually" part, followed by C-04 (e.g. `8 inbound events` + `Not enough history yet (3 of 4 weeks needed)`) | SPEC §13 "Input handling and UI copy" |
@@ -65,6 +66,7 @@ Sources: PLAN §13 §5.4, D5, and §13 "Input handling and UI copy".
 | C-20 | Load error (network or 5xx) | `We couldn't load this week's activity. Try again.` plus a `Try again` button that calls `DashboardState.reload()` | SPEC §13 "Input handling and UI copy" |
 | C-21 | Loading | `Loading…` | SPEC §13 "Input handling and UI copy" |
 | C-22 | Summary heading | `{account name} — all locations` | SPEC §13 "Input handling and UI copy" |
+| C-23 | Page heading (the page's only `<h1>`) | `Activity health` | user decision 2026-09-28 (Phase 2 web review); §13 "Phase 2 review decisions" |
 
 Rules on these strings (§13 §5.4 and §13 "Input handling and UI copy"):
 - The symbol and the text always appear together. Colour is never the only signal.
@@ -259,6 +261,7 @@ Copy ids (C-xx, P-xx) refer to §0.
 | UI-05 | Same | Status is readable with colours removed (symbol + text), e.g. by checking the DOM text or a greyscale screenshot | SPEC §13 §5.4 |
 | UI-06 | Same | Footnote contains C-09, C-10, C-11, C-12 and `Data as of Mon Jul 27, 2026`, each starting with a capital letter. The summary carries C-08. C-14 is absent | SPEC §13 §5.4; SPEC §13 "Input handling and UI copy" (capitalisation, C-08) |
 | UI-07 | Same | `Next week ▶` is disabled (2026-07-20 = latestCompleteWeek); `◀ Previous week` is enabled | SPEC §5.4 stepper bounds |
+| UI-43 | Same, and every scenario in §4.2 and §4.3 (including the empty, loading and error states) | The page has exactly one `<h1>`, and its text is `Activity health` (C-23). The summary heading C-22 is not an `<h1>` | SPEC §13 "Phase 2 review decisions" (user decision 2026-09-28) |
 
 ### 4.2 Scenarios
 
@@ -277,6 +280,7 @@ Copy ids (C-xx, P-xx) refer to §0.
 | UI-20 | Empty account `?account=20` | Shows `No activity recorded for this account yet.` in place of **both** the summary and the table: no `0 inbound events`, no table. The trigger is `locations == [] && summary.baseline.weeksUsed == 0`, not `earliestWeek`. Filters stay visible and usable; both week buttons are disabled (earliestWeek = latestCompleteWeek). No error banner | GOLDEN; SPEC §13 §5.4 (trigger); SPEC §13 "Input handling and UI copy" (replaces summary and table, filters stay) |
 | UI-20b | Same as UI-20 (`?account=20`) | The full footnote is still shown, including `Data as of Mon Jul 27, 2026`. The "Data as of" line is hidden only when `dataAsOf` is null (UI-22) | SPEC §13 "Last Phase 0 clarifications" |
 | UI-21 | Stepper at the lower bound `?account=14&week=2026-01-26&type=all` | `◀ Previous week` disabled. Only Site B and Site D listed | SPEC; GOLDEN-P (PLAN §13 "Phase 0 decisions" promoted table), account 14 01-26 |
+| UI-45 | Insufficient history rows, e.g. `?account=14&week=2026-02-02&type=all` (every row) and `?account=14&week=2026-03-02&type=all` (Sites A and C) | Each `insufficient_data` row's "Usual range" cell is empty: no `Usually` text, no `0–0`, no dash or placeholder. The count and C-04 are still shown. Rows with sufficient history in the same table (e.g. Site D on 03-02) still show `Usually X–Y a week` | SPEC §13 "Phase 2 review decisions" (confirms C-05, UI-16); GOLDEN-P (PLAN §13 "Phase 0 decisions" promoted table), account 14 02-02 and 03-02 |
 | UI-22 | Component test: `DashboardState`/page given an empty-state response with `dataAsOf: null` (empty database) | C-07 is shown, and no `Data as of` line is rendered anywhere (not "Data as of null" or "Invalid Date") | SPEC §13 "Contract decisions" (empty database) |
 
 ### 4.3 URL state, reload and invalid params (§5.4, still in force)
@@ -297,6 +301,7 @@ Copy ids (C-xx, P-xx) refer to §0.
 | UI-39 | At `?account=14&week=2026-03-02&type=call_received`, switch `Viewing as` to 6 | Week and type are kept: `?account=6&week=2026-03-02&type=call_received` | SPEC §13 "Input handling and UI copy" |
 | UI-39b | At `?account=14&week=2026-01-26&type=call_received`, switch `Viewing as` to 8 | The kept week 2026-01-26 is before account 8's earliestWeek (2026-02-02). The UI gets the API's 400 for that week, then rewrites the URL (replaceUrl) to `?account=8&week=2026-07-20&type=call_received`. Type is kept, and no error banner appears | SPEC §13 "Input handling and UI copy" (account switch) |
 | UI-40 | API unreachable or 5xx | C-20 shown; filters stay in the URL. `Try again` calls `DashboardState.reload()` and, once the API is back, shows the data without changing the URL | SPEC §13 "Input handling and UI copy" |
+| UI-44 | Component test: no report has loaded yet and the first load fails (network or 5xx) | C-20 is shown. `Viewing as` (C-15) and `Activity type` (C-16) are still rendered and usable: changing either updates the URL and triggers a new load. Only the week stepper (C-17, C-18) waits for a report: it is hidden or disabled until one loads | SPEC §13 "Phase 2 review decisions" (user decision 2026-09-28) |
 | UI-41 | Component test: `LocationTable` given a fixture of 4 rows in an order that is neither alphabetical nor by \|deviation\| (e.g. Site C normal 0.1, Site A below −2.5, Site D normal −1.0, Site B above 3.0), with `low`/`high` that no client formula would reproduce (e.g. 7–8) | Rows render in exactly the payload order C, A, D, B, and each shows `Usually 7–8 a week` as given. No client re-sorting or recomputation | SPEC §13 §5.2 ("locations returned sorted"), §5.4 ("never recomputed in the UI") |
 | UI-42 | Each type for account 14, 2026-07-20 | Summary nouns: all → `26 inbound events`, Calls → `16 calls`, Leads → `8 leads`, Appointments → `2 appointments`. Singular (`1 call` etc.) is covered by a component test with count 1 | SPEC §13 "Input handling and UI copy" (C-06a); counts 16 and 8 GOLDEN-P (PLAN §13 "Contract decisions" promoted table); 2 GOLDEN-P (PLAN §13 "Phase 0 decisions") |
 
@@ -329,7 +334,7 @@ How to verify: read `README.md` in the merged repo and follow the run steps on a
 | Single-site account | API-16, API-17, UI-14 |
 | Spike week | API-12, UI-10 |
 | Week after the spike (baseline contains it) | BL-13, API-13, API-14, UI-11, UI-12 |
-| Insufficient history (early February) | BL-12, API-18…21, UI-15…17, UI-21 |
+| Insufficient history (early February) | BL-12, API-18…21, UI-15…17, UI-21, UI-45 |
 | Type filter | BL-24, DATA-28, API-01d, API-15, API-23, UI-13, UI-19, UI-42 |
 | Reload preserves every filter | UI-30, UI-31, UI-39 |
 | Invalid URL params | UI-32…UI-37, UI-33b, UI-39b (API side: API-40…46, API-40b) |
@@ -337,6 +342,7 @@ How to verify: read `README.md` in the merged repo and follow the run steps on a
 | Duplicates | DATA-20…24, DATA-02, DATA-03 |
 | Ranking and ties | BL-30…33, BL-31b, API-11, API-24, UI-41 |
 | Starter files unchanged | DATA-40 |
+| Page heading; first-load failure | UI-43, UI-44 |
 | README | README-01…09 |
 
 ---
