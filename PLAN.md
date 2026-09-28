@@ -443,3 +443,17 @@ Count 14 → `normal` (z 1.98); 15 → `above`; 0 → `below`. (Under the wrong 
 | Account 14, week 2026-07-20, `appointment_set` (ties) | total 2, range 1–8, `normal`; Site A 0 vs 0–4 (dev −1.12) first; Sites B, C, D have deviation 0 → ordered by name B, C, D |
 | Account 18, week 2026-03-23, all (7 eligible weeks) | total 18, median 23, range 15–33, `normal`; Site C 0 vs 1–9 `below` (dev −2.90), ranked first |
 
+### 2026-09-28 — Input handling and UI copy decisions (user decisions, validated by the architect)
+
+**Reason.** Open items from the acceptance-criteria review (`docs/acceptance-criteria.md` §0.2 at the time). Each was decided by the user and validated by the
+`architect` against the contracts (no conflicts). Supersedes the §5.4 status/footnote copy only where stated; the approved strings live verbatim in `docs/acceptance-criteria.md` §0.1.
+- **API input:** malformed `week` (not `yyyy-MM-dd`, e.g. `2026-13-01`, `20260720`, `abc`) → 400 `ProblemDetails`; non-numeric `accountId` → 404 (route constraint `{accountId:int}`).
+- **URL normalisation:** any invalid URL parameter is rewritten to its default (latest complete week, `all`, account 14) with `replaceUrl` — never snapped to the nearest Monday.
+- **Account switch:** week and type are kept; if the API rejects the kept week (before the new account's `earliestWeek` → 400), the UI falls back to the latest complete week and rewrites the URL.
+- **Empty account:** "No activity recorded for this account yet." replaces both the summary and the table; filters stay visible; the week stepper is disabled.
+- **Load failure:** "We couldn't load this week's activity. Try again." with a "Try again" button (`DashboardState.reload()`); loading shows "Loading…".
+- **Additional copy:** type select "Activity type" — "All activity" / "Calls" / "Leads" / "Appointments"; week label "Mon Jul 20 – Sun Jul 26, 2026"; stepper "◀ Previous week" / "Next week ▶";
+  table headers "Location" / "Events" / "Usual range" / "Status"; summary heading "{account name} — all locations"; account method line "compared with the last 8 full weeks for this account".
+- **Nouns by type:** "N calls" / "N leads" / "N appointments" (singular for 1) when filtered; "inbound events" / "1 inbound event" only for `all`.
+- **Footnote lines** render with the first letter capitalised (wording unchanged). "Not enough history yet (0 of 4 weeks needed)" is kept for 0 weeks.
+
