@@ -85,6 +85,25 @@ Legend: **ACCEPTED** (AI proposal taken as is) · **REDIRECTED** (human changed 
     commits already contain them (no remote, never pushed). Fix: the bare username is now a redaction literal in the git-ignored `.ai-log-redact`; re-export → 0 hits,
     all JSONL valid. Whether to rewrite the two local commits is left to the user.
 
+24. **REDIRECTED** — Phase 0 was dispatched to the `architect` exactly as PLAN §9 said (scaffold + contracts). User: *"architect is not an implementer … we do have a backend and a frontend specialist"*.
+    The coordinator stopped it (its worktree held only a `git mv`, discarded) and asked how to split: user chose **backend scaffolds .NET, frontend scaffolds Angular, architect writes contracts only**,
+    with project/package ownership per stack. CLAUDE.md, PLAN §13 and the agent definitions were changed in a worktree.
+25. **REDIRECTED (workflow)** — User: every agent task in its own worktree, never on the main worktree; the reviewer after every feature; *"do not do it arbitrary, if there's something that is not clear
+    come back to me"*; later *"make sure to pass all decisions through the architect for validation"*. All later decisions went user → architect validation → PLAN §13, and the
+    coordinator worked in worktrees too (governance commits, verification builds, this log).
+26. **AI CAUGHT (frontend agent)** — While wiring the dev proxy, frontend found macOS AirPlay Receiver answering on :5000 (403 `AirTunes`); the coordinator confirmed with `lsof`. User chose a fixed port 5080.
+27. **AI CAUGHT (reviewer, Sonnet)** — Scaffold review: `TreatWarningsAsErrors` + CA1707 makes every snake_case test name a build error (user chose PascalCase), Angular strict mode missing,
+    proxy and launch ports disagreed, template leftovers. Acceptance-criteria review: 17 defects incl. a string filed as "approved" that PLAN never approved, values tagged golden that PLAN didn't pin,
+    untestable calendar/rounding criteria, a criterion contradicting another about the post-spike week; re-review caught `1.005` (not representable in binary → a correct `Math.Round` fails)
+    and DATA-29 contradicting the consensus (type matching lives in the API because the collation is case-insensitive). No golden value was wrong in any review.
+28. **AI CAUGHT (architect validating a user decision)** — The user chose `DateTimeOffset` for API instants; the architect checked the serializer output and reported a **conflict**: it writes
+    `+00:00`, not the `Z` in PLAN §5.2. User reverted to `DateTime` + an exact-string golden test. The architect also proved with a throwaway test that a malformed `week` returned **500** in
+    Development (binding throws); user delegated the fix → strict `yyyy-MM-dd` validation attribute, all malformed variants 400.
+29. **ACCEPTED (goldens)** — User promoted 15 more seed scenarios to goldens (week after the spike, a site going silent, mixed history, ties, single-site, per-account de-duplicated totals, …).
+    The coordinator recomputed every value from the statistician's model before writing it to PLAN §13 (`analysis/goldens/promoted_goldens.py`); per-account totals sum to 12,614.
+30. **USER DECIDED (Phase 0)** — Core stays package-free (`AddRelayCore` in Api), Core-owned wire names, nullable `dataAsOf` only for an empty database (clock fallback via `TimeProvider`),
+    UI copy and input-handling rules (all in PLAN §13). Contracts and acceptance criteria both ended **APPROVED** by the reviewer and were merged; next stop is the user's contract review.
+
 ## Reflection
 _(written at the end)_
 
