@@ -6,11 +6,12 @@ User: a customer admin of one Relay account, on Monday morning, who has to act o
 
 ## How to read this document
 
-**Precedence.** `PLAN.md` §13 has five entries dated 2026-09-28. Four of them apply here:
+**Precedence.** `PLAN.md` §13 has six entries dated 2026-09-28. Five of them apply here:
 - **"Revised design from the four-agent debate (approved by the user)"** overrides §5.1 (index bullet), §5.2, §5.3, the §5.4 status labels and footnote, the §7 Evaluator/Ranking/API bullets, the §7 golden table, D5 and D7.
 - **"Phase 0 decisions and promoted golden values (user decisions)"** adds ten golden scenarios and fixes the API port at 5080.
 - **"Input handling and UI copy decisions (user decisions, validated by the architect)"** decides malformed input, URL normalisation, account switching, the empty and error states, and the additional copy. It is cited below as §13 "Input handling and UI copy".
 - **"Contract decisions from the Phase 0 contract review (user decisions, validated by the architect)"** covers the empty database (`dataAsOf` null), the exact `dataAsOf` string, more malformed-week variants, the capitalised account method line, and more promoted goldens. It is cited below as §13 "Contract decisions".
+- **"Last Phase 0 clarifications (user decisions, validated by the architect)"** covers when `dataAsOf` may be null, an empty `?week=`, and the footnote on the empty-account page. It is cited below as §13 "Last Phase 0 clarifications".
 
 Everything else in PLAN.md still applies, including the §5.4 URL-state rules and the §7 Calendar, Grid and SQL edge cases. The rationale is in `docs/design-consensus.md`.
 
@@ -216,6 +217,7 @@ How to verify: run `dotnet test tests/Relay.Api.Tests`, then `curl` the running 
 | Id | When | Then | Tag |
 |---|---|---|---|
 | API-30 | `GET …/accounts/20/activity-health` | 200. `summary.count` 0, `insufficient_data`, `baseline.weeksUsed` 0 with null median/low/high, `deviation` null, `locations` `[]`, `earliestWeek` = `latestCompleteWeek` = `2026-07-20` | GOLDEN |
+| API-30b | Same request as API-30 (account 20, data exists for other accounts) | `dataAsOf` is the global anchor, exactly `"2026-07-27T22:20:34Z"`, not null | SPEC §13 "Last Phase 0 clarifications" |
 | API-31 | `GET …/accounts/20/activity-health?week=2026-03-02` | 400 ProblemDetails (before earliestWeek) | GOLDEN |
 | API-32 | Empty **database** (no events at all; `activity_events` empty), `GET …/accounts/14/activity-health` | 200 empty state as in API-30, with `dataAsOf` **null**. `latestCompleteWeek` comes from the current clock via the injected `TimeProvider`. With the clock pinned at `2026-09-28T12:00:00-04:00` (Mon, America/New_York), `latestCompleteWeek` = `earliestWeek` = `2026-09-21` | SPEC §13 "Contract decisions" (empty database); consensus §3 (latest complete week rule) |
 
@@ -231,6 +233,7 @@ How to verify: run `dotnet test tests/Relay.Api.Tests`, then `curl` the running 
 | API-44 | `…/accounts/8/activity-health?week=2026-01-26` (valid for 14, before 8's earliestWeek) | 400; the same week is 200 for account 14 (API-21) | SPEC |
 | API-45 | `type=ALL`, `type=Call_Received`, `type=calls` | 400 each (case-sensitive) | GOLDEN |
 | API-46 | `week=2026-13-01`, `week=20260720`, `week=abc`, `week=07/20/2026`, `week=2026-7-20` | 400 ProblemDetails each, with the same validation-problem shape as a bad `type` | SPEC §13 "Input handling and UI copy"; SPEC §13 "Contract decisions" (extra variants, shape) |
+| API-46b | `…/accounts/14/activity-health?week=` (present but empty), and likewise `?type=` | 400 validation problem with the error under `errors.Week` (and `errors.Type` for `type=`). The latest complete week is requested by omitting `week` | SPEC §13 "Last Phase 0 clarifications" |
 | API-47 | Unhandled exception in the pipeline (test: a service fake that throws) | 500, `Content-Type: application/problem+json`, no exception message and no stack trace in the body | SPEC §13 §5.2 ("Errors are ProblemDetails") |
 | API-48 | API-boundary mapper unit test with constructed deviations 0.125 and −0.125 (exactly representable binary midpoints) | Emits 0.13 and −0.13 (2 dp, `MidpointRounding.AwayFromZero`). Core keeps full precision; rounding happens only in the mapper. No seed value sits on a midpoint (consensus §3), so constructed values are required | SPEC §13 §5.2, §5.3.8 |
 
@@ -268,6 +271,7 @@ Copy ids (C-xx, P-xx) refer to §0.
 | UI-18 | Zero-activity location `?account=6&week=2026-06-29&type=all` | First row Site G, `0`, `Usually 2–9 a week`, `▼ Lower than usual` | GOLDEN-P (PLAN §13 "Phase 0 decisions" promoted table), account 6 06-29 |
 | UI-19 | Zero, small median `?account=14&week=2026-07-20&type=appointment_set` | Sites A and B show `0` and `Within usual range`; Site B reads `Usually 0–2 a week`. Footnote C-12 explains why neither can be lower than usual | GOLDEN-P (PLAN §13 "Phase 0 decisions": Site A) and GOLDEN-P (PLAN §13 "Contract decisions" promoted table) (Site B 0–2); SPEC known limit |
 | UI-20 | Empty account `?account=20` | Shows `No activity recorded for this account yet.` in place of **both** the summary and the table: no `0 inbound events`, no table. The trigger is `locations == [] && summary.baseline.weeksUsed == 0`, not `earliestWeek`. Filters stay visible and usable; both week buttons are disabled (earliestWeek = latestCompleteWeek). No error banner | GOLDEN; SPEC §13 §5.4 (trigger); SPEC §13 "Input handling and UI copy" (replaces summary and table, filters stay) |
+| UI-20b | Same as UI-20 (`?account=20`) | The full footnote is still shown, including `Data as of Mon Jul 27, 2026`. The "Data as of" line is hidden only when `dataAsOf` is null (UI-22) | SPEC §13 "Last Phase 0 clarifications" |
 | UI-21 | Stepper at the lower bound `?account=14&week=2026-01-26&type=all` | `◀ Previous week` disabled. Only Site B and Site D listed | SPEC; GOLDEN-P (PLAN §13 "Phase 0 decisions" promoted table), account 14 01-26 |
 | UI-22 | Component test: `DashboardState`/page given an empty-state response with `dataAsOf: null` (empty database) | C-07 is shown, and no `Data as of` line is rendered anywhere (not "Data as of null" or "Invalid Date") | SPEC §13 "Contract decisions" (empty database) |
 
@@ -285,6 +289,7 @@ Copy ids (C-xx, P-xx) refer to §0.
 | UI-36 | Open `?account=20&week=2026-03-02` | Rewritten to `week=2026-07-20`; empty state shown, not an error | GOLDEN (API 400) + SPEC §5.4 |
 | UI-37 | Open `?type=ALL` or `?type=foo` | Rewritten to `type=all` | SPEC §5.4 + §13 §5.2 |
 | UI-38 | Any rewrite in UI-32…37 | Uses replace (`replaceUrl`), not a new history entry, so Back does not return to the invalid URL | SPEC §5.4 ("URL rewritten") |
+| UI-38b | Any navigation (default load, stepper, account switch, normalisation) | The UI never emits `week=` with an empty value. For the latest complete week it either omits `week` or writes the explicit date; requests to the API for "latest" omit the parameter | SPEC §13 "Last Phase 0 clarifications" |
 | UI-39 | At `?account=14&week=2026-03-02&type=call_received`, switch `Viewing as` to 6 | Week and type are kept: `?account=6&week=2026-03-02&type=call_received` | SPEC §13 "Input handling and UI copy" |
 | UI-39b | At `?account=14&week=2026-01-26&type=call_received`, switch `Viewing as` to 8 | The kept week 2026-01-26 is before account 8's earliestWeek (2026-02-02). The UI gets the API's 400 for that week, then rewrites the URL (replaceUrl) to `?account=8&week=2026-07-20&type=call_received`. Type is kept, and no error banner appears | SPEC §13 "Input handling and UI copy" (account switch) |
 | UI-40 | API unreachable or 5xx | C-20 shown; filters stay in the URL. `Try again` calls `DashboardState.reload()` and, once the API is back, shows the data without changing the URL | SPEC §13 "Input handling and UI copy" |
