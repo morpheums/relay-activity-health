@@ -30,7 +30,17 @@ xUnit + Testcontainers · Angular (standalone, signals, URL query params as stat
 - The main thread is the coordinator: it dispatches subagents from `.claude/agents/`, reviews, merges, verifies. It does not write product code.
 - Parallel tracks run in separate git worktrees; each subagent commits only its own scope.
 - Every commit message ends with `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`.
-- Report back: what changed (paths), test command + result, anything you were unsure about or deviated from. Never claim green without the command output.
+- Endpoints call exactly one application service; they never inject query interfaces or `DbContext`.
+
+## Handoff report (every agent, every task)
+```
+## Summary        one or two sentences: what was done
+## Changed        paths created/edited
+## Verification   exact commands run + trimmed output (never claim green without it)
+## Deviations     anything that differs from PLAN.md/CLAUDE.md, and why
+## Uncertain      interpretations you had to make; things the coordinator should check
+## Next           what the next agent needs to know
+```
 
 ## Commands
 - DB: `docker compose up -d db`
