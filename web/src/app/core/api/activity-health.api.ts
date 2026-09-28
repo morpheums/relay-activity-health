@@ -1,4 +1,4 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { ActivityHealthReport, EventType } from '../models';
@@ -18,6 +18,8 @@ export class HttpActivityHealthApi extends ActivityHealthApi {
   private readonly http = inject(HttpClient);
 
   getActivityHealth(request: ActivityHealthRequest): Observable<ActivityHealthReport> {
-    throw new Error('Not implemented');
+    const weekParams = request.week === null ? new HttpParams() : new HttpParams().set('week', request.week);
+    const params = weekParams.set('type', request.eventType);
+    return this.http.get<ActivityHealthReport>(`/api/accounts/${request.accountId}/activity-health`, { params });
   }
 }
