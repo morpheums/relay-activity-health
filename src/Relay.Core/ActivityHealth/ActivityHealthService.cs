@@ -23,6 +23,10 @@ public sealed class ActivityHealthService(
     private readonly NormalityOptions _normalityOptions = normalityOptions;
     private readonly TimeProvider _timeProvider = timeProvider;
 
-    public Task<ActivityHealthResult> GetAsync(ActivityHealthQuery query, CancellationToken cancellationToken) =>
+    public Task<ActivityHealthResult> GetAsync(
+        int accountId,
+        DateOnly? week,
+        ActivityType eventType,
+        CancellationToken cancellationToken) =>
         throw new NotImplementedException();
 }

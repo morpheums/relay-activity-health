@@ -1,3 +1,3 @@
-export type EventType = 'all' | 'call_received' | 'lead_created' | 'appointment_set';
+export const EVENT_TYPES = ['all', 'call_received', 'lead_created', 'appointment_set'] as const;
 
-export const EVENT_TYPES: readonly EventType[] = ['all', 'call_received', 'lead_created', 'appointment_set'];
+export type EventType = (typeof EVENT_TYPES)[number];

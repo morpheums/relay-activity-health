@@ -1,7 +1,7 @@
 import { Account } from './account';
-import { AccountHealthSummary } from './account-health-summary';
 import { EventType } from './event-type';
 import { LocationHealth } from './location-health';
+import { SeriesHealth } from './series-health';
 import { WeekRange } from './week-range';
 
 export interface ActivityHealthReport {
@@ -13,6 +13,6 @@ export interface ActivityHealthReport {
   earliestWeek: string;
   baselineWeeks: number;
   minimumEligibleWeeks: number;
-  summary: AccountHealthSummary;
+  summary: SeriesHealth;
   locations: LocationHealth[];
 }

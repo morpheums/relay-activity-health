@@ -1,10 +1,5 @@
-import { Baseline } from './baseline';
-import { HealthStatus } from './health-status';
+import { SeriesHealth } from './series-health';
 
-export interface LocationHealth {
+export interface LocationHealth extends SeriesHealth {
   location: string;
-  count: number;
-  baseline: Baseline;
-  status: HealthStatus;
-  deviation: number | null;
 }

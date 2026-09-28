@@ -1,5 +1,4 @@
 export type { Account } from './account';
-export type { AccountHealthSummary } from './account-health-summary';
 export type { ActivityHealthReport } from './activity-health-report';
 export type { Baseline } from './baseline';
 export { EVENT_TYPES } from './event-type';
@@ -7,4 +6,5 @@ export type { EventType } from './event-type';
 export type { HealthStatus } from './health-status';
 export type { LocationHealth } from './location-health';
 export type { ProblemDetails } from './problem-details';
+export type { SeriesHealth } from './series-health';
 export type { WeekRange } from './week-range';
