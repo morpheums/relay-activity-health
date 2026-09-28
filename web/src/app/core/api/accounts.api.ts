@@ -12,6 +12,6 @@ export class HttpAccountsApi extends AccountsApi {
   private readonly http = inject(HttpClient);
 
   listAccounts(): Observable<Account[]> {
-    throw new Error('Not implemented');
+    return this.http.get<Account[]>('/api/accounts');
   }
 }
