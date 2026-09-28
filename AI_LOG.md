@@ -104,6 +104,19 @@ Legend: **ACCEPTED** (AI proposal taken as is) · **REDIRECTED** (human changed 
 30. **USER DECIDED (Phase 0)** — Core stays package-free (`AddRelayCore` in Api), Core-owned wire names, nullable `dataAsOf` only for an empty database (clock fallback via `TimeProvider`),
     UI copy and input-handling rules (all in PLAN §13). Contracts and acceptance criteria both ended **APPROVED** by the reviewer and were merged; next stop is the user's contract review.
 
+31. **HUMAN CAUGHT** — At contract review the user: *"I think IWeekCalendar is a little bit overengineered"*. The architect confirmed (two members had no caller, a custom exception
+    guarded an unreachable path) and proposed three options; user chose three members (`Window`, `WeekContaining`, `LatestCompleteWeek`). The Monday check and the baseline window list
+    moved to the service; product added BL-46 so the DST week inside the baseline stays pinned.
+32. **REDIRECTED (/simplify before locking)** — User: *"Run the /simplify over it before locking in"*. Four reviewers (reuse, simplification, efficiency, altitude) ran in parallel.
+    The coordinator dropped false positives with reasons (`TimeProvider` "dead" — it is the empty-DB fallback; `MinLength` "redundant" — proven needed; deriving the account series
+    from location series — wrong under §5.3 eligibility; caching/parallel queries — out of budget). User decisions: JSON enum converter instead of Core name tables (reversing an earlier
+    choice), Monday check stays in the service. On *"so we do have 3 places? entities, core and api dtos?"* the coordinator explained the layers; user: *"pass it over the architect,
+    weighting tradeoffs vs SOLID, clean architecture patterns"* → architect removed the parallel DTO set (Core output records serialised directly, no serializer attributes in Core,
+    rounding at the API boundary). This also brought the contracts back in line with backend.md, which already said "never a parallel DTO set". Net: 6 DTOs, 3 mappers, 2 name tables,
+    3 small types deleted; reviewer re-ran the real API and confirmed the §5.2 JSON byte-for-byte.
+33. **AI CAUGHT (architect)** — Removing the copied constructor fields fails the build while classes are stubs (CS9113 under warnings-as-errors); deferred to implementation instead of
+    adding `nameof` workarounds.
+
 ## Reflection
 _(written at the end)_
 
