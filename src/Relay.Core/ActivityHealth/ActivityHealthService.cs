@@ -11,7 +11,8 @@ public sealed class ActivityHealthService(
     IWeeklyGridBuilder weeklyGridBuilder,
     IBaselineEvaluator baselineEvaluator,
     ILocationRanker locationRanker,
-    NormalityOptions normalityOptions) : IActivityHealthService
+    NormalityOptions normalityOptions,
+    TimeProvider timeProvider) : IActivityHealthService
 {
     private readonly IAccountQueries _accountQueries = accountQueries;
     private readonly IActivityQueries _activityQueries = activityQueries;
@@ -20,6 +21,7 @@ public sealed class ActivityHealthService(
     private readonly IBaselineEvaluator _baselineEvaluator = baselineEvaluator;
     private readonly ILocationRanker _locationRanker = locationRanker;
     private readonly NormalityOptions _normalityOptions = normalityOptions;
+    private readonly TimeProvider _timeProvider = timeProvider;
 
     public Task<ActivityHealthResult> GetAsync(ActivityHealthQuery query, CancellationToken cancellationToken) =>
         throw new NotImplementedException();

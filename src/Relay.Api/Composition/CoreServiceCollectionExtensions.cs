@@ -19,6 +19,7 @@ public static class CoreServiceCollectionExtensions
             .ValidateOnStart();
         services.AddSingleton(serviceProvider => serviceProvider.GetRequiredService<IOptions<NormalityOptions>>().Value);
 
+        services.AddSingleton(TimeProvider.System);
         services.AddSingleton<IWeekCalendar, WeekCalendar>();
         services.AddSingleton<IWeeklyGridBuilder, WeeklyGridBuilder>();
         services.AddSingleton<IBaselineEvaluator, BaselineEvaluator>();
