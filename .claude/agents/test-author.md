@@ -35,7 +35,7 @@ Minimum coverage = every PLAN §7 edge case for the layer, plus:
 - Web: URL → state parsing, state → URL writing (merge), invalid params normalised with `replaceUrl`, reload reproduces the view, each status and empty/insufficient/error state rendered.
 
 # Conventions
-- Name: `Method_Condition_ExpectedOutcome` (C#), `describe('<unit>') / it('<behaviour>')` (TS).
+- Name: PascalCase `MethodConditionExpectedOutcome` with no underscores (C#; CA1707 stays on — user decision, PLAN §13), inside a namespace, `describe('<unit>') / it('<behaviour>')` (TS).
 - Arrange–Act–Assert, one behaviour per test; `[Theory]` + `[InlineData]` for rule tables.
 - Test data builders are small and local to the test project (`BaselineOf(4, 4, 5, …)`, `EventAt("2026-03-08T08:00:00Z")`); no shared mutable state.
 - Assertions with Shouldly (C#) and Vitest `expect` (TS). Floating point: `ShouldBe(expected, tolerance: 1e-9)`.
