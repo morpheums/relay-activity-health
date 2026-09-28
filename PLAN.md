@@ -494,3 +494,18 @@ Count 14 → `normal` (z 1.98); 15 → `above`; 0 → `below`. (Under the wrong 
 - Failure contract: an invalid IANA id → `TimeZoneNotFoundException`; a non-Monday `weekStart` passed to `Window` → `ArgumentException`. No custom exception type.
 - Rejected: dropping `LatestCompleteWeek` (moves a named domain rule into the service); a per-time-zone calendar factory (two interfaces to remove one argument).
 
+### 2026-09-28 — Contract simplification (/simplify) (user decisions; the DTO question decided by the architect at the user's request)
+
+**Reason.** The user ran `/simplify` over the contracts before locking them (four reviewers: reuse, simplification, efficiency, altitude).
+Supersedes the §13 "Contract decisions…" bullet "Wire names owned by Core" and the §6 table's type names.
+- **Wire names:** enums serialise via one `JsonStringEnumConverter(JsonNamingPolicy.SnakeCaseLower, allowIntegerValues: false)` in `AddRelayApi`; the strict, case-sensitive `type`
+  validation is built from `Enum.GetValues<ActivityType>()` through the same naming policy; Infrastructure SQL uses the same policy. No hand-written name tables.
+- **No parallel DTO set** (architect's decision, weighed against SOLID/clean architecture): the application service's output records are serialised directly. Core records are shaped
+  like the §5.2 JSON (`WeekRange`, `Baseline`, `SeriesHealth(Count, Baseline, Status, Deviation)`, `LocationHealth : SeriesHealth`, `ActivityHealthReport`) but carry no serializer
+  attributes; casing, enum names and date formats are configured once in the API. Rounding `deviation` to 2 dp (away from zero) stays at the API boundary (`WithDisplayDeviations()`);
+  ranking uses full precision. Rejected: a separate DTO layer (every §5.2 change in four places), serializer attributes in Core, a name-based rounding resolver.
+- **Leaner types:** `WeeklySeries(SelectedWeekCount, EligibleWeekCounts)` (no per-week eligibility flags); `IActivityHealthService.GetAsync(accountId, week, eventType, ct)` (no query record);
+  one endpoint-mapping class. Account-series eligibility still uses the account's own first event (§5.3), so it is not derived from location series.
+- **JSON numbers** are compared numerically (the §5.2 example `1.30` serialises as `1.3`); `locations[]` property order is location, count, baseline, status, deviation (pinned by an API golden test).
+- Unchanged by this pass: Monday check in the service, strict `yyyy-MM-dd` week attribute, `TimeProvider` fallback, `NormalityOptions`, `AddRelayCore` in Api, `DateTime` UTC instants.
+

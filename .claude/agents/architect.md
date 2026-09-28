@@ -21,7 +21,7 @@ C# (`Relay.Core`):
 - Folders by concept: `Calendar/`, `Normality/`, `ActivityHealth/`, `Accounts/`, `Queries/`. One public type per file; namespace = folder.
 - Interfaces exactly as PLAN §6 (`IWeekCalendar`, `IWeeklyGridBuilder`, `IBaselineEvaluator`, `ILocationRanker`, `IAccountService`, `IActivityHealthService`, `IActivityQueries`, `IAccountQueries`).
   Async members take a `CancellationToken` and return `Task<T>`; collections are `IReadOnlyList<T>`.
-- Records for all data: `WeekWindow`, `SiteFirstActivity`, `WeeklySiteCount`, `SeriesWeek`, `BaselineAssessment`, `ActivityHealthReport`, `LocationHealth`, `AccountSummary`, `ActivityHealthQuery`, `AccountListItem`, `NormalityOptions`, `ActivityType` (enum), `HealthStatus` (enum).
+- Records for all data (shaped as the PLAN §13 §5.2 JSON; serialised directly, no parallel DTO set): `WeekWindow`, `WeekRange`, `SiteFirstActivity`, `WeeklySiteCount`, `WeeklySeries`, `LocationSeries`, `Baseline`, `SeriesHealth`, `LocationHealth`, `ActivityHealthReport`, `AccountListItem`, `NormalityOptions`, `ActivityType` (enum), `HealthStatus` (enum), `InvalidWeekReason` (enum).
 - `ActivityHealthResult` as a closed hierarchy: `Found(ActivityHealthReport)`, `AccountNotFound`, `InvalidWeek(string Reason)`.
 - Type conventions: instants are `DateTime` in UTC; weeks are `DateOnly` (local Monday); counts are `int`; statistics are `double`.
 - Every implementation class exists, is `sealed`, takes its dependencies through the constructor, and every member throws `NotImplementedException`.

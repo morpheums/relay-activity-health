@@ -53,9 +53,10 @@ public static class ActivityHealthEndpoints
         TypedResults.Ok(await accounts.ListAsync(cancellationToken));
 
     private static async Task<IResult> GetActivityHealth([AsParameters] ActivityHealthRequest request, IActivityHealthService activityHealth, CancellationToken cancellationToken) =>
-        (await activityHealth.GetAsync(request.ToQuery(), cancellationToken)).ToHttpResult();
+        (await activityHealth.GetAsync(request.AccountId, request.ParsedWeek(), request.ParsedEventType(), cancellationToken)).ToHttpResult();
 }
 ```
+- String → `DateOnly?` / `ActivityType` conversion lives in one small `ActivityHealthRequest` extension (reusing `IsoDateAttribute.Format` and `ActivityTypeNames`); a missing `type` is `ActivityType.All`. `ToHttpResult` returns `Ok(report.WithDisplayDeviations())` — the only rounding point.
 - **Shape validation** (`type` is a known value, `week` parses) via .NET 10 `AddValidation()` + attributes on the `ActivityHealthRequest` record → automatic 400 `ProblemDetails`. No `if (...) return BadRequest` in handlers.
 - **Domain outcomes → HTTP** in exactly one place: `ActivityHealthResultExtensions.ToHttpResult()` (200 / 404 `ProblemDetails` / 400 `ProblemDetails` with the reason). Never duplicated per endpoint.
 - **Unexpected failures**: `AddProblemDetails()` + one `UnhandledExceptionHandler : IExceptionHandler` that logs with `ILogger` and returns a 500 `ProblemDetails` with `traceId`, no stack trace or exception message leaked.
