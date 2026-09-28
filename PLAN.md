@@ -526,3 +526,10 @@ Supersedes the §13 "Contract decisions…" bullet "Wire names owned by Core" an
 - **Component contracts:** `LocationTable` (`locations`, `minimumEligibleWeeks`), `AccountSummary` (`report`), `DashboardFilters` (accounts, accountId, week, earliestWeek,
   latestCompleteWeek, eventType → accountSelected, weekSelected, eventTypeSelected); the stepper's disabled state is derived; the footnote stays in `DashboardPage`.
 
+### 2026-09-28 — DST transitions at local midnight are out of scope (architect ruling, delegated by the user)
+
+**Reason.** Raised by the reviewer on the Core implementation: an untested branch handled zones whose DST transition falls at local midnight, and its ambiguous-midnight reading
+disagreed with `WeekContaining`. Time zones whose DST transition falls at local midnight (Monday 00:00 skipped or repeated) are out of scope: a skipped midnight fails the request (500)
+and a repeated one uses .NET's standard-time reading; no seed zone is affected (the US zones switch at 02:00). No tests are added for out-of-scope behaviour; the §7 US DST, Phoenix
+and UTC cases stay covered. The README's known limits carry this line.
+
