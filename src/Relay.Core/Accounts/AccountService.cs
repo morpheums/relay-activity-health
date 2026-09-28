@@ -4,8 +4,12 @@ namespace Relay.Core.Accounts;
 
 public sealed class AccountService(IAccountQueries accountQueries) : IAccountService
 {
-    private readonly IAccountQueries _accountQueries = accountQueries;
-
-    public Task<IReadOnlyList<AccountListItem>> ListAsync(CancellationToken cancellationToken) =>
-        throw new NotImplementedException();
+    public async Task<IReadOnlyList<AccountListItem>> ListAsync(CancellationToken cancellationToken)
+    {
+        var accounts = await accountQueries.ListAsync(cancellationToken);
+        return accounts
+            .OrderBy(account => account.Name, StringComparer.Ordinal)
+            .ThenBy(account => account.Id)
+            .ToList();
+    }
 }
