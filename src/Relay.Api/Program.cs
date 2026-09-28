@@ -9,10 +9,15 @@ builder.Services
     .AddRelayInfrastructure(builder.Configuration)
     .AddRelayApi();
 
+if (builder.Environment.IsDevelopment())
+{
+    builder.Services.AddHostedService<DevelopmentDatabaseMigrator>();
+}
+
 var app = builder.Build();
 
 app.UseExceptionHandler();
 app.UseStatusCodePages();
 app.MapRelayEndpoints();
 
-app.Run();
+await app.RunAsync();
