@@ -266,7 +266,7 @@ None of these went to the recruiter. Each is a working assumption stated in PLAN
 
 ## Design decisions and trade-offs
 
-Main decisions from PLAN §3, as revised by §13. Rationale and evidence: [`docs/design-consensus.md`](docs/design-consensus.md). Every number below comes from a script in `analysis/`.
+Main decisions from PLAN §3, as revised by §13. Rationale and evidence: [`docs/design-consensus.md`](docs/design-consensus.md). Every number below comes from `analysis/` or `docs/battle-test/`.
 
 | # | Decision | Rejected | Why |
 |---|---|---|---|
@@ -288,7 +288,7 @@ The rule was simulated on the seed before any code was written. The simulation u
 | Min–max of the baseline | 15.1 % | — | Rejected: too noisy |
 | Median ± 3 × spread | 0.3 % | — | Rejected: misses too much |
 | Median ± 2 × spread, √median floor (first plan) | 4.8 % | 78 % / **37 %** | Rejected **after** it was accepted. A full sweep showed that a location falling to **zero** was never flagged for leads or appointments, and was flagged for calls only 37 % of the time |
-| **R2\*: Anscombe scale, k = 2, floor 1.0** | **4.3 %** (≈ 4 %) | **98 % / 96 %** | **Chosen.** 0 contradictions between status and range in 253,149 checks. Account 6's spike week still flags 15/15 sites, and 4 weeks later, with the spike still in the baseline, all 15 are within range |
+| **R2\*: Anscombe scale, k = 2, floor 1.0** | **4.3 %** (≈ 4 %) | **98 % / 96 %** | **Chosen.** 0 contradictions between status and range in 253,149 checks. Account 6's spike week still flags 15/15 sites, and in the week of 2026-07-20, with the spike still in the baseline, all 15 are within range |
 
 Other options rejected in the debate: k = 1.75 (false "below" doubles to 5.5 %); k = 2.5 (drop-to-0 detection for calls falls to 70 %); Freeman–Tukey (7 % false "below" at median 2); exact Poisson/negative-binomial tails (drop-to-0 for calls only 56 %); EARS (based on mean and SD, and flags "above" only); Farrington/Noufaily (fitted models, out of scope); a fifth "too few to judge" status (costs contract, UI and test work; the footnote covers it).
 
@@ -310,7 +310,7 @@ Other options rejected in the debate: k = 1.75 (false "below" doubles to 5.5 %);
 | No separate DTO layer. Core's output records are shaped like the JSON; casing, enum names and rounding are configured once in the API | Otherwise every contract change would be made in four places |
 | API on port 5080. Connection string only from the environment | macOS holds port 5000. No committed secrets |
 | Time zones whose DST change falls at local midnight are out of scope | No seed zone is affected, because the US zones switch at 02:00. An untested branch for them disagreed with the rest of the calendar, so it was removed rather than half-supported |
-| Process: every agent works in its own git worktree; the red test suite is committed before the implementation; a reviewer on a different model after each layer; E2E smoke tests as the last step | See [How AI was used](#how-ai-was-used) |
+| Process: every agent works in its own git worktree; the red test suite is committed before the implementation; a reviewer on a different model after each layer; E2E smoke tests planned as the last step (not built yet) | See [How AI was used](#how-ai-was-used) |
 
 ---
 
@@ -368,7 +368,7 @@ From PLAN §11 and the design debate.
 
 In priority order.
 
-1. **Finish and harden the E2E smoke layer.** It is the only test that proves the browser, API and seeded DB work together; the current tests stop at each boundary.
+1. **Add the E2E smoke layer (PLAN §13 layer 6).** It is the only test that proves the browser, API and seeded DB work together; the current tests stop at each boundary.
 2. **Outcome rates, starting with the missed-call rate.** "Calls are normal but we missed half of them" is the most actionable thing the data holds.
 3. **Recalibrate on bursty data.** The ≈ 4 % flag rate holds only for Poisson-like data. Real customers with campaigns would see 5–8 % false flags per side; a negative-binomial check or a per-account k would address that.
 4. **Make the global data-anchor query cheap.** `MAX(occurred_at)` scans the index on every request. That is fine for 12k rows but not for production, so it should be cached or indexed.
