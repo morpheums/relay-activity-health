@@ -10,6 +10,7 @@ internal sealed class FakeActivityQueries : IActivityQueries
     private readonly List<(int AccountId, SiteFirstActivity SiteFirstActivity)> _siteFirstActivities = [];
     private readonly List<(int AccountId, ActivityType EventType, WeeklySiteCount WeeklySiteCount)> _weeklySiteCounts = [];
     private DateTime? _dataAnchorUtc;
+    private bool _rowsReversed;
 
     public List<WeeklyCountRequest> WeeklyCountRequests { get; } = [];
 
@@ -19,6 +20,12 @@ internal sealed class FakeActivityQueries : IActivityQueries
     public FakeActivityQueries WithDataAnchor(string dataAnchorUtc)
     {
         _dataAnchorUtc = TestTime.Utc(dataAnchorUtc);
+        return this;
+    }
+
+    public FakeActivityQueries WithRowsReversed()
+    {
+        _rowsReversed = true;
         return this;
     }
 
@@ -50,7 +57,7 @@ internal sealed class FakeActivityQueries : IActivityQueries
 
     public Task<IReadOnlyList<SiteFirstActivity>> ListSiteFirstActivitiesAsync(int accountId, CancellationToken cancellationToken) =>
         Task.FromResult<IReadOnlyList<SiteFirstActivity>>(
-            _siteFirstActivities.Where(entry => entry.AccountId == accountId).Select(entry => entry.SiteFirstActivity).ToList());
+            InReturnOrder(_siteFirstActivities.Where(entry => entry.AccountId == accountId).Select(entry => entry.SiteFirstActivity)));
 
     public Task<IReadOnlyList<WeeklySiteCount>> CountWeeklyBySiteAsync(
         int accountId,
@@ -61,12 +68,14 @@ internal sealed class FakeActivityQueries : IActivityQueries
         var requestedWindows = weekWindows.ToList();
         WeeklyCountRequests.Add(new WeeklyCountRequest(accountId, requestedWindows, eventType));
         var requestedWeekStarts = requestedWindows.Select(window => window.WeekStart).ToHashSet();
-        IReadOnlyList<WeeklySiteCount> matchingCounts = _weeklySiteCounts
+        var matchingCounts = _weeklySiteCounts
             .Where(entry => entry.AccountId == accountId
                 && entry.EventType == eventType
                 && requestedWeekStarts.Contains(entry.WeeklySiteCount.WeekStart))
-            .Select(entry => entry.WeeklySiteCount)
-            .ToList();
-        return Task.FromResult(matchingCounts);
+            .Select(entry => entry.WeeklySiteCount);
+        return Task.FromResult<IReadOnlyList<WeeklySiteCount>>(InReturnOrder(matchingCounts));
     }
+
+    private List<TRow> InReturnOrder<TRow>(IEnumerable<TRow> rowsInInsertionOrder) =>
+        _rowsReversed ? rowsInInsertionOrder.Reverse().ToList() : rowsInInsertionOrder.ToList();
 }

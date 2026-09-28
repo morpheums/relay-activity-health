@@ -415,4 +415,36 @@ public sealed class ActivityHealthServiceTests
         report.Locations[1].Baseline.ShouldBe(new Baseline(8, 0.0, 0, 2));
         report.Locations[1].Status.ShouldBe(HealthStatus.Normal);
     }
+
+    [Fact]
+    public async Task GetAsyncWeeklyCountAndSiteRowOrderDoesNotChangeTheReport()
+    {
+        FakeActivityQueries TiedSitesActivity() =>
+            new FakeActivityQueries()
+                .WithDataAnchor(SeedDataAnchor)
+                .WithSite(StorageAccountId, "Site G", "2026-07-01T10:00:00Z")
+                .WithSite(StorageAccountId, "Site F", "2026-06-30T10:00:00Z")
+                .WithSite(StorageAccountId, "Site B", "2026-05-12T09:00:00Z")
+                .WithSite(StorageAccountId, "Site A", "2026-05-12T09:00:00Z")
+                .WithSite(StorageAccountId, "Site D", "2026-05-12T09:00:00Z")
+                .WithSite(StorageAccountId, "Site C", "2026-05-12T09:00:00Z")
+                .WithWeeklyCounts(StorageAccountId, "Site G", "2026-06-29", ActivityType.All, 2, 2, 2, 2)
+                .WithWeeklyCounts(StorageAccountId, "Site F", "2026-06-29", ActivityType.All, 2, 2, 2, 2)
+                .WithWeeklyCounts(StorageAccountId, "Site B", "2026-05-25", ActivityType.All, 10, 10, 10, 10, 10, 10, 10, 10, 10)
+                .WithWeeklyCounts(StorageAccountId, "Site A", "2026-05-25", ActivityType.All, 10, 10, 10, 10, 10, 10, 10, 10, 10)
+                .WithWeeklyCounts(StorageAccountId, "Site D", "2026-05-25", ActivityType.All, 3, 3, 3, 3, 3, 3, 3, 3)
+                .WithWeeklyCounts(StorageAccountId, "Site C", "2026-05-25", ActivityType.All, 3, 3, 3, 3, 3, 3, 3, 3);
+        var naturalOrderService = CreateService(StorageAccount(), TiedSitesActivity());
+        var reversedOrderService = CreateService(StorageAccount(), TiedSitesActivity().WithRowsReversed());
+
+        var naturalOrderResult = await naturalOrderService.GetAsync(StorageAccountId, null, ActivityType.All, CancellationToken);
+        var reversedOrderResult = await reversedOrderService.GetAsync(StorageAccountId, null, ActivityType.All, CancellationToken);
+
+        var naturalOrderReport = naturalOrderResult.ShouldBeOfType<ActivityHealthResult.Found>().Report;
+        var reversedOrderReport = reversedOrderResult.ShouldBeOfType<ActivityHealthResult.Found>().Report;
+        naturalOrderReport.Locations.Select(location => location.Location)
+            .ShouldBe(["Site C", "Site D", "Site A", "Site B", "Site F", "Site G"]);
+        reversedOrderReport.Locations.ShouldBe(naturalOrderReport.Locations);
+        (reversedOrderReport with { Locations = naturalOrderReport.Locations }).ShouldBe(naturalOrderReport);
+    }
 }
