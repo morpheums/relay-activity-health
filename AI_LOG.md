@@ -41,6 +41,16 @@ Legend: **ACCEPTED** (AI proposal taken as is) · **REDIRECTED** (human changed 
 13. **REDIRECTED** — On the band rule, user: *"call one of your experts … also do a web research to see what's the industry standard"*, then *"instead of using a generic agent for the statistician create a specialized agent"* → `.claude/agents/statistician.md` written, generic run stopped and relaunched under that definition, plus a parallel industry survey.
 14. **AI CAUGHT** — Writing the export script, the assistant hard-coded the user's email as the default redaction pattern (it would have been committed to a public repo) and a greedy `sed` pattern corrupted JSON escapes. Caught by running the export and validating every file with `jq` and grepping for the secret → literal `perl` redaction from a git-ignored `.ai-log-redact` file.
 
+15. **ACCEPTED (reviewer on Sonnet caught gaps in the Opus-written plan)** — The adversarial review reproduced every golden value independently and confirmed the drop-to-zero blind spot (8). New findings accepted for the plan revision:
+    `baseline: null` for insufficient data leaves the UI's "3 of 4 weeks" with nowhere to live → always return `weeksUsed`; `earliestWeek` undefined and the before-earliest case unspecified;
+    **no agent owned the README's required "how to run" and "stack choices" sections** → assigned; ranking treats a lucky busy week like a location going quiet → sent to the statistician;
+    band calibration only simulated on full 8-week baselines, never at the 4-week minimum → sent to the statistician.
+    Partly **REJECTED**: "Docker SQL Server + Testcontainers is over-investment" — the user already runs SQL Server containers and the battle test showed a ~1 s seed load; kept, but DB-layer extras (DST at the SQL layer, plan-shape assertions) moved into the cut line.
+
+16. **REDIRECTED** — User: *"make sure the agents talk directly between each other and they agree on a design, do not intervene in their conversation, they should debate and reach an agreement."*
+    The coordinator only launches the debate (inputs, protocol, stopping rule) and brings the agreed design plus any recorded dissent to the user; it does not relay or steer messages.
+    Inputs: statistician report, industry survey (17 products; recommends ±3 band, ≥6 weeks, "too few to judge" below median 2 — simulated on synthetic Poisson data, not the seed), independent-implementation ambiguities, SQL Server findings, adversarial review.
+
 ## Reflection
 _(written at the end)_
 
