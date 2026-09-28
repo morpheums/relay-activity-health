@@ -1,9 +1,9 @@
+using static Relay.Core.Calendar.WeekLength;
+
 namespace Relay.Core.Calendar;
 
 public sealed class WeekCalendar : IWeekCalendar
 {
-    private const int DaysPerWeek = 7;
-
     public WeekWindow Window(DateOnly weekStart, string timeZoneId)
     {
         if (weekStart.DayOfWeek != DayOfWeek.Monday)
@@ -35,16 +35,6 @@ public sealed class WeekCalendar : IWeekCalendar
         return localDay.AddDays(-daysSinceMonday);
     }
 
-    private static DateTime LocalMidnightToUtc(DateOnly localDay, TimeZoneInfo timeZone)
-    {
-        var localMidnight = localDay.ToDateTime(TimeOnly.MinValue, DateTimeKind.Unspecified);
-        if (!timeZone.IsInvalidTime(localMidnight))
-        {
-            return TimeZoneInfo.ConvertTimeToUtc(localMidnight, timeZone);
-        }
-
-        // Midnight skipped by a DST jump: the day starts at the jump, which is midnight read with the previous day's offset.
-        var offsetBeforeJump = timeZone.GetUtcOffset(localMidnight.AddDays(-1));
-        return DateTime.SpecifyKind(localMidnight - offsetBeforeJump, DateTimeKind.Utc);
-    }
+    private static DateTime LocalMidnightToUtc(DateOnly localDay, TimeZoneInfo timeZone) =>
+        TimeZoneInfo.ConvertTimeToUtc(localDay.ToDateTime(TimeOnly.MinValue, DateTimeKind.Unspecified), timeZone);
 }

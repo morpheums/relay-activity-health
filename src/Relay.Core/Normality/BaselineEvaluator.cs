@@ -34,8 +34,11 @@ public sealed class BaselineEvaluator(NormalityOptions normalityOptions) : IBase
 
     private static double AnscombeTransform(double count) => AnscombeScale * Math.Sqrt(count + AnscombeOffset);
 
-    private static double InverseAnscombeTransform(double transformed) =>
-        Math.Pow(transformed / AnscombeScale, 2) - AnscombeOffset;
+    private static double InverseAnscombeTransform(double transformed)
+    {
+        var root = transformed / AnscombeScale;
+        return root * root - AnscombeOffset;
+    }
 
     private static double MedianOf(IEnumerable<double> values)
     {

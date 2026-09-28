@@ -41,12 +41,11 @@ public sealed class WeeklyGridBuilder : IWeeklyGridBuilder
             .ToDictionary(group => group.Key, group => group.Sum(weeklySiteCount => weeklySiteCount.Count));
 
         var selectedWeekCount = accountCountsByWeek.GetValueOrDefault(selectedWeek.WeekStart);
-        if (siteFirstActivities.Count == 0)
+        if (siteFirstActivities.AccountFirstActivityUtc() is not { } accountFirstActivityUtc)
         {
             return new WeeklySeries(selectedWeekCount, []);
         }
 
-        var accountFirstActivityUtc = siteFirstActivities.Min(site => site.FirstActivityUtc);
         var eligibleWeekCounts = EligibleWindows(baselineWindows, accountFirstActivityUtc)
             .Select(window => accountCountsByWeek.GetValueOrDefault(window.WeekStart))
             .ToList();

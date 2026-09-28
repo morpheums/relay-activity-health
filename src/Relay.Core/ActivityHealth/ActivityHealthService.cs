@@ -1,6 +1,7 @@
 using Relay.Core.Calendar;
 using Relay.Core.Normality;
 using Relay.Core.Queries;
+using static Relay.Core.Calendar.WeekLength;
 
 namespace Relay.Core.ActivityHealth;
 
@@ -14,8 +15,6 @@ public sealed class ActivityHealthService(
     NormalityOptions normalityOptions,
     TimeProvider timeProvider) : IActivityHealthService
 {
-    private const int DaysPerWeek = 7;
-
     public async Task<ActivityHealthResult> GetAsync(
         int accountId,
         DateOnly? week,
@@ -75,12 +74,11 @@ public sealed class ActivityHealthService(
 
     private DateOnly EarliestWeekFor(IReadOnlyList<SiteFirstActivity> siteFirstActivities, DateOnly latestCompleteWeek, string timeZoneId)
     {
-        if (siteFirstActivities.Count == 0)
+        if (siteFirstActivities.AccountFirstActivityUtc() is not { } accountFirstActivityUtc)
         {
             return latestCompleteWeek;
         }
 
-        var accountFirstActivityUtc = siteFirstActivities.Min(site => site.FirstActivityUtc);
         var firstActivityWeek = weekCalendar.WeekContaining(accountFirstActivityUtc, timeZoneId);
         return firstActivityWeek < latestCompleteWeek ? firstActivityWeek : latestCompleteWeek;
     }
