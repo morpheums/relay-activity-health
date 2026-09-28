@@ -479,3 +479,9 @@ Count 14 → `normal` (z 1.98); 15 → `above`; 0 → `below`. (Under the wrong 
 | Account 14, week 2026-07-20, `call_received` / `lead_created` | totals 16 (range 9–24, `normal`) / 8 (range 2–12, `normal`) |
 | Account 6, week 2026-07-20, all | Site M is `locations[0]` (7, range 1–9, dev 1.30) |
 
+### 2026-09-28 — Last Phase 0 clarifications (user decisions, validated by the architect)
+
+- **§13 §5.2 `dataAsOf`** is `string` in the response, **or `null` only when the database has no events at all**; for every account (including account 20) it is the global anchor when data exists.
+- **Empty `?week=`** (present but empty) → 400, like `?type=`. "Latest complete week" is requested by omitting the parameter; the UI never emits `week=`.
+- **Account 20's empty-state page** still shows the full footnote, including "Data as of Mon Jul 27, 2026"; the "Data as of" line is hidden only when `dataAsOf` is null.
+
