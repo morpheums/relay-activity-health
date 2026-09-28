@@ -6,12 +6,13 @@ User: a customer admin of one Relay account, on Monday morning, who has to act o
 
 ## How to read this document
 
-**Precedence.** `PLAN.md` §13 has six entries dated 2026-09-28. Five of them apply here:
+**Precedence.** `PLAN.md` §13 has several entries dated 2026-09-28. These apply here:
 - **"Revised design from the four-agent debate (approved by the user)"** overrides §5.1 (index bullet), §5.2, §5.3, the §5.4 status labels and footnote, the §7 Evaluator/Ranking/API bullets, the §7 golden table, D5 and D7.
 - **"Phase 0 decisions and promoted golden values (user decisions)"** adds ten golden scenarios and fixes the API port at 5080.
 - **"Input handling and UI copy decisions (user decisions, validated by the architect)"** decides malformed input, URL normalisation, account switching, the empty and error states, and the additional copy. It is cited below as §13 "Input handling and UI copy".
 - **"Contract decisions from the Phase 0 contract review (user decisions, validated by the architect)"** covers the empty database (`dataAsOf` null), the exact `dataAsOf` string, more malformed-week variants, the capitalised account method line, and more promoted goldens. It is cited below as §13 "Contract decisions".
 - **"Last Phase 0 clarifications (user decisions, validated by the architect)"** covers when `dataAsOf` may be null, an empty `?week=`, and the footnote on the empty-account page. It is cited below as §13 "Last Phase 0 clarifications".
+- **"Calendar contract simplified"** reduces `IWeekCalendar` to `Window`, `WeekContaining` and `LatestCompleteWeek`; the Monday check and the 8 baseline windows move into `ActivityHealthService`. It is cited below as §13 "Calendar contract simplified".
 
 Everything else in PLAN.md still applies, including the §5.4 URL-state rules and the §7 Calendar, Grid and SQL edge cases. The rationale is in `docs/design-consensus.md`.
 
@@ -131,12 +132,13 @@ How to verify: run `dotnet test tests/Relay.Core.Tests` and read the test source
 | BL-41d | UTC, week 2026-03-02 | [2026-03-02T00:00Z, 2026-03-09T00:00Z), 168 h | SPEC §7 Calendar |
 | BL-41e | America/Chicago, instant 2026-03-09T05:00:00Z (local Mon 00:00) | Belongs to week 2026-03-09, not 2026-03-02 | SPEC §7 Calendar |
 | BL-41f | Latest complete week, America/New_York: anchor Mon 2026-07-27 00:00 local (04:00Z) / Sun 2026-07-26 23:59:59 local (2026-07-27T03:59:59Z) / Mon 2026-07-27 18:20:34 local (the seed anchor) | 2026-07-20 / 2026-07-13 / 2026-07-20 | SPEC §7 Calendar; consensus §3 ("week containing the anchor, minus 7 days") |
-| BL-41g | Invalid IANA id (e.g. `Mars/Olympus`) | Fails with an error; no silent fallback to UTC | SPEC §7 Calendar |
-| BL-41h | Is-week-start for 2026-07-21 (Tue) / 2026-07-20 (Mon) | false / true | SPEC §7 Calendar |
+| BL-41g | Invalid IANA id (e.g. `Mars/Olympus`) passed to any calendar member | Throws `TimeZoneNotFoundException`; no silent fallback to UTC | SPEC §7 Calendar; SPEC §13 "Calendar contract simplified" |
+| BL-41h | `Window` for week start 2026-07-21 (a Tuesday), America/New_York | Throws `ArgumentException`. The user-facing Monday rule is BL-43 (service → `InvalidWeek`, `NotAWeekStart`) | SPEC §7 Calendar; SPEC §13 "Calendar contract simplified" |
 | BL-42 | Service, no week given | Uses latestCompleteWeek | SPEC §13 §5.2 |
 | BL-43 | Service, week not a Monday / after latestCompleteWeek / before earliestWeek | `InvalidWeek` | SPEC §13 §5.2 |
 | BL-44 | Service, unknown account | `AccountNotFound` | SPEC §5.2 |
 | BL-45 | Service, account with no events | Found. count 0, `insufficient_data`, weeksUsed 0, earliestWeek = latestCompleteWeek, no locations | SPEC §13 §5.2 |
+| BL-46 | Service, account in America/Chicago, W = 2026-03-16 | The service requests counts for W and for the 8 preceding Mondays as baseline (2026-01-19, 01-26, 02-02, 02-09, 02-16, 02-23, 03-02, 03-09), baseline windows oldest first, every window built by the calendar's `Window`. The baseline includes the 167 h DST week 2026-03-02 → [2026-03-02T06:00Z, 2026-03-09T05:00Z) | SPEC §13 "Calendar contract simplified" |
 
 ---
 
