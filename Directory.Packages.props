@@ -5,6 +5,7 @@
   <ItemGroup>
     <PackageVersion Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.12" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.12" />
+    <PackageVersion Include="DotNetEnv" Version="3.2.0" />
   </ItemGroup>
   <ItemGroup>
     <PackageVersion Include="xunit.v3" Version="4.0.1" />

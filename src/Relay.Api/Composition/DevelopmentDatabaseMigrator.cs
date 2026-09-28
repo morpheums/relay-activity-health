@@ -37,7 +37,7 @@ public sealed partial class DevelopmentDatabaseMigrator(
         }
 
         throw new InvalidOperationException(
-            $"The connection string '{ConnectionStringSetting}' is missing or empty. Set the environment variable '{ConnectionStringEnvironmentVariable}' before starting the API.");
+            $"The connection string '{ConnectionStringSetting}' is missing or empty. Copy .env.example to .env at the repository root (or set the environment variable '{ConnectionStringEnvironmentVariable}') before starting the API.");
     }
 
     [LoggerMessage(Level = LogLevel.Information, Message = "Applying Relay database migrations on start (Development)")]
