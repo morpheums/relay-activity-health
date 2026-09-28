@@ -4,7 +4,7 @@ public sealed record ActivityHealthResponse(
     AccountResponse Account,
     string EventType,
     WeekRangeResponse Week,
-    DateTime DataAsOf,
+    DateTime? DataAsOf,
     DateOnly LatestCompleteWeek,
     DateOnly EarliestWeek,
     int BaselineWeeks,

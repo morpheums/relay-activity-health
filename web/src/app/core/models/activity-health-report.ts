@@ -8,7 +8,7 @@ export interface ActivityHealthReport {
   account: Account;
   eventType: EventType;
   week: WeekRange;
-  dataAsOf: string;
+  dataAsOf: string | null;
   latestCompleteWeek: string;
   earliestWeek: string;
   baselineWeeks: number;

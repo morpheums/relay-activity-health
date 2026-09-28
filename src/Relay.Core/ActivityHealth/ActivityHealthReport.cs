@@ -8,7 +8,7 @@ public sealed record ActivityHealthReport(
     ActivityType EventType,
     DateOnly WeekStart,
     DateOnly WeekEnd,
-    DateTime DataAsOfUtc,
+    DateTime? DataAsOfUtc,
     DateOnly LatestCompleteWeek,
     DateOnly EarliestWeek,
     int BaselineWeeks,
