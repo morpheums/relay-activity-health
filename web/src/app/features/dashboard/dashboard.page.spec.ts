@@ -3,7 +3,7 @@ import { Router, provideRouter } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 import { routes } from '../../app.routes';
 import { AccountsApi } from '../../core/api/accounts.api';
-import { ActivityHealthApi } from '../../core/api/activity-health.api';
+import { ActivityHealthApi, ActivityHealthRequest } from '../../core/api/activity-health.api';
 import { EventType } from '../../core/models';
 import {
   BEACON_HOME_SECURITY,
@@ -18,6 +18,7 @@ import {
   cellTexts,
   columnHeaderTexts,
   collapsedText,
+  findButton,
   getButton,
   getSelect,
   chooseOption,
@@ -28,8 +29,8 @@ import {
   selectedOptionText,
   textOutsideTables,
 } from '../../../testing/dom-queries';
-import { FakeAccountsApi, FakeActivityHealthApi, serverError } from '../../../testing/fake-apis';
-import { RecordedNavigation, currentPath, currentQueryParams, recordNavigations, settle } from '../../../testing/router-testing';
+import { FakeAccountsApi, FakeActivityHealthApi, networkFailure, serverError } from '../../../testing/fake-apis';
+import { RecordedNavigation, currentPath, currentQueryParams, queryParamsOf, recordNavigations, settle } from '../../../testing/router-testing';
 import { DashboardState } from './dashboard-state';
 
 interface PageUnderTest {
@@ -98,6 +99,25 @@ function rowFor(root: HTMLElement, location: string): HTMLElement {
   }
   return row;
 }
+
+function pageHeadingTexts(root: HTMLElement): string[] {
+  return Array.from(root.querySelectorAll('h1')).map((heading) => collapsedText(heading));
+}
+
+function elementsWithExactText(root: HTMLElement, text: string): Element[] {
+  return Array.from(root.querySelectorAll('*')).filter((element) => collapsedText(element) === text);
+}
+
+function usualRangeCellText(root: HTMLElement, location: string): string {
+  const usualRangeColumn = columnHeaderTexts(root).indexOf('Usual range');
+  expect(usualRangeColumn).toBeGreaterThanOrEqual(0);
+  return cellTexts(rowFor(root, location))[usualRangeColumn];
+}
+
+const FIRST_LOAD_FAILURES = [
+  { label: '5xx', failure: serverError },
+  { label: 'network', failure: networkFailure },
+];
 
 describe('DashboardPage', () => {
   describe('default view (account 14, week 2026-07-20, all)', () => {
@@ -621,6 +641,234 @@ describe('DashboardPage', () => {
       expect(navigations.at(-1)?.replaceUrl).toBe(true);
       expect(pageText(root)).not.toContain(LOAD_ERROR_MESSAGE);
       expect(textOutsideTables(root)).toContain('26 inbound events · usually 18–38 a week');
+    });
+  });
+
+  describe('page heading (UI-43, C-23)', () => {
+    it('default view: exactly one <h1>, reading "Activity health"', async () => {
+      const { root } = await openPage('/dashboard');
+
+      expect(pageHeadingTexts(root)).toEqual(['Activity health']);
+    });
+
+    it('default view: the summary heading "Beacon Home Security — all locations" is not an <h1>', async () => {
+      const { root } = await openPage('/dashboard');
+
+      const summaryHeadings = elementsWithExactText(root, 'Beacon Home Security — all locations');
+      expect(summaryHeadings.length).toBeGreaterThan(0);
+      summaryHeadings.forEach((summaryHeading) => expect(summaryHeading.tagName).not.toBe('H1'));
+    });
+
+    it.each([
+      '/dashboard?account=6&week=2026-06-01&type=all',
+      '/dashboard?account=6&week=2026-06-08&type=all',
+      '/dashboard?account=6&week=2026-07-20&type=call_received',
+      '/dashboard?account=8',
+      '/dashboard?account=8&week=2026-03-02&type=all',
+      '/dashboard?account=14&week=2026-02-02&type=all',
+      '/dashboard?account=14&week=2026-03-02&type=all',
+      '/dashboard?account=14&week=2026-01-26&type=all',
+      '/dashboard?account=999',
+      '/dashboard?account=14&week=2025-12-29&type=all',
+    ])('%s: exactly one <h1>, reading "Activity health"', async (url) => {
+      const { root } = await openPage(url);
+
+      expect(pageHeadingTexts(root)).toEqual(['Activity health']);
+    });
+
+    it('empty account 20: exactly one <h1>, reading "Activity health"', async () => {
+      const { root } = await openPage('/dashboard?account=20');
+
+      expect(pageText(root)).toContain(EMPTY_ACCOUNT_MESSAGE);
+      expect(pageHeadingTexts(root)).toEqual(['Activity health']);
+    });
+
+    it('while loading: exactly one <h1>, reading "Activity health"', async () => {
+      const { root } = await openPage('/dashboard?account=14&week=2026-07-20&type=all', (api) => api.holdNext());
+
+      expect(pageText(root)).toContain('Loading…');
+      expect(pageHeadingTexts(root)).toEqual(['Activity health']);
+    });
+
+    it.each(FIRST_LOAD_FAILURES)('after a $label load error: exactly one <h1>, reading "Activity health"', async ({ failure }) => {
+      const { root } = await openPage('/dashboard?account=14&week=2026-07-20&type=all', (api) => api.failNext(failure()));
+
+      expect(pageText(root)).toContain(LOAD_ERROR_MESSAGE);
+      expect(pageHeadingTexts(root)).toEqual(['Activity health']);
+    });
+  });
+
+  describe('first load fails before any report (UI-44)', () => {
+    it.each(FIRST_LOAD_FAILURES)('$label: shows the load error with "Viewing as" and "Activity type" rendered and enabled', async ({ failure }) => {
+      const { root } = await openPage('/dashboard?account=14&week=2026-07-20&type=all', (api) => api.failNext(failure()));
+
+      expect(pageText(root)).toContain(LOAD_ERROR_MESSAGE);
+      expect(getSelect(root, 'Viewing as').disabled).toBe(false);
+      expect(selectedOptionText(getSelect(root, 'Viewing as'))).toBe('Beacon Home Security');
+      expect(getSelect(root, 'Activity type').disabled).toBe(false);
+      expect(selectedOptionText(getSelect(root, 'Activity type'))).toBe('All activity');
+    });
+
+    it.each(FIRST_LOAD_FAILURES)('$label: shows no week stepper buttons', async ({ failure }) => {
+      const { root } = await openPage('/dashboard?account=14&week=2026-07-20&type=all', (api) => api.failNext(failure()));
+
+      expect(pageText(root)).toContain(LOAD_ERROR_MESSAGE);
+      expect(findButton(root, PREVIOUS_WEEK)).toBeNull();
+      expect(findButton(root, NEXT_WEEK)).toBeNull();
+    });
+
+    it.each(FIRST_LOAD_FAILURES)(
+      '$label: choosing Metro Collision Centers writes account=6 as a new history entry, requests it and shows its report',
+      async ({ failure }) => {
+        const { root, activityHealthApi, navigations, harness } = await openPage('/dashboard?account=14&week=2026-07-20&type=all', (api) =>
+          api.failNext(failure()),
+        );
+
+        chooseOption(getSelect(root, 'Viewing as'), 'Metro Collision Centers');
+        await settle(harness);
+
+        expect(currentQueryParams()).toEqual({ account: '6', week: '2026-07-20', type: 'all' });
+        const accountChoice = navigations.find((navigation) => queryParamsOf(navigation.url)['account'] === '6');
+        expect(accountChoice?.replaceUrl).toBe(false);
+        expect(activityHealthApi.requests).toEqual<ActivityHealthRequest[]>([
+          { accountId: 14, week: '2026-07-20', eventType: 'all' },
+          { accountId: 6, week: '2026-07-20', eventType: 'all' },
+        ]);
+        expect(pageText(root)).not.toContain(LOAD_ERROR_MESSAGE);
+        expect(textOutsideTables(root)).toContain('87 inbound events · usually 30–134 a week');
+      },
+    );
+
+    it.each(FIRST_LOAD_FAILURES)(
+      '$label: choosing Calls writes type=call_received as a new history entry, requests it and shows its report',
+      async ({ failure }) => {
+        const { root, activityHealthApi, navigations, harness } = await openPage('/dashboard?account=14&week=2026-07-20&type=all', (api) =>
+          api.failNext(failure()),
+        );
+
+        chooseOption(getSelect(root, 'Activity type'), 'Calls');
+        await settle(harness);
+
+        expect(currentQueryParams()).toEqual({ account: '14', week: '2026-07-20', type: 'call_received' });
+        const typeChoice = navigations.find((navigation) => queryParamsOf(navigation.url)['type'] === 'call_received');
+        expect(typeChoice?.replaceUrl).toBe(false);
+        expect(activityHealthApi.requests).toEqual<ActivityHealthRequest[]>([
+          { accountId: 14, week: '2026-07-20', eventType: 'all' },
+          { accountId: 14, week: '2026-07-20', eventType: 'call_received' },
+        ]);
+        expect(pageText(root)).not.toContain(LOAD_ERROR_MESSAGE);
+        expect(textOutsideTables(root)).toContain('16 calls · usually 9–24 a week');
+      },
+    );
+
+    it('shows the week stepper once a report loads after the failed first load', async () => {
+      const { root, harness } = await openPage('/dashboard?account=14&week=2026-07-20&type=all', (api) => api.failNext(serverError()));
+
+      chooseOption(getSelect(root, 'Viewing as'), 'Metro Collision Centers');
+      await settle(harness);
+
+      expect(isDisabled(getButton(root, PREVIOUS_WEEK))).toBe(false);
+      expect(isDisabled(getButton(root, NEXT_WEEK))).toBe(true);
+    });
+  });
+
+  describe('insufficient rows leave the "Usual range" cell empty (UI-45)', () => {
+    it.each(['Site A', 'Site B', 'Site C', 'Site D'])('account 14, 2026-02-02: %s has an empty "Usual range" cell', async (location) => {
+      const { root } = await openPage('/dashboard?account=14&week=2026-02-02&type=all');
+
+      expect(usualRangeCellText(root, location)).toBe('');
+    });
+
+    it('account 14, 2026-02-02: the table rows show C-04 but no "Usually" and no "0–0"', async () => {
+      const { root } = await openPage('/dashboard?account=14&week=2026-02-02&type=all');
+
+      const tableRowsText = locationRows(root).map((row) => collapsedText(row)).join(' ');
+      expect(tableRowsText).toContain('Not enough history yet (0 of 4 weeks needed)');
+      expect(tableRowsText).not.toContain('Usually');
+      expect(tableRowsText).not.toContain('0–0');
+    });
+
+    it.each(['Site A', 'Site C'])('account 14, 2026-03-02: insufficient %s has an empty "Usual range" cell', async (location) => {
+      const { root } = await openPage('/dashboard?account=14&week=2026-03-02&type=all');
+
+      expect(usualRangeCellText(root, location)).toBe('');
+    });
+
+    it.each([
+      { location: 'Site A', count: '7' },
+      { location: 'Site C', count: '8' },
+    ])('account 14, 2026-03-02: $location still shows its count $count and "Not enough history yet (3 of 4 weeks needed)"', async ({ location, count }) => {
+      const { root } = await openPage('/dashboard?account=14&week=2026-03-02&type=all');
+
+      expect(cellTexts(rowFor(root, location))).toContain(count);
+      expect(collapsedText(rowFor(root, location))).toContain('Not enough history yet (3 of 4 weeks needed)');
+    });
+
+    it('account 14, 2026-03-02: Site D still shows "Usually 2–11 a week"', async () => {
+      const { root } = await openPage('/dashboard?account=14&week=2026-03-02&type=all');
+
+      expect(usualRangeCellText(root, 'Site D')).toBe('Usually 2–11 a week');
+    });
+  });
+
+  describe('request counts (Phase 2 review)', () => {
+    it('/dashboard sends exactly one request: account 14, no week, type all', async () => {
+      const { activityHealthApi, harness } = await openPage('/dashboard');
+      await settle(harness);
+
+      expect(activityHealthApi.requests).toEqual<ActivityHealthRequest[]>([{ accountId: 14, week: null, eventType: 'all' }]);
+    });
+
+    it('/dashboard: writing week=2026-07-20 into the URL uses replaceUrl and sends no further request', async () => {
+      const { activityHealthApi, navigations, harness } = await openPage('/dashboard');
+      await settle(harness);
+
+      expect(currentQueryParams()).toEqual({ account: '14', week: '2026-07-20', type: 'all' });
+      const weekRewrite = navigations.find((navigation) => queryParamsOf(navigation.url)['week'] === '2026-07-20');
+      expect(weekRewrite?.replaceUrl).toBe(true);
+      expect(navigations.slice(1).every((navigation) => navigation.replaceUrl)).toBe(true);
+      expect(activityHealthApi.requests).toHaveLength(1);
+    });
+
+    it('a Tuesday week (2026-07-21) is rewritten on the client and sends exactly one request, without a week', async () => {
+      const { activityHealthApi, harness } = await openPage('/dashboard?account=14&week=2026-07-21&type=all');
+      await settle(harness);
+
+      expect(currentQueryParams()).toEqual({ account: '14', week: '2026-07-20', type: 'all' });
+      expect(activityHealthApi.requests).toEqual<ActivityHealthRequest[]>([{ accountId: 14, week: null, eventType: 'all' }]);
+    });
+
+    it('account=999 with a valid week sends the 404 attempt, then exactly one request for account 14', async () => {
+      const { activityHealthApi, harness } = await openPage('/dashboard?account=999&week=2026-07-20&type=all');
+      await settle(harness);
+
+      expect(currentQueryParams()).toEqual({ account: '14', week: '2026-07-20', type: 'all' });
+      expect(activityHealthApi.requests).toEqual<ActivityHealthRequest[]>([
+        { accountId: 999, week: '2026-07-20', eventType: 'all' },
+        { accountId: 14, week: '2026-07-20', eventType: 'all' },
+      ]);
+    });
+
+    it('account=999 alone sends the 404 attempt, then exactly one request for account 14, both without a week', async () => {
+      const { activityHealthApi, harness } = await openPage('/dashboard?account=999');
+      await settle(harness);
+
+      expect(currentQueryParams()).toEqual({ account: '14', week: '2026-07-20', type: 'all' });
+      expect(activityHealthApi.requests).toEqual<ActivityHealthRequest[]>([
+        { accountId: 999, week: null, eventType: 'all' },
+        { accountId: 14, week: null, eventType: 'all' },
+      ]);
+    });
+
+    it('a week before earliestWeek (2025-12-29) sends the 400 attempt, then exactly one request without a week', async () => {
+      const { activityHealthApi, harness } = await openPage('/dashboard?account=14&week=2025-12-29&type=all');
+      await settle(harness);
+
+      expect(currentQueryParams()).toEqual({ account: '14', week: '2026-07-20', type: 'all' });
+      expect(activityHealthApi.requests).toEqual<ActivityHealthRequest[]>([
+        { accountId: 14, week: '2025-12-29', eventType: 'all' },
+        { accountId: 14, week: null, eventType: 'all' },
+      ]);
     });
   });
 });

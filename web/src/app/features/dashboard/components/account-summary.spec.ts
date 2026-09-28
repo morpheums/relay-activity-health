@@ -124,4 +124,18 @@ describe('AccountSummary', () => {
     FORBIDDEN_ON_SCREEN.forEach((forbidden) => expect(summaryText).not.toMatch(forbidden));
     expect(summaryText).not.toContain('-0.19');
   });
+
+  it('renders the heading "Beacon Home Security — all locations" as a heading that is not an <h1> (UI-43)', async () => {
+    TestBed.configureTestingModule({ imports: [AccountSummary] });
+    const fixture = TestBed.createComponent(AccountSummary);
+    fixture.componentRef.setInput('report', beaconDefaultWeekReport());
+    await fixture.whenStable();
+    const root = fixture.nativeElement as HTMLElement;
+
+    const summaryHeading = Array.from(root.querySelectorAll('h2, h3, h4, h5, h6, [role="heading"]')).find(
+      (heading) => collapsedText(heading) === 'Beacon Home Security — all locations',
+    );
+    expect(summaryHeading).toBeDefined();
+    expect(root.querySelectorAll('h1')).toHaveLength(0);
+  });
 });

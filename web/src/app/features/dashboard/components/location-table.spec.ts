@@ -1,6 +1,12 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { LocationHealth } from '../../../core/models';
-import { locationRow, withRange, withoutEnoughHistory } from '../../../../testing/activity-health-fixtures';
+import {
+  beaconMixedHistoryReport,
+  beaconNoEligibleWeeksReport,
+  locationRow,
+  withRange,
+  withoutEnoughHistory,
+} from '../../../../testing/activity-health-fixtures';
 import { cellTexts, collapsedText, columnHeaderTexts, locationRows } from '../../../../testing/dom-queries';
 import { LocationTable } from './location-table';
 
@@ -21,6 +27,12 @@ function rowFor(root: HTMLElement, location: string): HTMLElement {
     throw new Error(`No row for ${location} in: ${collapsedText(root)}`);
   }
   return row;
+}
+
+function usualRangeCellText(root: HTMLElement, location: string): string {
+  const usualRangeColumn = columnHeaderTexts(root).indexOf('Usual range');
+  expect(usualRangeColumn).toBeGreaterThanOrEqual(0);
+  return cellTexts(rowFor(root, location))[usualRangeColumn];
 }
 
 function unsortedPayloadWithUnreproducibleRanges(): LocationHealth[] {
@@ -102,5 +114,52 @@ describe('LocationTable', () => {
     FORBIDDEN_ON_SCREEN.forEach((forbidden) => expect(collapsedText(root)).not.toMatch(forbidden));
     expect(collapsedText(root)).not.toContain('7.5');
     expect(collapsedText(root)).not.toContain('2.5');
+  });
+
+  describe('insufficient rows leave the "Usual range" cell empty (UI-45)', () => {
+    it.each(['Site A', 'Site B', 'Site C', 'Site D'])(
+      'account 14, 2026-02-02: %s has an empty "Usual range" cell',
+      async (location) => {
+        const root = await renderTable(beaconNoEligibleWeeksReport().locations);
+
+        expect(usualRangeCellText(root, location)).toBe('');
+      },
+    );
+
+    it.each([
+      { location: 'Site A', count: '9' },
+      { location: 'Site B', count: '5' },
+      { location: 'Site C', count: '7' },
+      { location: 'Site D', count: '6' },
+    ])('account 14, 2026-02-02: $location still shows its count $count and "Not enough history yet (0 of 4 weeks needed)"', async ({ location, count }) => {
+      const root = await renderTable(beaconNoEligibleWeeksReport().locations);
+
+      expect(cellTexts(rowFor(root, location))).toContain(count);
+      expect(collapsedText(rowFor(root, location))).toContain('Not enough history yet (0 of 4 weeks needed)');
+    });
+
+    it('account 14, 2026-02-02: the table shows no "Usually", no "0–0" and no dash placeholder', async () => {
+      const root = await renderTable(beaconNoEligibleWeeksReport().locations);
+
+      const tableText = collapsedText(root);
+      expect(tableText).not.toContain('Usually');
+      expect(tableText).not.toContain('0–0');
+      locationRows(root).forEach((row) => expect(cellTexts(row).filter((cell) => /^[—–-]$/.test(cell))).toEqual([]));
+    });
+
+    it.each(['Site A', 'Site C'])('account 14, 2026-03-02: insufficient %s has an empty "Usual range" cell', async (location) => {
+      const root = await renderTable(beaconMixedHistoryReport().locations);
+
+      expect(usualRangeCellText(root, location)).toBe('');
+    });
+
+    it.each([
+      { location: 'Site D', usualRange: 'Usually 2–11 a week' },
+      { location: 'Site B', usualRange: 'Usually 2–10 a week' },
+    ])('account 14, 2026-03-02: $location with enough history still shows "$usualRange"', async ({ location, usualRange }) => {
+      const root = await renderTable(beaconMixedHistoryReport().locations);
+
+      expect(usualRangeCellText(root, location)).toBe(usualRange);
+    });
   });
 });

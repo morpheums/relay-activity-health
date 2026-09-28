@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { Account, EventType } from '../../../core/models';
+import { Account, EventType, WeekRange } from '../../../core/models';
 import { LATEST_COMPLETE_WEEK, seedAccounts, sundayOf } from '../../../../testing/activity-health-fixtures';
-import { chooseOption, collapsedText, getButton, getSelect, isDisabled, optionTexts, selectedOptionText } from '../../../../testing/dom-queries';
+import { chooseOption, collapsedText, findButton, getButton, getSelect, isDisabled, optionTexts, selectedOptionText } from '../../../../testing/dom-queries';
 import { DashboardFilters } from './dashboard-filters';
 
 const PREVIOUS_WEEK = '◀ Previous week';
@@ -52,6 +52,31 @@ async function renderFilters(overrides: Partial<FiltersInputs> = {}): Promise<Fi
   await fixture.whenStable();
   return { root: fixture.nativeElement as HTMLElement, fixture, selectedAccountIds, selectedWeeks, selectedEventTypes };
 }
+
+interface WeekInputs {
+  week?: WeekRange | null;
+  earliestWeek?: string | null;
+  latestCompleteWeek?: string | null;
+}
+
+async function renderFiltersWithWeekInputs(weekInputs: WeekInputs): Promise<FiltersUnderTest> {
+  TestBed.configureTestingModule({ imports: [DashboardFilters] });
+  const fixture = TestBed.createComponent(DashboardFilters);
+  fixture.componentRef.setInput('accounts', seedAccounts());
+  fixture.componentRef.setInput('accountId', 14);
+  fixture.componentRef.setInput('eventType', 'all');
+  Object.entries(weekInputs).forEach(([inputName, value]) => fixture.componentRef.setInput(inputName, value));
+  const selectedAccountIds: number[] = [];
+  const selectedWeeks: string[] = [];
+  const selectedEventTypes: EventType[] = [];
+  fixture.componentInstance.accountSelected.subscribe((accountId) => selectedAccountIds.push(accountId));
+  fixture.componentInstance.weekSelected.subscribe((week) => selectedWeeks.push(week));
+  fixture.componentInstance.eventTypeSelected.subscribe((eventType) => selectedEventTypes.push(eventType));
+  await fixture.whenStable();
+  return { root: fixture.nativeElement as HTMLElement, fixture, selectedAccountIds, selectedWeeks, selectedEventTypes };
+}
+
+const DEFAULT_WEEK_RANGE: WeekRange = { start: '2026-07-20', end: '2026-07-26' };
 
 describe('DashboardFilters', () => {
   describe('Viewing as', () => {
@@ -193,6 +218,66 @@ describe('DashboardFilters', () => {
       getButton(root, button).click();
 
       expect(selectedWeeks).toEqual([expectedWeek]);
+    });
+  });
+
+  describe('before the first report (UI-44)', () => {
+    it('renders "Viewing as" with Beacon Home Security selected when no week inputs are set', async () => {
+      const { root } = await renderFiltersWithWeekInputs({});
+
+      expect(getSelect(root, 'Viewing as').disabled).toBe(false);
+      expect(selectedOptionText(getSelect(root, 'Viewing as'))).toBe('Beacon Home Security');
+    });
+
+    it('renders "Activity type" with All activity selected when no week inputs are set', async () => {
+      const { root } = await renderFiltersWithWeekInputs({});
+
+      expect(getSelect(root, 'Activity type').disabled).toBe(false);
+      expect(selectedOptionText(getSelect(root, 'Activity type'))).toBe('All activity');
+    });
+
+    it('renders no week buttons and no week label when no week inputs are set', async () => {
+      const { root } = await renderFiltersWithWeekInputs({});
+
+      expect(findButton(root, PREVIOUS_WEEK)).toBeNull();
+      expect(findButton(root, NEXT_WEEK)).toBeNull();
+      expect(collapsedText(root)).not.toContain('Mon Jul');
+    });
+
+    it('emits accountSelected 6 when Metro Collision Centers is chosen with no week inputs set', async () => {
+      const { root, selectedAccountIds } = await renderFiltersWithWeekInputs({});
+
+      chooseOption(getSelect(root, 'Viewing as'), 'Metro Collision Centers');
+
+      expect(selectedAccountIds).toEqual([6]);
+    });
+
+    it('emits eventTypeSelected "call_received" when Calls is chosen with no week inputs set', async () => {
+      const { root, selectedEventTypes } = await renderFiltersWithWeekInputs({});
+
+      chooseOption(getSelect(root, 'Activity type'), 'Calls');
+
+      expect(selectedEventTypes).toEqual(['call_received']);
+    });
+
+    it.each<{ missingInput: string; weekInputs: WeekInputs }>([
+      { missingInput: 'week', weekInputs: { week: null, earliestWeek: '2026-01-26', latestCompleteWeek: LATEST_COMPLETE_WEEK } },
+      { missingInput: 'earliestWeek', weekInputs: { week: DEFAULT_WEEK_RANGE, earliestWeek: null, latestCompleteWeek: LATEST_COMPLETE_WEEK } },
+      { missingInput: 'latestCompleteWeek', weekInputs: { week: DEFAULT_WEEK_RANGE, earliestWeek: '2026-01-26', latestCompleteWeek: null } },
+    ])('renders no week buttons while $missingInput is null, and both selects still render', async ({ weekInputs }) => {
+      const { root } = await renderFiltersWithWeekInputs(weekInputs);
+
+      expect(findButton(root, PREVIOUS_WEEK)).toBeNull();
+      expect(findButton(root, NEXT_WEEK)).toBeNull();
+      expect(getSelect(root, 'Viewing as')).toBeTruthy();
+      expect(getSelect(root, 'Activity type')).toBeTruthy();
+    });
+
+    it('renders both week buttons once week, earliestWeek and latestCompleteWeek are all set', async () => {
+      const { root } = await renderFiltersWithWeekInputs({ week: DEFAULT_WEEK_RANGE, earliestWeek: '2026-01-26', latestCompleteWeek: LATEST_COMPLETE_WEEK });
+
+      expect(findButton(root, PREVIOUS_WEEK)).not.toBeNull();
+      expect(findButton(root, NEXT_WEEK)).not.toBeNull();
     });
   });
 });
