@@ -409,3 +409,14 @@ Count 14 → `normal` (z 1.98); 15 → `above`; 0 → `below`. (Under the wrong 
 - 400 for a week before `earliestWeek`.
 - 400 for `type=ALL` / `Call_Received` (case-sensitive).
 - Account 20: default week → 200 empty with `earliestWeek` 2026-07-20; `week=2026-03-02` → 400.
+
+### 2026-09-28 — Phase 0 split by specialty; project-file ownership per stack (user decision)
+
+**Reason.** The user: *"architect is not an implementer"* — scaffolding belongs to the stack specialists. Supersedes the Phase 0 line in §9 and the "Writes/Owns" split in §8.
+- **Phase 0** now runs as: `backend` (.NET solution, projects, `Directory.*.props`, central packages, `global.json`, minimal `Program.cs`, `git mv` of the starter files to `db/`)
+  ‖ `frontend` (Angular shell, Vitest, dev proxy, `dashboard` route) in parallel worktrees → merge → `architect` adds **contracts only** (interfaces, records, DTOs, DI extension
+  signatures, TS models, abstract API tokens) with `NotImplementedException` stubs → reviewer → **user reviews contracts**.
+  In parallel, `product` writes `docs/acceptance-criteria.md`.
+- **Ownership after Phase 0:** `backend` owns `.sln`, `*.csproj`, `Directory.*.props`, `global.json`; `frontend` owns `package.json`, `angular.json`; `architect` owns public contracts
+  and never edits project files. Other agents request package/project changes through the coordinator.
+- **Every** agent task runs in its own worktree (not only parallel ones); after each feature the `reviewer` runs and its findings are fixed, with unclear ones escalated to the user first.

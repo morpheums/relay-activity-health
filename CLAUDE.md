@@ -21,14 +21,16 @@ xUnit + Testcontainers · Angular (standalone, signals, URL query params as stat
 
 ## Boundaries
 - `Relay.Core` references nothing else in the solution. `Relay.Infrastructure` implements Core's query interfaces. `Relay.Api` is the composition root.
-- Only the `architect` agent edits `.sln`, `*.csproj`, `Directory.*.props`, `package.json`, `angular.json`, or public contracts (interfaces, records, API DTOs).
-  Anyone else who needs a contract change stops and reports it.
+- Only the `architect` edits public contracts (interfaces, records, API DTOs, TS models, abstract API tokens); it never scaffolds or edits project files.
+  `backend` owns `.sln`, `*.csproj`, `Directory.*.props`, `global.json`; `frontend` owns `package.json`, `angular.json`.
+  Anyone else who needs a contract, package or project change stops and reports it.
 - `db/seed.sql` and `db/schema.sql` are never modified.
 - Stay inside the file scope you were given.
 
 ## Working model
 - The main thread is the coordinator: it dispatches subagents from `.claude/agents/`, reviews, merges, verifies. It does not write product code.
-- Parallel tracks run in separate git worktrees; each subagent commits only its own scope.
+- Every agent task runs in its own git worktree — never on the main worktree; each subagent commits only its own scope, and the coordinator merges.
+- After every feature lands, the `reviewer` reviews it and the owning agent fixes the findings. Findings that are unclear, conflict with PLAN.md, or need a product/design call go to the user before any fix.
 - Every commit message ends with `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`.
 - Endpoints call exactly one application service; they never inject query interfaces or `DbContext`.
 
