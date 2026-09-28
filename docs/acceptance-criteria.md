@@ -6,10 +6,11 @@ User: a customer admin of one Relay account, on Monday morning, who has to act o
 
 ## How to read this document
 
-**Precedence.** `PLAN.md` §13 has four entries dated 2026-09-28. Three of them apply here:
+**Precedence.** `PLAN.md` §13 has five entries dated 2026-09-28. Four of them apply here:
 - **"Revised design from the four-agent debate (approved by the user)"** overrides §5.1 (index bullet), §5.2, §5.3, the §5.4 status labels and footnote, the §7 Evaluator/Ranking/API bullets, the §7 golden table, D5 and D7.
 - **"Phase 0 decisions and promoted golden values (user decisions)"** adds ten golden scenarios and fixes the API port at 5080.
 - **"Input handling and UI copy decisions (user decisions, validated by the architect)"** decides malformed input, URL normalisation, account switching, the empty and error states, and the additional copy. It is cited below as §13 "Input handling and UI copy".
+- **"Contract decisions from the Phase 0 contract review (user decisions, validated by the architect)"** covers the empty database (`dataAsOf` null), the exact `dataAsOf` string, more malformed-week variants, the capitalised account method line, and more promoted goldens. It is cited below as §13 "Contract decisions".
 
 Everything else in PLAN.md still applies, including the §5.4 URL-state rules and the §7 Calendar, Grid and SQL edge cases. The rationale is in `docs/design-consensus.md`.
 
@@ -18,9 +19,9 @@ Everything else in PLAN.md still applies, including the §5.4 URL-state rules an
 | Tag | Meaning | May a test assert it? |
 |---|---|---|
 | `GOLDEN` | A value from the "Revised design" §7 golden table or its hand derivations | Yes. Tests must use these values |
-| `GOLDEN-P` | A value from the promoted-goldens table in the "Phase 0 decisions" entry of §13 | Yes |
+| `GOLDEN-P` | A value from a promoted-goldens table in §13: the "Phase 0 decisions" entry or the "Contract decisions" entry | Yes |
 | `SPEC` | Follows directly from a PLAN rule, cited next to it | Yes |
-| `SEED` | A value from my query on the seed, using the statistician's R2\* model (Appendix A). It is **not** in PLAN | Product acceptance only. Tests must not copy it unless it is added to PLAN §13 |
+| `SEED` | A value from my query on the seed, using the statistician's R2\* model (Appendix A). It is **not** in PLAN | No. Appendix and manual acceptance only; no automated criterion currently uses it |
 | `PROPOSED` | Behaviour or copy that PLAN does not specify | Only after the coordinator or user approves it |
 
 **Defaults.** Default account **14** (Beacon Home Security, America/New_York, 4 sites). Default week **2026-07-20**. Default type `all`. Data as of `2026-07-27T22:20:34Z`.
@@ -46,7 +47,7 @@ Sources: PLAN §13 §5.4, D5, and §13 "Input handling and UI copy".
 | C-06a | `{noun}` by type, plural / singular (count = 1) | all: `inbound events` / `inbound event` · call_received: `calls` / `call` · lead_created: `leads` / `lead` · appointment_set: `appointments` / `appointment` | SPEC §13 "Input handling and UI copy" |
 | C-06b | Account summary line, `insufficient_data` | `{count} {noun}`, with no "usually" part, followed by C-04 (e.g. `8 inbound events` + `Not enough history yet (3 of 4 weeks needed)`) | SPEC §13 "Input handling and UI copy" |
 | C-07 | Empty account | `No activity recorded for this account yet.` It replaces both the summary and the table. Filters stay visible, and both week stepper buttons are disabled | §13 §5.4; SPEC §13 "Input handling and UI copy" (placement) |
-| C-08 | Method line, account summary | `Compared with the last 8 full weeks for this account` | consensus §9; SPEC §13 "Input handling and UI copy" (wording); capital first letter: user decision 2026-09-28 (coordinator adding it to PLAN §13) |
+| C-08 | Method line, account summary | `Compared with the last 8 full weeks for this account` | consensus §9; SPEC §13 "Input handling and UI copy" (wording); SPEC §13 "Contract decisions" (capital first letter) |
 | C-09 | Method line, locations (footnote) | `Compared with the last 8 full weeks at this location` | §13 §5.4 |
 | C-10 | Footnote | `Inbound events, not unique customers` | §13 §5.4 |
 | C-11 | Footnote | `Exact duplicates counted once` | §13 §5.4 |
@@ -96,7 +97,6 @@ How to verify: run `dotnet test tests/Relay.Core.Tests` and read the test source
 | BL-11 | [11,11,11,8] → 18 / → 19 | 18 = `high`, so `normal` / 19 is `above` (edges are inclusive) | SPEC §13 §5.3.7, range from GOLDEN BL-01 |
 | BL-12 | 3 eligible weeks (e.g. account 8, 2026-03-02) | `insufficient_data`; weeksUsed 3; median, low, high, deviation all null; count still present | GOLDEN / SPEC §5.3.3 |
 | BL-13 | Account 6, week 2026-07-20: 8 eligible weeks including the 880 spike ([53,880,102,59,76,69,79,50] → 87) | Total: median 72.5, range 30–134, `normal`, dev 0.53. All 15 sites `normal`. Scope is this week only. Flags in the week right after the spike are expected and correct (API-13, 2026-06-08: Sites C and J `above`) | GOLDEN (account 6, 2026-07-20) |
-| BL-14 | API-boundary mapper given constructed deviations 1.005 and −1.005 | Emits 1.01 and −1.01 (2 dp, `MidpointRounding.AwayFromZero`). Core keeps full precision; rounding happens only in the mapper. No seed value sits on a midpoint (consensus §3), so this must use constructed values | SPEC §13 §5.2, §5.3.8 |
 
 ### 1.2 Grid, eligibility and site list (§13 §5.3 steps 1–2; §7 Grid cases)
 
@@ -115,6 +115,7 @@ How to verify: run `dotnet test tests/Relay.Core.Tests` and read the test source
 |---|---|---|---|
 | BL-30 | Mixed statuses | Order: flagged (`above`/`below`) first, then `normal`, with `insufficient_data` last | SPEC |
 | BL-31 | Flagged rows | Sorted by \|deviation\| descending using the unrounded value; above and below are ranked together | SPEC |
+| BL-31b | `normal` rows | Sorted by \|deviation\| descending after all flagged rows. Account 14, 2026-07-20: Site B (`below`) first, then the normal rows C (0.98), A (0.61), D (−0.19, \|0.19\|) | SPEC §13 §5.3.9; GOLDEN-P (PLAN §13 "Phase 0 decisions": order B, C, A, D) |
 | BL-32 | Equal \|deviation\| | `below` before `above`, then location name ascending (ordinal) | SPEC |
 | BL-33 | Several `insufficient_data` rows | Sorted among themselves by name (ordinal) | SPEC |
 
@@ -156,7 +157,6 @@ How to verify: run `dotnet test tests/Relay.Infrastructure.Tests` and read each 
 | DATA-26 | An event exactly at a window's UTC start | Counted in that window | SPEC §7 SQL |
 | DATA-27 | An event exactly at a window's UTC end (e.g. Chicago 2026-03-09T05:00:00Z, the end of week 2026-03-02) | Not counted in that window; counted in the next window (2026-03-09) when that window is requested | SPEC §7 SQL (windows are `[start, end)`) |
 | DATA-28 | A fixture with one `call_received`, one `lead_created` and one `appointment_set` in a window | Type all → 3. `call_received` → 1. `lead_created` → 1. `appointment_set` → 1 | SPEC §7 SQL |
-| DATA-29 | Type value `CALL_RECEIVED` reaching the query layer | Does not count calls. The API rejects it earlier (API-45); matching is case-sensitive end to end even though the collation is not | SPEC §13 §5.2; consensus §4.5 |
 | DATA-30 | Rows for another account, and rows outside every requested window | Ignored | SPEC §7 SQL |
 | DATA-31 | Account with no rows | Empty site list, empty counts, no exception | SPEC §7 SQL |
 | DATA-32 | Anchor query on a fixture whose latest row is 2026-07-27T22:20:34 | Returns that instant with `DateTimeKind.Utc` | SPEC §13 §5.1 |
@@ -168,9 +168,9 @@ How to verify: run `dotnet test tests/Relay.Infrastructure.Tests` and read each 
 | Id | Given / When | Then | Tag |
 |---|---|---|---|
 | DATA-01 | All migrations applied (`InitialCreate` + `LoadSeedData`) | `accounts` has 20 rows; `activity_events` has **12,626** raw rows (duplicates kept) | SPEC §2, §5.1 |
-| DATA-02 | De-duplicated weekly counts for every account (1–20), with windows covering every local week from 2026-01-26 through 2026-07-27 inclusive (the partial week too) | The counts sum to **12,614** in total, so nothing is lost or double-counted at the week edges. Per account: 1: 1,221 · 2: 729 · 3: 477 · 4: 796 · 5: 884 · 6: 2,637 · 7: 437 · 8: 260 · 9: 546 · 10: 342 · 11: 354 · 12: 1,303 · 13: 205 · 14: 638 · 15: 499 · 16: 167 · 17: 323 · 18: 586 · 19: 210 · 20: 0 | Total SPEC (§2: 12,626 − 12 pairs; consensus §4.2). Per-account SEED (A.3) |
+| DATA-02 | De-duplicated weekly counts for every account (1–20), with windows covering every local week from 2026-01-26 through 2026-07-27 inclusive (the partial week too) | The counts sum to **12,614** in total, so nothing is lost or double-counted at the week edges. Per account: 1: 1,221 · 2: 729 · 3: 477 · 4: 796 · 5: 884 · 6: 2,637 · 7: 437 · 8: 260 · 9: 546 · 10: 342 · 11: 354 · 12: 1,303 · 13: 205 · 14: 638 · 15: 499 · 16: 167 · 17: 323 · 18: 586 · 19: 210 · 20: 0 | GOLDEN-P (PLAN §13 "Contract decisions" promoted table); total also SPEC §2 / consensus §4.2 |
 | DATA-03 | Account 1, Site C, local week 2026-07-06 (America/Chicago), all | Count **4** (raw rows 5; ids 11266/11267 are one event) | GOLDEN |
-| DATA-10 | Account 14 sites | Sites A, B, C, D with first events in local weeks 2026-02-02, 2026-01-26, 2026-02-02, 2026-01-26 | SEED (A.1) |
+| DATA-10 | Account 14 sites | Sites B and D first active in local week 2026-01-26; Sites A and C in 2026-02-02 | GOLDEN-P (PLAN §13 "Contract decisions" promoted table) |
 | DATA-40 | `db/schema.sql`, `db/seed.sql` after the Phase 0 `git mv` | Content unchanged. SHA-256 must equal the originals committed at the repo root in `4898e69`: `schema.sql` `348912f4fd6dade1728058a4f666780c60b94578f4276135583f502616e51d3d`, `seed.sql` `40e60ee81d999eb32057b4437bc84e9ec197265d4e58c13c0bfbad150e6eaea2`. `git log --follow` shows a rename | SPEC §13 (starter files), CLAUDE.md boundaries |
 
 ---
@@ -192,11 +192,11 @@ How to verify: run `dotnet test tests/Relay.Api.Tests`, then `curl` the running 
 | API-01b | `GET …/accounts/14/activity-health` (JSON names) | Top level exactly: `account{id,name,timezone}`, `eventType`, `week{start,end}`, `dataAsOf`, `latestCompleteWeek`, `earliestWeek`, `baselineWeeks`, `minimumEligibleWeeks`, `summary`, `locations`. Summary and each location: `count`, `baseline{weeksUsed,median,low,high}`, `status`, `deviation`; locations also `location`. camelCase as in the PLAN §13 §5.2 example | SPEC §13 §5.2 |
 | API-01c | Every response in §3 | `status` is exactly one of `above`, `below`, `normal`, `insufficient_data` (lower case, underscore) | SPEC §13 §5.2 |
 | API-01d | `…/accounts/14/activity-health?week=2026-07-20` with **no** `type` | Same body as `type=all`; `eventType` `all` | SPEC §13 §5.2 (default `all`) |
-| API-10 | Default: `GET $API/api/accounts/14/activity-health` | 200. `week.start` `2026-07-20`, `week.end` `2026-07-26`, `eventType` `all`, `dataAsOf` `2026-07-27T22:20:34Z`, `latestCompleteWeek` `2026-07-20`, `earliestWeek` `2026-01-26`, `baselineWeeks` 8, `minimumEligibleWeeks` 4. Summary: count 26, median 27, low 18, high 38, `normal`. `locations[0]` = Site B, count 2, low 3, high 12, `below`, deviation −2.16. Sites C, A, D all `normal` | GOLDEN |
+| API-10 | Default: `GET $API/api/accounts/14/activity-health` | 200. `week.start` `2026-07-20`, `week.end` `2026-07-26`, `eventType` `all`, `dataAsOf` exactly the string `"2026-07-27T22:20:34Z"` (a `Z` suffix, not `+00:00`, and no fractional seconds), `latestCompleteWeek` `2026-07-20`, `earliestWeek` `2026-01-26`, `baselineWeeks` 8, `minimumEligibleWeeks` 4. Summary: count 26, median 27, low 18, high 38, `normal`. `locations[0]` = Site B, count 2, low 3, high 12, `below`, deviation −2.16. Sites C, A, D all `normal` | GOLDEN; SPEC §13 "Contract decisions" (exact `dataAsOf` string) |
 | API-11 | Same as API-10 | Location order is exactly Site B, Site C, Site A, Site D | GOLDEN-P (PLAN §13 "Phase 0 decisions" promoted table), account 14 07-20 ordering |
 | API-12 | Spike week: `…/accounts/6/activity-health?week=2026-06-01` | Summary 880, median 66, low 39, high 101, `above`, dev 22.37. All 15 locations `above`. `locations[0]` = Site C, 67, median 3, 1–7, dev 12.74 | GOLDEN |
 | API-13 | Week after the spike: `…/accounts/6/activity-health?week=2026-06-08` | Summary 102, 37–104, `normal`. `locations[0]` Site C 11 vs 1–8 `above`, `locations[1]` Site J 11 vs 2–10 `above`, and the other 13 `normal`. The spike stays in the baseline but does not hide real rises | GOLDEN-P (PLAN §13 "Phase 0 decisions" promoted table), account 6 06-08 |
-| API-14 | Spike still in the baseline: `…/accounts/6/activity-health?week=2026-07-20` | Summary 87, median 72.5 (unrounded), 30–134, `normal`, dev 0.53. All 15 locations `normal`. Site M: 7, median 3.5, 1–9, dev 1.30, and it is `locations[0]` | GOLDEN (+ order: SEED A.6) |
+| API-14 | Spike still in the baseline: `…/accounts/6/activity-health?week=2026-07-20` | Summary 87, median 72.5 (unrounded), 30–134, `normal`, dev 0.53. All 15 locations `normal`. Site M: 7, median 3.5, 1–9, dev 1.30, and it is `locations[0]` | GOLDEN; GOLDEN-P (PLAN §13 "Contract decisions" promoted table) (Site M is `locations[0]`) |
 | API-15 | Type filter: `…/accounts/6/activity-health?week=2026-07-20&type=call_received` | `eventType` `call_received`. Summary 51, median 42, 17–79, `normal`, dev 0.54. Still 15 locations | GOLDEN; SPEC §13 §5.3.1 |
 | API-16 | Single-site account: `…/accounts/8/activity-health` | Exactly 1 location (Site A). Summary and location both show 7, median 10, 5–17, `normal`. `earliestWeek` `2026-02-02` | GOLDEN-P (PLAN §13 "Phase 0 decisions" promoted table), account 8 07-20; earliestWeek GOLDEN |
 | API-17 | Single site, floor case: `…/accounts/8/activity-health?week=2026-03-09` | Summary 11, median 11, 6–18, `normal` | GOLDEN |
@@ -205,7 +205,7 @@ How to verify: run `dotnet test tests/Relay.Api.Tests`, then `curl` the running 
 | API-20 | Mixed eligibility: `…/accounts/14/activity-health?week=2026-03-02` | Summary 40 vs 16–36 `above`. Order: Site D (16 vs 2–11 `above`), Site B (9 vs 2–10 `normal`), then Site A and Site C, both `insufficient_data` with weeksUsed 3 | GOLDEN-P (PLAN §13 "Phase 0 decisions" promoted table), account 14 03-02 (weeksUsed 3 per site: SPEC §13 §5.3.2) |
 | API-21 | Earliest week, sites not yet active: `…/accounts/14/activity-health?week=2026-01-26` | 200. Only Site B and Site D are listed (A and C first appear in the week of 2026-02-02). All rows `insufficient_data`, weeksUsed 0 | GOLDEN-P (PLAN §13 "Phase 0 decisions" promoted table), account 14 01-26; SPEC §13 §5.3.1 |
 | API-22 | Location with zero activity (flagged): `…/accounts/6/activity-health?week=2026-06-29` | Site G present with count 0, 2–9, `below`, and it is `locations[0]` | GOLDEN-P (PLAN §13 "Phase 0 decisions" promoted table), account 6 06-29 |
-| API-23 | Zero activity under a type filter: `…/accounts/14/activity-health?type=appointment_set` | Total 2, 1–8, `normal`. All 4 sites listed. Site A 0 vs 0–4 (dev −1.12) is `normal`. Site B 0 vs 0–2 is `normal` too (median ≤ 2, so it cannot be `below`) | GOLDEN-P (PLAN §13 "Phase 0 decisions" promoted table), account 14 appointment_set (Site A, total); Site B range 0–2 SEED (A.4); SPEC §13 §5.3 known limit |
+| API-23 | Zero activity under a type filter: `…/accounts/14/activity-health?type=appointment_set` | Total 2, 1–8, `normal`. All 4 sites listed. Site A 0 vs 0–4 (dev −1.12) is `normal`. Site B 0 vs 0–2 is `normal` too (median ≤ 2, so it cannot be `below`) | GOLDEN-P (PLAN §13 "Phase 0 decisions": total, Site A) and GOLDEN-P (PLAN §13 "Contract decisions" promoted table) (Site B 0, median 0, 0–2); SPEC §13 §5.3 known limit |
 | API-24 | Exact-tie ordering: same request as API-23 | Sites B, C, D all have deviation exactly 0, so they are ordered by name: `locations` = A, B, C, D | GOLDEN-P (PLAN §13 "Phase 0 decisions" promoted table), account 14 appointment_set ties |
 | API-25 | Partial eligibility on a total: `…/accounts/18/activity-health?week=2026-03-23` | Summary `baseline.weeksUsed` 7, 18 vs 15–33 `normal`. Site C 0 vs 1–9 `below`, and it is `locations[0]` | GOLDEN-P (PLAN §13 "Phase 0 decisions" promoted table), account 18 03-23 |
 | API-26 | Every account, default week | `week.start` 2026-07-20. `earliestWeek` is 2026-01-26 for accounts 1, 4, 5, 6, 7, 12, 14, 18; 2026-02-02 for 2, 3, 8–11, 13, 15–17, 19; 2026-07-20 for 20 | GOLDEN |
@@ -217,6 +217,7 @@ How to verify: run `dotnet test tests/Relay.Api.Tests`, then `curl` the running 
 |---|---|---|---|
 | API-30 | `GET …/accounts/20/activity-health` | 200. `summary.count` 0, `insufficient_data`, `baseline.weeksUsed` 0 with null median/low/high, `deviation` null, `locations` `[]`, `earliestWeek` = `latestCompleteWeek` = `2026-07-20` | GOLDEN |
 | API-31 | `GET …/accounts/20/activity-health?week=2026-03-02` | 400 ProblemDetails (before earliestWeek) | GOLDEN |
+| API-32 | Empty **database** (no events at all; `activity_events` empty), `GET …/accounts/14/activity-health` | 200 empty state as in API-30, with `dataAsOf` **null**. `latestCompleteWeek` comes from the current clock via the injected `TimeProvider` (a test pins it, e.g. 2026-09-28 in America/New_York → 2026-09-21) | SPEC §13 "Contract decisions" (empty database) |
 
 ### 3.4 Invalid input (all errors are `ProblemDetails`, `Content-Type: application/problem+json`)
 
@@ -229,8 +230,9 @@ How to verify: run `dotnet test tests/Relay.Api.Tests`, then `curl` the running 
 | API-43 | `…/accounts/14/activity-health?week=2026-01-19` (before earliestWeek) | 400 | SPEC / GOLDEN |
 | API-44 | `…/accounts/8/activity-health?week=2026-01-26` (valid for 14, before 8's earliestWeek) | 400; the same week is 200 for account 14 (API-21) | SPEC |
 | API-45 | `type=ALL`, `type=Call_Received`, `type=calls` | 400 each (case-sensitive) | GOLDEN |
-| API-46 | `week=2026-13-01`, `week=20260720`, `week=abc` | 400 ProblemDetails each | SPEC §13 "Input handling and UI copy" |
+| API-46 | `week=2026-13-01`, `week=20260720`, `week=abc`, `week=07/20/2026`, `week=2026-7-20` | 400 ProblemDetails each, with the same validation-problem shape as a bad `type` | SPEC §13 "Input handling and UI copy"; SPEC §13 "Contract decisions" (extra variants, shape) |
 | API-47 | Unhandled exception in the pipeline (test: a service fake that throws) | 500, `Content-Type: application/problem+json`, no exception message and no stack trace in the body | SPEC §13 §5.2 ("Errors are ProblemDetails") |
+| API-48 | API-boundary mapper unit test with constructed deviations 0.125 and −0.125 (exactly representable binary midpoints) | Emits 0.13 and −0.13 (2 dp, `MidpointRounding.AwayFromZero`). Core keeps full precision; rounding happens only in the mapper. No seed value sits on a midpoint (consensus §3), so constructed values are required | SPEC §13 §5.2, §5.3.8 |
 
 ---
 
@@ -246,7 +248,7 @@ Copy ids (C-xx, P-xx) refer to §0.
 | UI-01 | Open `/dashboard` with no params | URL becomes `/dashboard?account=14&week=2026-07-20&type=all`. `Viewing as` shows Beacon Home Security | SPEC §5.4 URL rules; §13 D5 |
 | UI-02 | Same | Summary reads `26 inbound events · usually 18–38 a week` and `Within usual range` | GOLDEN; C-03, C-06 |
 | UI-03 | Same | The first table row is Site B: `2`, `Usually 3–12 a week`, `▼ Lower than usual`. The rows below it (C, A, D) each show `Within usual range` | GOLDEN; GOLDEN-P (PLAN §13 "Phase 0 decisions" promoted table) (order B, C, A, D) |
-| UI-04 | Same, and every scenario in §4.2 | The rendered page text matches none of: `\bz\b`, `σ`, `±`, `\bmedian\b` (case-insensitive), `\btypical\b` (case-insensitive), `\bdeviation\b` (case-insensitive), and a standalone `\bNormal\b` (capital N, whole word, so `Within usual range` passes). No deviation or median number appears | SPEC §13 §5.4 |
+| UI-04 | Same, and every scenario in §4.2 | The rendered page text matches none of: `\bz\b`, `σ`, `±`, `\bmedian\b` (case-insensitive), `\btypical\b` (case-insensitive), `\bdeviation\b` (case-insensitive), and a standalone `\bNormal\b` (capital N, whole word, so `Within usual range` passes). | SPEC §13 §5.4 |
 | UI-05 | Same | Status is readable with colours removed (symbol + text), e.g. by checking the DOM text or a greyscale screenshot | SPEC §13 §5.4 |
 | UI-06 | Same | Footnote contains C-09, C-10, C-11, C-12 and `Data as of Mon Jul 27, 2026`, each starting with a capital letter. The summary carries C-08. C-14 is absent | SPEC §13 §5.4; SPEC §13 "Input handling and UI copy" (capitalisation, C-08) |
 | UI-07 | Same | `Next week ▶` is disabled (2026-07-20 = latestCompleteWeek); `◀ Previous week` is enabled | SPEC §5.4 stepper bounds |
@@ -264,9 +266,10 @@ Copy ids (C-xx, P-xx) refer to §0.
 | UI-16 | Earliest weeks `?account=14&week=2026-02-02&type=all` | Every row shows its count and `Not enough history yet (0 of 4 weeks needed)`, with no range | GOLDEN-P (PLAN §13 "Phase 0 decisions" promoted table), account 14 02-02; SPEC §13 "Input handling and UI copy" (C-04 with N = 0 kept) |
 | UI-17 | Mixed `?account=14&week=2026-03-02&type=all` | Site D `▲ Higher than usual` first. Sites A and C last, each with `Not enough history yet (3 of 4 weeks needed)` | GOLDEN-P (PLAN §13 "Phase 0 decisions" promoted table), account 14 03-02 |
 | UI-18 | Zero-activity location `?account=6&week=2026-06-29&type=all` | First row Site G, `0`, `Usually 2–9 a week`, `▼ Lower than usual` | GOLDEN-P (PLAN §13 "Phase 0 decisions" promoted table), account 6 06-29 |
-| UI-19 | Zero, small median `?account=14&week=2026-07-20&type=appointment_set` | Sites A and B show `0` and `Within usual range`; Site B reads `Usually 0–2 a week`. Footnote C-12 explains why neither can be lower than usual | GOLDEN-P (PLAN §13 "Phase 0 decisions" promoted table) (Site A); Site B range 0–2 SEED (A.4); SPEC known limit |
+| UI-19 | Zero, small median `?account=14&week=2026-07-20&type=appointment_set` | Sites A and B show `0` and `Within usual range`; Site B reads `Usually 0–2 a week`. Footnote C-12 explains why neither can be lower than usual | GOLDEN-P (PLAN §13 "Phase 0 decisions": Site A) and GOLDEN-P (PLAN §13 "Contract decisions" promoted table) (Site B 0–2); SPEC known limit |
 | UI-20 | Empty account `?account=20` | Shows `No activity recorded for this account yet.` in place of **both** the summary and the table: no `0 inbound events`, no table. The trigger is `locations == [] && summary.baseline.weeksUsed == 0`, not `earliestWeek`. Filters stay visible and usable; both week buttons are disabled (earliestWeek = latestCompleteWeek). No error banner | GOLDEN; SPEC §13 §5.4 (trigger); SPEC §13 "Input handling and UI copy" (replaces summary and table, filters stay) |
 | UI-21 | Stepper at the lower bound `?account=14&week=2026-01-26&type=all` | `◀ Previous week` disabled. Only Site B and Site D listed | SPEC; GOLDEN-P (PLAN §13 "Phase 0 decisions" promoted table), account 14 01-26 |
+| UI-22 | Component test: `DashboardState`/page given an empty-state response with `dataAsOf: null` (empty database) | C-07 is shown, and no `Data as of` line is rendered anywhere (not "Data as of null" or "Invalid Date") | SPEC §13 "Contract decisions" (empty database) |
 
 ### 4.3 URL state, reload and invalid params (§5.4, still in force)
 
@@ -285,8 +288,8 @@ Copy ids (C-xx, P-xx) refer to §0.
 | UI-39 | At `?account=14&week=2026-03-02&type=call_received`, switch `Viewing as` to 6 | Week and type are kept: `?account=6&week=2026-03-02&type=call_received` | SPEC §13 "Input handling and UI copy" |
 | UI-39b | At `?account=14&week=2026-01-26&type=call_received`, switch `Viewing as` to 8 | The kept week 2026-01-26 is before account 8's earliestWeek (2026-02-02). The UI gets the API's 400 for that week, then rewrites the URL (replaceUrl) to `?account=8&week=2026-07-20&type=call_received`. Type is kept, and no error banner appears | SPEC §13 "Input handling and UI copy" (account switch) |
 | UI-40 | API unreachable or 5xx | C-20 shown; filters stay in the URL. `Try again` calls `DashboardState.reload()` and, once the API is back, shows the data without changing the URL | SPEC §13 "Input handling and UI copy" |
-| UI-42 | Each type for account 14, 2026-07-20 | Summary nouns: all → `26 inbound events`, Calls → `16 calls`, Leads → `8 leads`, Appointments → `2 appointments`. Singular (`1 call` etc.) is covered by a component test with count 1 | SPEC §13 "Input handling and UI copy" (C-06a); counts 16 and 8 SEED (A.4); 2 GOLDEN-P (PLAN §13 "Phase 0 decisions" promoted table) |
 | UI-41 | Component test: `LocationTable` given a fixture of 4 rows in an order that is neither alphabetical nor by \|deviation\| (e.g. Site C normal 0.1, Site A below −2.5, Site D normal −1.0, Site B above 3.0), with `low`/`high` that no client formula would reproduce (e.g. 7–8) | Rows render in exactly the payload order C, A, D, B, and each shows `Usually 7–8 a week` as given. No client re-sorting or recomputation | SPEC §13 §5.2 ("locations returned sorted"), §5.4 ("never recomputed in the UI") |
+| UI-42 | Each type for account 14, 2026-07-20 | Summary nouns: all → `26 inbound events`, Calls → `16 calls`, Leads → `8 leads`, Appointments → `2 appointments`. Singular (`1 call` etc.) is covered by a component test with count 1 | SPEC §13 "Input handling and UI copy" (C-06a); counts 16 and 8 GOLDEN-P (PLAN §13 "Contract decisions" promoted table); 2 GOLDEN-P (PLAN §13 "Phase 0 decisions") |
 
 ---
 
@@ -303,7 +306,7 @@ How to verify: read `README.md` in the merged repo and follow the run steps on a
 | README-05 | Design decisions and trade-offs | D1–D7 as revised by §13, including rejected options and the simulated numbers: R2\* flags ≈ 4 % of site-weeks (4.3 %), drop to 0 caught 98 % all / 96 % calls (was 78 / 37 %) | Brief; PLAN §3, §13 |
 | README-06 | Deliberately deferred | PLAN §11 items, each with one line of why | Brief; PLAN §11 |
 | README-07 | With another day | Prioritised list, one line of why each | Brief |
-| README-08 | Known limits | The seven bullets of consensus §1 "Known limits" **verbatim** (≤ 2 a week can never show lower; drop to 0 caught about 90 % at 4+ and about 65 % at 3; 4-week baseline adds about 1 point per side; about 4 % of site-weeks and 13 % of account-weeks; a single-site halving is usually not caught, 34 of 99; a spike stays 7 weeks and widens ranges about 20–30 %; per-type filters at site level are thin) | SPEC §13 ("README must carry the known limits … verbatim and state the ≈ 4 % design flag rate") |
+| README-08 | Known limits | The seven bullets of consensus §1 "Known limits (README, carried verbatim from the statistician)", quoted exactly:<br>"A location that usually gets ≤ 2 a week can never show "lower"."<br>"A drop to 0 is caught about 90 % of the time at 4+ a week, and about 65 % at 3."<br>"With a 4-week baseline, false flags rise by about 1 point per side."<br>"Design flag rate: about 4 % of site-weeks; 13 % of account-weeks show at least one flagged location (`product_monday_view_out.md`)."<br>"A halving at a single site is usually not caught in one week. Of 99 real halvings at median ≥ 6, 34 were flagged and 65 were not (`reviewer_default_week_out.md`)."<br>"A spike stays in the baseline for 7 weeks and widens ranges by about 20–30 % (true of every rule)."<br>"Per-type filters at site level are thin." | SPEC §13 ("README must carry the known limits in `docs/design-consensus.md` §1 verbatim and state the ≈ 4 % design flag rate") |
 | README-09 | Data handling | Duplicates (12 exact pairs counted once; near-duplicates kept), the account 6 spike, the empty account, partial weeks, timezones, small-count limits | Brief ("handle the unglamorous parts"); PLAN §2 |
 
 ---
@@ -313,17 +316,17 @@ How to verify: read `README.md` in the merged repo and follow the run steps on a
 | Scenario | Criteria |
 |---|---|
 | Default week | BL-40, BL-42, API-10, API-26, UI-01…07 |
-| Empty account (20) | BL-45, DATA-31, API-30, API-31, UI-20, UI-36 |
+| Empty account (20) | BL-45, DATA-31, API-30, API-31, UI-20, UI-36 (empty database: API-32, UI-22) |
 | Single-site account | API-16, API-17, UI-14 |
 | Spike week | API-12, UI-10 |
 | Week after the spike (baseline contains it) | BL-13, API-13, API-14, UI-11, UI-12 |
 | Insufficient history (early February) | BL-12, API-18…21, UI-15…17, UI-21 |
-| Type filter | BL-24, DATA-28, DATA-29, API-01d, API-15, API-23, UI-13, UI-19, UI-42 |
+| Type filter | BL-24, DATA-28, API-01d, API-15, API-23, UI-13, UI-19, UI-42 |
 | Reload preserves every filter | UI-30, UI-31, UI-39 |
 | Invalid URL params | UI-32…UI-37, UI-33b, UI-39b (API side: API-40…46, API-40b) |
 | Location with zero activity in the week | BL-20, BL-21, API-22, API-23, API-25, UI-18, UI-19 |
 | Duplicates | DATA-20…24, DATA-02, DATA-03 |
-| Ranking and ties | BL-30…33, API-11, API-24, UI-41 |
+| Ranking and ties | BL-30…33, BL-31b, API-11, API-24, UI-41 |
 | Starter files unchanged | DATA-40 |
 | README | README-01…09 |
 
@@ -331,7 +334,7 @@ How to verify: read `README.md` in the merged repo and follow the run steps on a
 
 ## Appendix A — Seed evidence
 
-Most of this is now covered by the promoted goldens (`GOLDEN-P`), which were independently recomputed in `analysis/goldens/promoted_goldens_out.md`. What remains `SEED`: the DATA-02 per-account counts, the DATA-10 first-activity weeks, Site B 0–2 under `appointment_set`, and the account 14 per-type totals 16 and 8.
+Most of this is now covered by the promoted goldens (`GOLDEN-P`), which were independently recomputed in `analysis/goldens/promoted_goldens_out.md`. Every value below is now promoted to PLAN §13 (the "Phase 0 decisions" and "Contract decisions" tables). No automated criterion is tagged `SEED`. This appendix is kept as the original product evidence and for manual acceptance.
 
 These come from the statistician's R2\* model (`analysis/statistician/golden.py`, which executes `analysis/reference_model.py` on `schema.sql` + `seed.sql` in SQLite), queried by product on 2026-09-28 with a scratch script. Nothing in the repo was changed.
 Command: `python3 <scratch>/pq.py analysis/statistician` and `pq2.py` (both call `show(account, week, type)` / `evaluate(...)` from `golden.py`).
