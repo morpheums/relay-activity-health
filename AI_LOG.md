@@ -130,6 +130,19 @@ Legend: **ACCEPTED** (AI proposal taken as is) · **REDIRECTED** (human changed 
 38. **AI CAUGHT (coordinator)** — The old dev password survived in side-branch history after the env-only fix; the database track was squash-merged, every side branch deleted and the
     repository garbage-collected (object scan: 0 occurrences).
 
+39. **AI CAUGHT (coordinator, own mistake)** — The Phase 1 log export committed the old dev password (10 transcript files, as agents had typed it without the `!`) because the
+    commit step did not stop on a non-zero leak count. Caught by the post-commit check; the user approved replacing main's unpushed tip with a clean commit and garbage-collecting.
+    The redaction list now holds the bare form, and the export step refuses to commit unless both leak counts are zero.
+40. **ACCEPTED (Phase 2 green)** — backend (Core 135/135), database (Infrastructure 52/52; weekly query = one index seek per window, 3–6 ms, totals equal the goldens), frontend (web 179/179),
+    each in its own worktree, no test edited, each reviewed by the Sonnet reviewer and verified by the coordinator before merge.
+41. **AI CAUGHT (reviewer)** — Core: an untested branch for DST transitions at local midnight whose ambiguous-midnight reading disagreed with `WeekContaining`. User: *"Architect ruling"* →
+    out of scope, branch removed, recorded in §13 and the README limits. Web: the logic preventing a duplicate request after the URL rewrite was correct but unpinned — test-author
+    added exact request-sequence tests and proved them by mutation (removing the guard fails 6 tests that nothing caught before).
+42. **USER DECIDED (Phase 2)** — Filters render before the first report (only the stepper waits); page heading "Activity health"; empty "Usual range" cell for insufficient rows;
+    reviewer notes accepted as is (anchor query scans; Unspecified windows treated as UTC; account-list failure silent).
+43. **DEVIATION (architect)** — Applying the optional-inputs contract, the architect also edited the two templates, so the behaviour existed before its tests. Recorded rather than hidden;
+    test-author then wrote the specs and proved each one fails against a deliberately broken implementation (8 mutations) before the merge.
+
 ## Reflection
 _(written at the end)_
 
