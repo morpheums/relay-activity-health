@@ -16,7 +16,7 @@ xUnit + Testcontainers · Angular (standalone, signals, URL query params as stat
 4. **Test-first, per layer.** Interfaces + records + `NotImplementedException` stubs → the complete test suite (happy path + every edge case in PLAN §7) →
    commit **red** → user reviews the tests → implement to green → reviewer → next layer. Never write implementation and its tests in the same step.
 5. **Test expectations come from PLAN.md** (§5.3 rules, §7 golden values), never from running the implementation.
-6. Business-logic tests use no database and no mocks. SQL is tested only against real SQL Server (Testcontainers) — never EF InMemory or SQLite.
+6. C# test names are PascalCase without underscores (analyzer CA1707 stays on). Business-logic tests use no database and no mocks. SQL is tested only against real SQL Server (Testcontainers) — never EF InMemory or SQLite.
 7. SQL does counting only (de-dup, bucket into given UTC windows, group). Week math, zero-fill, statistics and ranking live in `Relay.Core`.
 
 ## Boundaries
@@ -46,7 +46,7 @@ xUnit + Testcontainers · Angular (standalone, signals, URL query params as stat
 
 ## Commands
 - DB: `docker compose up -d db`
-- Backend tests: `dotnet test`
-- API: `dotnet run --project src/Relay.Api`
+- Backend tests: `dotnet test` (exits 8 while a test project has zero tests — expected until its red suite lands)
+- API: `dotnet run --project src/Relay.Api` (fixed port **5080**; the Angular proxy targets it)
 - Frontend: `cd web && npm start` · tests: `cd web && npm test`
 - AI log export: `scripts/export-ai-log.sh`
