@@ -542,3 +542,20 @@ and UTC cases stay covered. The README's known limits carry this line.
 - **Accepted as is (reviewer notes):** the global data-anchor query scans the index (fine at seed scale; a README "another day" item); windows with `DateTimeKind.Unspecified`
   are treated as UTC (Core always sends UTC); a failed account-list load leaves "Viewing as" empty without an error.
 
+### 2026-09-28 — End-to-end smoke layer (user decision, validated by the architect)
+
+**Reason.** The user asked whether E2E tests were part of the plan (they were manual only) and chose to add an automated smoke layer **as the very last step**. It proves the real browser,
+Angular app, API and seeded SQL Server work together. Adds §7 layer 6 and a Phase 4 to §9.
+- **Layer 6 — E2E smoke** (`web/e2e/*.e2e.ts`, Playwright, Chromium, 4–6 tests): default view (account 14, latest complete week 2026-07-20, Site B "▼ Lower than usual" with
+  2 vs "Usually 3–12 a week" ranked first, order B, C, A, D — first §13 golden table); account 6 week 2026-06-01 (total 880, all 15 sites `above`); account 20 empty state;
+  invalid `week=2026-07-21` rewritten to 2026-07-20 (replace); optionally a filter change undone by Back. Expectations only from §7/§13 golden values and approved copy;
+  selectors by role and approved copy, no test ids.
+- **Phase 4 (last):** only after the API + golden suite is green, frontend's manual end-to-end check, product acceptance and the reviewer's full pass.
+  `frontend` adds `@playwright/test`, `playwright.config.ts`, the `e2e` script and ignores `test-results/`, `playwright-report/`; `test-author` writes the specs; the reviewer reviews them.
+- **Red-first deviation:** the app is already green, so each spec proves it can fail by fault injection on a throwaway branch (one targeted mutation per spec, red output recorded,
+  mutation discarded). A stopped API is not accepted as proof.
+- **Running:** Playwright `webServer` starts the API (`dotnet run --project ../src/Relay.Api`, `ConnectionStrings__Relay` from the environment) and `ng serve`, reusing running servers;
+  the DB via `docker compose up -d db`; the API migrates and seeds on start. No secrets committed. Excluded from `npm test`; runs via `npm run e2e`.
+- **Cut line:** first item cut in §10, ahead of the frontend component tests.
+- **README:** `docker compose up -d db && cd web && npx playwright install chromium && npm run e2e` (with `ConnectionStrings__Relay` set).
+
