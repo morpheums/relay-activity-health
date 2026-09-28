@@ -117,6 +117,19 @@ Legend: **ACCEPTED** (AI proposal taken as is) · **REDIRECTED** (human changed 
 33. **AI CAUGHT (architect)** — Removing the copied constructor fields fails the build while classes are stubs (CS9113 under warnings-as-errors); deferred to implementation instead of
     adding `nameof` workarounds.
 
+34. **ACCEPTED (Phase 1 red suites)** — Three test-author tracks in parallel worktrees (Core 135, Infrastructure 52 on Testcontainers SQL Server, web 179) plus the database track
+    (compose, EF model, migrations; seed loads 12,626 rows in ~1.3 s). Every suite was reviewed by the Sonnet reviewer, who recomputed golden values by hand; the user approved the
+    combined red run on an integration branch before any implementation.
+35. **AI CAUGHT (reviewer)** — Core suite: `AccountService` had no tests and nothing pinned an explicit `week == latestCompleteWeek` (an off-by-one would have passed). Web suite: a sweep
+    test that a "Loading…" page would pass, fixture numbers that looked golden but weren't, and no check that user actions add history entries. All fixed before the checkpoint.
+36. **AI CAUGHT (database agent)** — Its own probe showed `Database.SqlQuery<record>` returns `DateTime.Kind = Unspecified` while entity reads and scalar queries are `Utc`, and that
+    each of the two UTC conversions covers a path the other misses — so it kept both with a one-line why-comment instead of "fixing" the duplicate.
+37. **USER DECIDED (Phase 1)** — Against the recommendation: *"count null, empty, 0 as the same so we can dedup easily"* (coordinator verified on the seed first: 12,614 either way,
+    no golden changes). Also: no committed dev password (compose requires `.env`, connection string only from the environment), accounts ordered by name, precedence account → Monday → range,
+    `earliestWeek = min(first-event week, latest complete week)`, client-side `type` check, first-load-failure URL. All validated by the architect, recorded in PLAN §13.
+38. **AI CAUGHT (coordinator)** — The old dev password survived in side-branch history after the env-only fix; the database track was squash-merged, every side branch deleted and the
+    repository garbage-collected (object scan: 0 occurrences).
+
 ## Reflection
 _(written at the end)_
 
