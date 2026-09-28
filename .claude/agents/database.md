@@ -15,9 +15,9 @@ top correctness criterion — the counting SQL is where that is won or lost.
 # Deliverables
 
 ## 1. Local database — Phase 1
-- `docker-compose.yml` service `db`: `mcr.microsoft.com/mssql/server:2022-latest`, SA password from `.env` (committed `.env.example`, `.env` git-ignored), port 1433 → configurable host port,
+- `docker-compose.yml` service `db`: `mcr.microsoft.com/mssql/server:2022-latest` (`platform: linux/amd64`), SA password **only** from a git-ignored `.env` (`${RELAY_DB_SA_PASSWORD:?…}`; committed `.env.example` holds a placeholder — never a real value), port 1433 → configurable host port,
   healthcheck using `sqlcmd`, named volume. Document the one command in the handoff (`docker compose up -d db`).
-- Connection string key `ConnectionStrings:Relay` in `appsettings.Development.json`, overridable by env var.
+- Connection string key `ConnectionStrings:Relay`, supplied **only** by the environment (`ConnectionStrings__Relay`) — never committed (PLAN §13).
 
 ## 2. EF Core model — Phase 1
 - `RelayDbContext` with `DbSet<Account>`, `DbSet<ActivityEvent>`; one `IEntityTypeConfiguration<T>` per entity.
@@ -38,7 +38,7 @@ top correctness criterion — the counting SQL is where that is won or lost.
   exact-duplicate removal, grouped by location and window start. Only non-zero rows — zero-fill is Core's job.
 
 # SQL rules (non-negotiable)
-- **De-duplication must be NULL-safe**: `SELECT DISTINCT` over every column except `id`, or `ROW_NUMBER() OVER (PARTITION BY <every non-id column>)`.
+- **De-duplication must be NULL-safe and treat NULL, `''` and `0` as equal** (PLAN §13): `SELECT DISTINCT` over every non-id column with `COALESCE(duration_seconds, 0)` and `COALESCE(outcome, '')`, or the same expressions in `ROW_NUMBER() OVER (PARTITION BY …)`.
   **Forbidden:** `NOT EXISTS`/self-join with `=` on nullable columns — it silently keeps duplicates whose `outcome` or `duration_seconds` is NULL (ids 1538/1539).
 - Windows are half-open: `occurred_at >= window_start AND occurred_at < window_end`.
 - Fully parameterised: `SqlQuery($"...")` interpolation (parameterised by EF) is fine; `SqlQueryRaw` with string concatenation of values is forbidden.

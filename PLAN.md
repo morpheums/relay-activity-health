@@ -509,3 +509,20 @@ Supersedes the §13 "Contract decisions…" bullet "Wire names owned by Core" an
 - **JSON numbers** are compared numerically (the §5.2 example `1.30` serialises as `1.3`); `locations[]` property order is location, count, baseline, status, deviation (pinned by an API golden test).
 - Unchanged by this pass: Monday check in the service, strict `yyyy-MM-dd` week attribute, `TimeProvider` fallback, `NormalityOptions`, `AddRelayCore` in Api, `DateTime` UTC instants.
 
+### 2026-09-28 — Phase 1 red-suite decisions (user decisions, validated by the architect)
+
+**Reason.** Raised by the reviews of the database work and the three red suites.
+- **No committed secrets:** the dev SA password is never committed. Compose requires `RELAY_DB_SA_PASSWORD` from a git-ignored `.env` (`.env.example` holds a placeholder);
+  the API connection string comes only from the environment (`ConnectionStrings__Relay`), not `appsettings.Development.json`. Supersedes §5.1's "connection string in
+  `appsettings.Development.json`". Migrate-on-start fails fast with a clear message when it is missing. Testcontainers are unaffected. Compose keeps `platform: linux/amd64`.
+- **De-duplication treats NULL, `''` and `0` as equal:** two rows identical except `outcome` NULL vs `''` or `duration_seconds` NULL vs `0` are one event
+  (`DISTINCT`/`GROUP BY` over every non-id column with `COALESCE(duration_seconds, 0)` and `COALESCE(outcome, '')`; `=` self-joins still forbidden). Seed impact: none (still 12,614).
+- **`GET /api/accounts` is ordered by name** (ordinal, ties by id), in `AccountService` — SQL stays free of `ORDER BY`.
+- **Precedence:** malformed input (`week`/`type` shape) → 400 from validation before anything else; then unknown account → 404; then `NotAWeekStart`; then before-earliest / after-latest.
+- **`earliestWeek = min(week of the first event, latestCompleteWeek)`:** an account whose first event is in the incomplete anchor week behaves like the empty account.
+- **UI:** `type` is validated client-side against `EVENT_TYPES` and rewritten to `all` before any request (an invalid type is never sent). User actions add history entries
+  (no `replaceUrl`); only normalisation rewrites replace. With no `week` in the URL and a failing first request, the URL keeps the known defaults without `week`, the load error and
+  "Try again" show, and the week is filled in (replace) after the first successful load.
+- **Component contracts:** `LocationTable` (`locations`, `minimumEligibleWeeks`), `AccountSummary` (`report`), `DashboardFilters` (accounts, accountId, week, earliestWeek,
+  latestCompleteWeek, eventType → accountSelected, weekSelected, eventTypeSelected); the stepper's disabled state is derived; the footnote stays in `DashboardPage`.
+
