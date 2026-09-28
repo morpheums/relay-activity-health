@@ -1,0 +1,256 @@
+# PLAN — DASH-247 "Is this normal for us?"
+
+Written before any implementation code. Built with Claude Code (Opus 5.5) across the planning sessions exported to `ai-log/raw/`
+(`52cccc9e…`, `f8d4159a…`, `cfcd6b64…`). Per the brief this file stays as-written once approved; anything that changes during
+implementation is appended to **§13 Plan changes** with the reason, never edited in place.
+
+---
+
+## 1. Interpretation of the ticket
+
+**Who:** a customer admin of one Relay account (single- or multi-location), Monday morning.
+**Question they need answered at a glance:**
+1. "Was last week normal *for us*?" — the account as a whole, compared with its own recent history.
+2. "Which location needs attention?" — every location compared with *its own* history, ranked so the most unusual one is on top.
+
+**What "normal" means here:** a week's inbound activity count falls inside the range this location/account usually produces,
+derived from its previous 8 complete weeks with robust statistics (median + MAD). Outside the range → "above normal" / "below normal".
+Not enough history → say so instead of guessing.
+
+**What we are *not* building:** alerting/notifications, forecasting/ML (out of scope per product), cross-account benchmarks
+(different persona — that's an account-manager view), outcome rates (deferred, §11).
+
+## 2. What the seed data told us
+
+Profiled independently in Python/SQLite before design (scripts in the planning session log). 20 accounts, 12,626 events,
+`2026-02-01 10:57:44` → `2026-07-27 22:20:34` UTC.
+
+| Finding | Consequence for the design |
+|---|---|
+| Data ends **Monday 2026-07-27**; system clock is Sep 2026 | Anchor "now" to the data, not the clock (D1). Default week = Jul 20–26 |
+| The current week holds one day of data; weekends ≈ 25% of a weekday | Only ever compare **complete** weeks |
+| **Account 6: 880 events in week of Jun 1** (805 on Jun 3 alone) vs ~70/week, all 15 sites, plausible fields | A mean baseline is poisoned for 8 weeks afterwards (mean 171 vs median 72.5 for week of Jul 20). Use median + MAD |
+| **12 exact-duplicate pairs** (adjacent ids, every column equal) | De-duplicate at query time; keep raw rows (use data as-is) |
+| 27 near-duplicates within 60s | Look like natural traffic — not de-duplicated |
+| **Account 20 has zero events** | Empty state is a valid 200, not an error |
+| Per-site per-type weekly medians are 3–6 | %-change is noise. Band must scale with each series' own variability |
+| `location` is clean free text ("Site A"…"Site O"), 1–15 per account; no locations table | Site list derived from events |
+| Local-week vs UTC-week bucketing moves only 8 events; hours look generated near US-East/UTC | Bucket in account local time (it's cheap and correct), but it isn't where correctness lives |
+| ~400 NULL outcomes, 313 NULL call durations, missed calls with durations | Irrelevant to counts; noted, and a reason rates are deferred |
+| All sites' first activity is in week Jan 26 or Feb 2 | Eligibility rule (§5.3) only matters for early weeks |
+
+## 3. Decisions (with rejected alternatives)
+
+| # | Decision | Rejected | Why |
+|---|---|---|---|
+| D1 | "Now" = latest event in the whole dataset (global anchor). Default week = latest complete local week | System clock; fixed config date; per-account anchor | Clock shows nothing on static data. Per-account anchor would make an account that stopped sending data look normal |
+| D2 | Normal = own history (median ± 2 × robust spread over 8 weeks) | Sibling comparison (share of account); %-change vs mean | Sibling share is confounded when the whole account moves (spike week: all 15 sites keep their share → "all normal"), and useless for single-site accounts. Mean is poisoned by the spike; %-change cries wolf on small counts |
+| D3 | Sibling view = account summary row + locations table sorted by deviation (same method, no second statistic) | Separate sibling statistic | One method, one set of edge cases; still separates "whole account moved" from "one site moved" |
+| D4 | Metric = inbound activity count; default all types, event-type filter | Per-type columns; outcome rates | Totals have enough volume; per-type columns are mostly noise; rates deferred (§11) |
+| D5 | Account switcher labelled "Viewing as" (impersonation for demo, not auth). Default account **12** (Redline Tire & Service, 7 sites, one flagged in the default week) | Hardcode one account; cross-account overview | Lets an evaluator see account 6, 20 and single-site accounts in the app, not only in tests |
+| D6 | SQL does counting only; week math, zero-fill, statistics, ranking in pure C# | Everything in SQL; LINQ | Keeps product rules unit-testable without a DB. LINQ doesn't change the test story (InMemory/SQLite give different semantics) |
+| D7 | Band threshold **2** × spread | Rank bands (2nd lowest–2nd highest); min–max; 3 × spread | Simulated on the seed (every site-week with a full baseline, spike excluded): rank band flags **34.6%** of sites/week, min–max 15.1%, **±2 → 4.8%**, ±3 → 0.3%. ±2 and ±3 both flag 15/15 sites in the spike week |
+
+## 4. Assumptions & open questions (not sent to recruiter — working assumption stated)
+
+| Question | Working assumption |
+|---|---|
+| Is the Jun 3 spike real (storm, campaign) or a bad import? | Unknown from the data. We show it as "above normal" and never exclude it; the median keeps it from distorting later weeks |
+| Are exact duplicates real repeated events? | No — identical to the second with adjacent ids = ingestion duplicates. Counted once. Stated in UI footnote + README |
+| Does "this week" mean the current partial week? | No — the last complete week; the partial one would read as a collapse every Monday |
+| Week start day | Monday (ISO), in the account's IANA timezone |
+| Does a site exist before its first event? | No — weeks before (and including) a site's first-activity week don't count toward its baseline |
+| Is "All" = customers? | No — inbound events; a call, lead and appointment may be the same person (no customer id). UI says "inbound events" |
+
+## 5. Design
+
+### 5.1 Database
+- SQL Server 2022 via `docker compose` (`db` service). Connection string in `appsettings.Development.json`, overridable by env var.
+- EF Core migration `InitialCreate` mirrors `schema.sql`; table/column names kept **snake_case** via explicit configuration so the seed runs verbatim.
+  `TIMESTAMP` → `datetime2`; ids `ValueGeneratedNever`; `event_type` stays a string column.
+- **No unique constraint** (it would reject the duplicate rows). Index `IX_activity_events_account_occurred` on
+  `(account_id, occurred_at) INCLUDE (location, event_type)`.
+- Migration `LoadSeedData` runs `db/seed.sql` (committed unmodified, embedded resource) via `migrationBuilder.Sql`. `Down()` deletes the rows.
+- The API applies migrations at startup in Development. Integration tests apply `InitialCreate` only and insert their own fixtures.
+
+### 5.2 API
+`GET /api/accounts` → `[{ id, name, timezone }]` (includes account 20).
+
+`GET /api/accounts/{accountId}/activity-health?week=YYYY-MM-DD&type=all`
+
+| Param | Rule |
+|---|---|
+| `week` | Optional local Monday. Default = latest complete week. Not a Monday → 400. After latest complete week → 400 |
+| `type` | `all` (default) \| `call_received` \| `lead_created` \| `appointment_set`; else 400 |
+| `accountId` | Unknown → 404 |
+
+Errors are `ProblemDetails`. Response:
+```json
+{
+  "account": { "id": 6, "name": "Metro Collision Centers", "timezone": "America/New_York" },
+  "eventType": "all",
+  "week": { "start": "2026-07-20", "end": "2026-07-26" },
+  "dataAsOf": "2026-07-27T22:20:34Z",
+  "latestCompleteWeek": "2026-07-20",
+  "earliestWeek": "2026-01-26",
+  "baselineWeeks": 8,
+  "summary": { "count": 87, "baseline": { "median": 72.5, "low": 24, "high": 121, "weeksUsed": 8 }, "status": "normal", "deviation": 0.59 },
+  "locations": [ { "location": "Site M", "count": 7, "baseline": { … }, "status": "normal", "deviation": 1.57 } ]
+}
+```
+`status ∈ above | below | normal | insufficient_data`. `baseline` is `null` when insufficient. `locations` is returned sorted (§5.3).
+Empty account → 200, `summary.count = 0`, `insufficient_data`, `locations: []`.
+
+### 5.3 Normality rules (the product logic — pure C#)
+For the account total and for each site, for selected week `W`:
+1. **Sites** = distinct locations whose first event is before the end of `W`.
+2. **Baseline weeks** = the 8 local weeks before `W`, **zero-filled**. A week is *eligible* only if it starts **after** the week
+   containing that series' first event (site → site's first event; account total → account's first event).
+3. Fewer than **4** eligible weeks → `insufficient_data` (count still shown).
+4. `median` = median of eligible weeks (mean of the middle two when even).
+5. `spread` = max(1.4826 × MAD, √max(median, 1)). The √ term is the Poisson noise floor so a steady or quiet series never gets a zero-width band.
+6. Band: `below` iff count < median − 2·spread; `above` iff count > median + 2·spread; else `normal`.
+   Displayed integer range `low = max(0, ⌈median − 2·spread⌉)`, `high = ⌊median + 2·spread⌋` (equivalent to the rule for integer counts).
+7. `deviation` = (count − median) / spread, rounded to 2 dp for display only.
+8. Ranking: `insufficient_data` last; otherwise |deviation| descending, then location name ascending.
+
+Constants live in `NormalityOptions { BaselineWeeks = 8, MinimumEligibleWeeks = 4, BandWidth = 2.0 }`.
+
+### 5.4 Frontend
+- Current stable Angular, standalone components, signals; Vitest.
+- Single route `/dashboard?account=12&week=2026-07-20&type=all`. **URL is the source of truth**: `DashboardState` maps query params → signals and writes changes via
+  `router.navigate` (merge). Invalid/missing params → defaults, URL rewritten so reload is reproducible.
+- `ActivityHealthApi`, `AccountsApi` are abstract-class DI tokens; `Http…` implementations provided in `app.config.ts`.
+- Components: `DashboardPage` (container), `DashboardFilters` (Viewing-as select, ◀ week ▶ stepper bounded by `earliestWeek`/`latestCompleteWeek`, type select),
+  `AccountSummary`, `LocationTable`. Presentational components are input/output only.
+- Status as text + symbol (never colour alone): "▲ Above normal", "▼ Below normal", "Normal", "Not enough history (3 of 4 weeks)".
+- Footnote: method in plain English, "inbound events, not unique customers", "exact duplicates counted once", "data as of Mon Jul 27".
+- Dev proxy `/api` → backend.
+
+## 6. Architecture & code rules
+
+```
+relay-activity-health/
+  db/seed.sql, db/schema.sql         (starter files, unmodified)
+  src/Relay.Core                     business logic + application service + query interfaces (no dependencies)
+  src/Relay.Infrastructure           EF Core, migrations, raw SQL implementations of Core's query interfaces
+  src/Relay.Api                      Minimal API endpoints, DI composition root
+  tests/Relay.Core.Tests             unit (no DB, no mocks for BL)
+  tests/Relay.Infrastructure.Tests   integration (Testcontainers SQL Server)
+  tests/Relay.Api.Tests              API + golden tests (WebApplicationFactory + Testcontainers)
+  web/                               Angular app
+  .claude/agents/                    agent team definitions
+  scripts/export-ai-log.sh
+```
+
+Interfaces (behaviour) — records/DTOs/options are plain data and have none:
+
+| Interface | Project | Responsibility |
+|---|---|---|
+| `IWeekCalendar` | Core | Local Monday ↔ UTC `[start, end)` windows (DST-correct via IANA `TimeZoneInfo`), week containing an instant, latest complete week for an anchor, "is a week start" |
+| `IWeeklyGridBuilder` | Core | Sparse `(site, week, count)` + site first-activity → zero-filled series with eligibility per week |
+| `IBaselineEvaluator` | Core | Eligible baseline counts + current count → median, spread, band, status, deviation (§5.3 steps 3–7) |
+| `ILocationRanker` | Core | §5.3 step 8 |
+| `IActivityHealthService` | Core | Orchestrates the above + queries; returns `ActivityHealthResult` (Found / AccountNotFound / InvalidWeek) |
+| `IActivityQueries` | Core (impl: Infrastructure) | Data anchor + first event; sites with first-event instant; weekly de-duplicated counts for given UTC windows and type |
+| `IAccountQueries` | Core (impl: Infrastructure) | List accounts; get one |
+
+**Code rules** (also in `CLAUDE.md`, binding on every agent):
+1. SOLID, no tight coupling. Every class with behaviour depends on interfaces and is wired via DI. Plain data is exempt.
+2. **No comment blocks — forbidden.** Self-explanatory code and descriptive names. A single-line comment only when truly needed (e.g. why 1.4826).
+3. Test-first per layer: interfaces + records + `NotImplementedException` stubs → complete test suite (happy path + edge cases) → **commit red** →
+   user reviews the tests → implement to green → reviewer → next layer. Business-logic tests run with no DB and no mocks.
+4. Test expectations come from the spec and the independent Python profile — never from the implementation under test.
+
+## 7. Test plan
+
+| Layer | Project | Kind |
+|---|---|---|
+| 1 Business logic | `Relay.Core.Tests` | Unit, pure |
+| 2 Service | `Relay.Core.Tests` | Unit, hand-written fakes of `IActivityQueries`/`IAccountQueries` |
+| 3 Data | `Relay.Infrastructure.Tests` | Integration, Testcontainers, hand-built fixtures |
+| 4 API + golden | `Relay.Api.Tests` | Integration against the real seed |
+| 5 Frontend | `web` (Vitest) | `DashboardState` URL round-trip + normalisation; `LocationTable`/`AccountSummary` states |
+
+**Edge cases that must have tests**
+- Calendar: DST start week (Mar 8 2026) and end week (Nov 1 2026) in America/Chicago; America/Phoenix (no DST); UTC; event exactly at a week boundary (belongs to the new week);
+  latest complete week when the anchor is Monday vs Sunday 23:59:59 local vs exactly Monday 00:00 local; non-Monday week rejected; invalid IANA id.
+- Grid: site with zero events in `W` appears with 0; site silent for the whole baseline; weeks on/before first-activity week ineligible; site whose first event is after `W` excluded.
+- Evaluator: < 4 eligible weeks; MAD = 0 (floor applies); median 0; even-count median; spike inside baseline; low clamped at 0; exactly on the band edge is `normal`.
+- Ranking: insufficient last; ties by name; above and below ranked by magnitude together.
+- SQL: exact duplicates counted once, near-duplicates not; boundary instant; type filter; other accounts' rows ignored; events outside windows ignored; no rows → empty.
+- API: 404 unknown account; 400 non-Monday / future week / bad type; default week; empty account 200.
+
+**Golden values (from the independent Python model, §2)**
+| Scenario | Expected |
+|---|---|
+| Account 6, week 2026-06-01, all | total 880, median 66, range 35–97, `above`; **all 15 sites `above`**, top = Site C (67, dev 36.95) |
+| Account 6, week 2026-07-20, all | total 87, median 72.5, range 24–121, `normal` (baseline contains the 880 week; mean would be 171); all 15 sites `normal` |
+| Account 6, week 2026-07-20, `call_received` | total 51, median 42, range 13–71, `normal` |
+| Account 12, week 2026-07-20, all | total 54, median 56, range 39–73, `normal`; Site F 11 vs 1–10 → `above` (dev 2.35), ranked first |
+| Account 1, week 2026-07-06, Site C | 4 (raw rows 5 — one exact duplicate) |
+| Account 8, week 2026-03-02 | `insufficient_data` (3 eligible weeks) |
+| Account 8, week 2026-03-09 | baseline 11,11,11,8 → median 11, MAD 0, spread √11 = 3.317, range 5–17, `normal` |
+| Account 20 | empty state |
+| Default week (any account) | 2026-07-20 |
+
+## 8. Agent team & working model
+
+Definitions in `.claude/agents/`, all bound by `CLAUDE.md`.
+
+| Agent | Model | Owns | Writes |
+|---|---|---|---|
+| `product` | Opus 5.5 | Interpretation, acceptance criteria per slice, README interpretation/assumptions/deferred | Docs |
+| `architect` | Opus 5.5 | Solution/projects/packages, all interfaces, records, API contract, stubs; rules on cross-layer changes | Contracts |
+| `test-author` | Opus 5.5 | Red test suites for every layer; **never implements** | Tests |
+| `backend` | Opus 5.5 | Core implementations, service, endpoints, DI | Code |
+| `database` | Opus 5.5 | EF config, migrations, seed load, raw SQL, index, compose, Testcontainers fixture | Code |
+| `frontend` | Opus 5.5 | Angular state, services, components | Code |
+| `reviewer` | **Sonnet 5** | Read-only adversarial review per layer: rules, SOLID, §5.3 conformance, golden values | Findings |
+
+Main thread = **coordinator only**: dispatches with precise context (spec section, file scope, done criteria), reviews output, decides
+accept/reject/redirect, merges worktrees, runs verification, keeps `AI_LOG.md`. It doesn't write product code.
+Reviewer on a different model than the authors is deliberate — a second model doesn't share the author's blind spots.
+
+## 9. Execution phases & parallelisation
+
+```
+Phase 0  sequential   architect: move starter files to db/, solution + 3 src + 3 test projects, packages, Angular shell (web/),
+                      docker-compose, contracts (interfaces, records, API DTOs, TS models) + NotImplemented stubs
+                      → commit "contracts" → USER reviews contracts
+Phase 1  parallel     A  test-author: Core red suite (calendar, grid, evaluator, ranker, service w/ fakes)
+         (worktrees)  B  test-author: Infrastructure red suite     ‖  database: migrations + seed load + compose up
+                      C  test-author: web red suite
+                      → ONE checkpoint: USER reviews all red suites
+Phase 2  parallel     backend → A green  ‖  database → B green  ‖  frontend → C green (against fake API)
+                      → reviewer on each track as it lands → fixes
+Phase 3  sequential   test-author: API + golden red suite → backend: endpoints green → frontend wired to real API
+                      → reviewer full pass → product: README → coordinator: export AI log, reflection
+```
+Tracks touch disjoint paths (`src/Relay.Core`+`tests/Relay.Core.Tests` | `src/Relay.Infrastructure`+`tests/Relay.Infrastructure.Tests` | `web/`).
+Only the architect touches `.sln`, `.csproj`, `package.json`, `Directory.*` — in Phase 0 — so parallel tracks never collide.
+Contract changes discovered later go back through the architect.
+
+## 10. Time budget & cut line
+
+Planning has used roughly 2h (first session 16:33 UTC). Remaining target ≈ 3h. If behind, cut in this order:
+1. Frontend component tests (keep the `DashboardState` URL test).
+2. Type filter UI (keep the API param + tests).
+3. Week stepper → plain date input.
+Never cut: aggregate correctness, BL + SQL tests, golden tests, README, AI log. If out of time: stop and document in README.
+
+## 11. Deferred (deliberately)
+- Outcome rates (missed-call rate, lead conversion, no-show) — more actionable, but worse small-number problem and NULL-outcome decisions. First "another day" item.
+- Second severity tier (|dev| > 3 "very unusual").
+- Sibling-share statistic (confounded, see D2).
+- Near-duplicate policy, spike root-cause annotation, trend sparklines, auth, caching.
+
+## 12. AI log (minimal, no hooks)
+- `scripts/export-ai-log.sh` copies every session and subagent transcript for this work (both project folders under `$CLAUDE_CONFIG_DIR/projects`) into
+  `ai-log/raw/`, redacts the user's email and any SA password, and renders a readable `ai-log/sessions/<session>.md` (prompts, responses, tool calls).
+  The coordinator runs it at each phase checkpoint and before the final push.
+- `AI_LOG.md` is written **live** by the coordinator: every dispatch (agent, prompt summary, link to raw), outcome, accept/reject/redirect + why,
+  user overrides. Ends with the reflection and the one-line tools/models statement.
+
+## 13. Plan changes
+_(append-only, dated, with reason)_
