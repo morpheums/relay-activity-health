@@ -25,7 +25,7 @@ C# (`Relay.Core`):
 - `ActivityHealthResult` as a closed hierarchy: `Found(ActivityHealthReport)`, `AccountNotFound`, `InvalidWeek(string Reason)`.
 - Type conventions: instants are `DateTime` in UTC; weeks are `DateOnly` (local Monday); counts are `int`; statistics are `double`.
 - Every implementation class exists, is `sealed`, takes its dependencies through the constructor, and every member throws `NotImplementedException`.
-- DI extension methods: `AddRelayCore(this IServiceCollection, IConfiguration)` (binds `NormalityOptions` with `ValidateOnStart`), `AddRelayInfrastructure(...)`, `AddRelayApi()`, `MapRelayEndpoints(this IEndpointRouteBuilder)` — registrations real, bodies of the registered classes stubbed.
+- DI extension methods: `AddRelayCore(this IServiceCollection, IConfiguration)` in `Relay.Api/Composition` (binds `NormalityOptions` with `ValidateOnStart` and exposes it to Core as plain data, so Core stays package-free — PLAN §13), `AddRelayInfrastructure(...)`, `AddRelayApi()`, `MapRelayEndpoints(this IEndpointRouteBuilder)` — registrations real, bodies of the registered classes stubbed.
 - `Program.cs` is only those calls plus `UseExceptionHandler()`/`UseStatusCodePages()` — the backend agent fills the handlers.
 
 TypeScript (`web/src/app`):

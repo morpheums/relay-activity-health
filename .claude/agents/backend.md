@@ -28,7 +28,7 @@ Structure only; no contracts, no logic (the architect adds contracts afterwards)
 - `WeekCalendar : IWeekCalendar` — IANA zone via `TimeZoneInfo.FindSystemTimeZoneById`; a week is local Monday 00:00 → next Monday 00:00, converted to UTC (half-open);
   handles DST (23 h / 25 h days) by converting each boundary, never by adding 7×24 h. Latest complete week = the latest week whose UTC end ≤ the data anchor.
 - `WeeklyGridBuilder : IWeeklyGridBuilder` — zero-fills every (site, week); marks eligibility per PLAN §5.3; excludes sites whose first activity is after the selected week.
-- `BaselineEvaluator : IBaselineEvaluator` — PLAN §5.3 exactly, constants only from `IOptions<NormalityOptions>`. Keep each step a small, named private method
+- `BaselineEvaluator : IBaselineEvaluator` — PLAN §5.3 exactly, constants only from the injected `NormalityOptions` (plain data; bound and validated by `AddRelayCore` in `Relay.Api/Composition` — PLAN §13). Keep each step a small, named private method
   (`MedianOf`, `SpreadOf`, `StatusFor`, `RangeFor`) so the code reads like the plan.
 - `LocationRanker : ILocationRanker` — PLAN §5.3 ranking; stable, culture-invariant name ordering (`StringComparer.Ordinal`).
 - `AccountService : IAccountService` — lists accounts through `IAccountQueries`.

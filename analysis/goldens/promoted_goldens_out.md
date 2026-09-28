@@ -110,3 +110,51 @@
 | 3. Site B | 5 | 3.0 | 1–7 | normal | 0.96 | (0, 6, 'normal', 1.15) | [2, 9, 4, 2, 2, 4] |
 | 4. Site E | 2 | 4 | 1–11 | normal | -0.86 | (0, 9, 'normal', -0.67) | [1, 3, 6, 4, 7, 6, 3] |
 | 5. Site A | 4 | 4.0 | 1–10 | normal | 0.0 | (0, 8, 'normal', 0.0) | [8, 8, 4, 4, 3, 2] |
+
+### account 6, week 2026-07-20, type all
+| series | count | median | range | status | deviation (z) | current rule (low,high,status,dev) | baseline |
+|---|---|---|---|---|---|---|---|
+| TOTAL | 87 | 72.5 | 30–134 | normal | 0.53 | (24, 121, 'normal', 0.59) | [53, 880, 102, 59, 76, 69, 79, 50] |
+<!-- total centreT=17.073371 spreadT=3.057172 -->
+| 1. Site M | 7 | 3.5 | 1–9 | normal | 1.3 | (0, 7, 'normal', 1.57) | [3, 50, 3, 2, 4, 1, 6, 5] |
+
+### account 14, week 2026-07-20, type call_received
+| series | count | median | range | status | deviation (z) | current rule (low,high,status,dev) | baseline |
+|---|---|---|---|---|---|---|---|
+| TOTAL | 16 | 15.5 | 9–24 | normal | 0.12 | (8, 23, 'normal', 0.13) | [12, 12, 14, 16, 15, 17, 20, 20] |
+<!-- total centreT=7.968689 spreadT=1.000000 -->
+
+### account 14, week 2026-07-20, type lead_created
+| series | count | median | range | status | deviation (z) | current rule (low,high,status,dev) | baseline |
+|---|---|---|---|---|---|---|---|
+| TOTAL | 8 | 6.0 | 2–12 | normal | 0.74 | (2, 10, 'normal', 0.82) | [7, 2, 6, 10, 9, 5, 6, 4] |
+<!-- total centreT=5.049752 spreadT=1.000000 -->
+
+### de-duplicated events per account (all weeks)
+| 1 | 1221 |
+| 2 | 729 |
+| 3 | 477 |
+| 4 | 796 |
+| 5 | 884 |
+| 6 | 2637 |
+| 7 | 437 |
+| 8 | 260 |
+| 9 | 546 |
+| 10 | 342 |
+| 11 | 354 |
+| 12 | 1303 |
+| 13 | 205 |
+| 14 | 638 |
+| 15 | 499 |
+| 16 | 167 |
+| 17 | 323 |
+| 18 | 586 |
+| 19 | 210 |
+| 20 | 0 |
+| total | 12614 |
+
+### account 14 site first-activity weeks
+| Site A | 2026-02-03T16:47:39+00:00 | week 2026-02-02 |
+| Site B | 2026-02-01T18:02:21+00:00 | week 2026-01-26 |
+| Site C | 2026-02-02T11:11:10+00:00 | week 2026-02-02 |
+| Site D | 2026-02-01T16:26:34+00:00 | week 2026-01-26 |
