@@ -8,8 +8,6 @@ A Relay customer admin opens the dashboard on Monday morning and gets two answer
 Spec: [`PLAN.md`](PLAN.md). It was written before the code and is append-only; later decisions are in §13 with a reason for each.
 Acceptance criteria and approved UI copy: [`docs/acceptance-criteria.md`](docs/acceptance-criteria.md). AI interaction log: [`AI_LOG.md`](AI_LOG.md).
 
-> **Pending verification.** Statements marked **[verify]** describe API behaviour that the red test suite (`tests/Relay.Api.Tests`) pins but the API does not implement yet. Examples are migrate-on-start and the missing-connection-string message. They must be confirmed against the running API before merge.
-
 **Contents:** [Quick start](#quick-start) · [Prerequisites](#prerequisites) · [Configuration](#configuration) · [Run the app](#run-the-app) · [Run the tests](#run-the-tests) · [Troubleshooting](#troubleshooting) · [API reference](#api-reference) · [Interpretation of the ticket](#interpretation-of-the-ticket) · [Key assumptions](#key-assumptions) · [Design decisions and trade-offs](#design-decisions-and-trade-offs) · [Data handling](#data-handling) · [Known limits](#known-limits) · [Deliberately deferred](#deliberately-deferred) · [With another day](#with-another-day) · [Stack](#stack) · [Project structure](#project-structure) · [How AI was used](#how-ai-was-used)
 
 ---
@@ -37,7 +35,7 @@ Tests: `dotnet test` (Docker running) and `cd web && npm test`.
 | npm | **11.12.1** (`"packageManager": "npm@11.12.1"` in `web/package.json`) | `npm ci` installs from the lockfile |
 | Docker | Any recent Docker Desktop or Engine with Compose v2. Verified with 29.5.3 | It runs the SQL Server container for the app. **The Infrastructure and API test suites also need Docker running**, because Testcontainers starts its own SQL Server containers |
 | Global Angular CLI | **Not needed** | `npm start` and `npm test` run the project-local `ng` from `web/node_modules` |
-| `dotnet-ef` tool | **Not needed to run** | The API applies migrations on startup in Development **[verify]**. You need `dotnet-ef` only to author new migrations; the repo has no tool manifest |
+| `dotnet-ef` tool | **Not needed to run** | The API applies migrations on startup in Development. You need `dotnet-ef` only to author new migrations; the repo has no tool manifest |
 
 **Ports**
 
@@ -60,13 +58,13 @@ Nothing secret is committed. `.env` is git-ignored, and `.env.example` holds onl
 | `RELAY_DB_SA_PASSWORD` | SQL Server `sa` password | **None, required.** Compose stops with `set RELAY_DB_SA_PASSWORD in .env` if it is missing | `docker compose`, which reads `.env` automatically and passes it to the container as `MSSQL_SA_PASSWORD`. It is also embedded in `ConnectionStrings__Relay` |
 | `RELAY_DB_PORT` | Host port for SQL Server | `1433` | `docker compose` (port mapping); embedded in `ConnectionStrings__Relay` |
 | `ConnectionStrings__Relay` | API connection string (`ConnectionStrings:Relay` in .NET configuration) | Built in `.env.example` from the two variables above: `Server=localhost,${RELAY_DB_PORT};Database=relay;User Id=sa;Password=${RELAY_DB_SA_PASSWORD};TrustServerCertificate=True` | The API, **only from the environment** (it is in no `appsettings*.json`), and the EF design-time factory (`RelayDesignTimeDbContextFactory`) when you run `dotnet-ef`. The API does **not** read `.env` itself; export it with `set -a; source .env; set +a` |
-| `ASPNETCORE_ENVIRONMENT` | Environment name | `Development`, set by `launchSettings.json` for `dotnet run` | The API. Migrate-on-start runs only in Development **[verify]** |
+| `ASPNETCORE_ENVIRONMENT` | Environment name | `Development`, set by `launchSettings.json` for `dotnet run` | The API. Migrate-on-start and the missing-connection-string check run **only in Development**. In Production a missing connection string surfaces as a 500 on the first request |
 
 The tests need none of these. Testcontainers creates its own databases and connection strings.
 
 **Password rules:** SQL Server rejects weak `sa` passwords, and the container then exits. Use at least 8 characters from three of the four groups: upper case, lower case, digits, symbols. Avoid `$` (Compose and the shell expand it), `"`, and `;` (it ends a value in the connection string).
 
-**Changing the password or resetting the data:** the `relay-db-data` volume keeps the password it was created with. Changing `.env` later does **not** change it. To reset, run `docker compose down -v` (this **deletes the database**), then `docker compose up -d --wait db`. The next API start recreates and reseeds the database **[verify]**.
+**Changing the password or resetting the data:** the `relay-db-data` volume keeps the password it was created with. Changing `.env` later does **not** change it. To reset, run `docker compose down -v` (this **deletes the database**), then `docker compose up -d --wait db`. The next API start recreates and reseeds the database.
 
 ---
 
@@ -79,7 +77,9 @@ The tests need none of these. Testcontainers creates its own databases and conne
    set -a; source .env; set +a
    dotnet run --project src/Relay.Api
    ```
-   It listens on **http://localhost:5080**. On the first start in Development it creates the `relay` database, applies `InitialCreate` (the schema) and `LoadSeedData` (runs `db/seed.sql`, about 12.6k rows, in about 1 s) **[verify]**. Quick check: `curl -s http://localhost:5080/api/accounts` returns 20 accounts.
+   It listens on **http://localhost:5080**. On the first start in Development it creates the `relay` database, applies `InitialCreate` (the schema) and `LoadSeedData` (runs `db/seed.sql`, about 12.6k rows, in about 1 s). It logs `Applying Relay database migrations on start (Development)`, and the port opens only after migration finishes, so the first start takes a few seconds longer. If `ConnectionStrings__Relay` is missing, it stops at startup with:
+   `The connection string 'ConnectionStrings:Relay' is missing or empty. Set the environment variable 'ConnectionStrings__Relay' before starting the API.`
+   Quick check: `curl -s http://localhost:5080/api/accounts` returns 20 accounts.
 4. **Web** (terminal 2): `cd web && npm ci && npm start`. `ng serve` proxies `/api` to `http://localhost:5080` (`web/proxy.conf.json`).
 5. **Open http://localhost:4200/dashboard.**
 
@@ -106,7 +106,7 @@ Reloading any of these reproduces the same view.
 |---|---|
 | Stop the API or the web server | `Ctrl+C` in its terminal |
 | Stop the DB and keep the data | `docker compose stop db` (or `docker compose down`) |
-| Delete the DB and its data | `docker compose down -v`. The next API start reseeds it **[verify]** |
+| Delete the DB and its data | `docker compose down -v`. The next API start reseeds it |
 
 ---
 
@@ -123,7 +123,6 @@ Reloading any of these reproduces the same view.
 | Frontend | `cd web && npm test` | Node, after `npm ci` | Vitest via `ng test`: URL-as-state round trip and normalisation, request sequencing, component states and copy |
 | End-to-end smoke (**planned, not in the repo yet**) | `docker compose up -d --wait db && cd web && npx playwright install chromium && npm run e2e`, with `ConnectionStrings__Relay` exported | Docker, Chromium | Browser, Angular, API and seeded DB together (PLAN §13, "End-to-end smoke layer") |
 
-- **Red suite.** `tests/Relay.Api.Tests` is committed red until the endpoints are implemented, so until then `dotnet test` fails on that project **[verify]**.
 - **Where expectations come from.** Test expectations come from PLAN.md and the independent Python models in `analysis/`. They were never taken from running the code under test.
 - **Build settings.** The build uses `TreatWarningsAsErrors` and `AnalysisLevel latest-recommended`, so an analyzer warning fails the build.
 
@@ -134,7 +133,7 @@ Reloading any of these reproduces the same view.
 | Symptom | Cause and fix |
 |---|---|
 | The API won't bind, or the web proxy gets errors on port 5000 | On macOS the AirPlay Receiver holds :5000. That is why the API uses **5080** (`launchSettings.json`, `web/proxy.conf.json`). Start the API with `dotnet run --project src/Relay.Api` so the launch profile applies |
-| The API stops at startup with a message naming `ConnectionStrings:Relay` / `ConnectionStrings__Relay` | The connection string is not in the environment. Run `set -a; source .env; set +a` **in the same terminal** before `dotnet run` **[verify: exact message]** |
+| The API stops at startup with `The connection string 'ConnectionStrings:Relay' is missing or empty. Set the environment variable 'ConnectionStrings__Relay' before starting the API.` | The connection string is not in the environment. Run `set -a; source .env; set +a` **in the same terminal** before `dotnet run`. This check runs only in Development; in Production the same problem shows up as a 500 on the first request |
 | `Login failed for user 'sa'` | The volume was created with a different password. Put the old password back in `.env`, or reset with `docker compose down -v` (deletes the data) |
 | `docker compose up` fails with `set RELAY_DB_SA_PASSWORD in .env` | `.env` is missing, or the variable is empty. Run `cp .env.example .env` and set it |
 | The DB container exits or never turns healthy | The password is too weak for SQL Server; check `docker compose logs db`. On Apple Silicon, check that Rosetta emulation is enabled |
