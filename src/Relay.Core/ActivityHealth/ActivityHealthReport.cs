@@ -1,4 +1,5 @@
-using Relay.Core.Accounts;
+using Relay.Core.Normality;
+using Relay.Core.Queries;
 
 namespace Relay.Core.ActivityHealth;
 
@@ -12,5 +13,5 @@ public sealed record ActivityHealthReport(
     DateOnly EarliestWeek,
     int BaselineWeeks,
     int MinimumEligibleWeeks,
-    AccountSummary Summary,
+    AccountTotal Summary,
     IReadOnlyList<LocationHealth> Locations);

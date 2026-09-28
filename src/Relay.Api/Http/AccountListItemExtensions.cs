@@ -1,4 +1,4 @@
-using Relay.Core.Accounts;
+using Relay.Core.Queries;
 
 namespace Relay.Api.Http;
 

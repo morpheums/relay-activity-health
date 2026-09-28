@@ -6,7 +6,7 @@ namespace Relay.Api.Http;
 public sealed record ActivityHealthRequest(
     [FromRoute] int AccountId,
     [FromQuery] IsoDate? Week,
-    [FromQuery, RegularExpression(ActivityHealthRequest.EventTypePattern)] string? Type)
+    [FromQuery, MinLength(1), RegularExpression(ActivityHealthRequest.EventTypePattern)] string? Type)
 {
     public const string EventTypePattern = "^(all|call_received|lead_created|appointment_set)$";
 }

@@ -10,5 +10,5 @@ public abstract record ActivityHealthResult
 
     public sealed record AccountNotFound : ActivityHealthResult;
 
-    public sealed record InvalidWeek(string Reason) : ActivityHealthResult;
+    public sealed record InvalidWeek(InvalidWeekReason Reason) : ActivityHealthResult;
 }

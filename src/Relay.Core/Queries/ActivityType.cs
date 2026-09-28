@@ -1,4 +1,4 @@
-namespace Relay.Core.ActivityHealth;
+namespace Relay.Core.Queries;
 
 public enum ActivityType
 {

@@ -1,4 +1,3 @@
-using Relay.Core.ActivityHealth;
 using Relay.Core.Calendar;
 
 namespace Relay.Core.Queries;

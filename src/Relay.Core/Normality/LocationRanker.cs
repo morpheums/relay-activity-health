@@ -1,5 +1,3 @@
-using Relay.Core.ActivityHealth;
-
 namespace Relay.Core.Normality;
 
 public sealed class LocationRanker : ILocationRanker

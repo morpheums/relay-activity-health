@@ -1,4 +1,3 @@
-using Relay.Core.ActivityHealth;
 using Relay.Core.Calendar;
 using Relay.Core.Queries;
 using Relay.Infrastructure.Persistence;

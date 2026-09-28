@@ -1,4 +1,3 @@
-using Relay.Core.Accounts;
 using Relay.Core.Queries;
 using Relay.Infrastructure.Persistence;
 

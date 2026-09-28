@@ -1,5 +1,3 @@
-using Relay.Core.Accounts;
-
 namespace Relay.Core.Queries;
 
 public interface IAccountQueries
