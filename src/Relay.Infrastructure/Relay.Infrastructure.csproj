@@ -12,4 +12,8 @@
     </PackageReference>
   </ItemGroup>
 
+  <ItemGroup>
+    <EmbeddedResource Include="..\..\db\seed.sql" LogicalName="Relay.Infrastructure.Seed.seed.sql" />
+  </ItemGroup>
+
 </Project>
