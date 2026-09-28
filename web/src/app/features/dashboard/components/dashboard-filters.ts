@@ -16,11 +16,13 @@ import { addWeeks, formatWeekRange } from '../week';
       </select>
     </label>
 
-    <div class="week-stepper" role="group" aria-label="Week">
-      <button type="button" [disabled]="!canGoToPreviousWeek()" (click)="stepWeek(-1)">◀ Previous week</button>
-      <span class="week-label" aria-live="polite">{{ weekLabel() }}</span>
-      <button type="button" [disabled]="!canGoToNextWeek()" (click)="stepWeek(1)">Next week ▶</button>
-    </div>
+    @if (weekStepper(); as stepper) {
+      <div class="week-stepper" role="group" aria-label="Week">
+        <button type="button" [disabled]="!stepper.canGoToPreviousWeek" (click)="stepWeek(stepper.weekStart, -1)">◀ Previous week</button>
+        <span class="week-label" aria-live="polite">{{ stepper.weekLabel }}</span>
+        <button type="button" [disabled]="!stepper.canGoToNextWeek" (click)="stepWeek(stepper.weekStart, 1)">Next week ▶</button>
+      </div>
+    }
 
     <label class="filter">
       Activity type
@@ -41,9 +43,9 @@ import { addWeeks, formatWeekRange } from '../week';
 export class DashboardFilters {
   readonly accounts = input.required<readonly Account[]>();
   readonly accountId = input.required<number>();
-  readonly week = input.required<WeekRange>();
-  readonly earliestWeek = input.required<string>();
-  readonly latestCompleteWeek = input.required<string>();
+  readonly week = input<WeekRange | null>(null);
+  readonly earliestWeek = input<string | null>(null);
+  readonly latestCompleteWeek = input<string | null>(null);
   readonly eventType = input.required<EventType>();
 
   readonly accountSelected = output<number>();
@@ -51,9 +53,20 @@ export class DashboardFilters {
   readonly eventTypeSelected = output<EventType>();
 
   protected readonly eventTypeOptions = EVENT_TYPES.map((value) => ({ value, label: EVENT_TYPE_LABELS[value] }));
-  protected readonly weekLabel = computed(() => formatWeekRange(this.week().start, this.week().end));
-  protected readonly canGoToPreviousWeek = computed(() => this.week().start > this.earliestWeek());
-  protected readonly canGoToNextWeek = computed(() => this.week().start < this.latestCompleteWeek());
+  protected readonly weekStepper = computed(() => {
+    const week = this.week();
+    const earliestWeek = this.earliestWeek();
+    const latestCompleteWeek = this.latestCompleteWeek();
+    if (week === null || earliestWeek === null || latestCompleteWeek === null) {
+      return null;
+    }
+    return {
+      weekStart: week.start,
+      weekLabel: formatWeekRange(week.start, week.end),
+      canGoToPreviousWeek: week.start > earliestWeek,
+      canGoToNextWeek: week.start < latestCompleteWeek,
+    };
+  });
 
   protected onAccountChange(event: Event): void {
     const selectedAccountId = Number((event.target as HTMLSelectElement).value);
@@ -70,7 +83,7 @@ export class DashboardFilters {
     }
   }
 
-  protected stepWeek(weekCount: number): void {
-    this.weekSelected.emit(addWeeks(this.week().start, weekCount));
+  protected stepWeek(weekStart: string, weekCount: number): void {
+    this.weekSelected.emit(addWeeks(weekStart, weekCount));
   }
 }

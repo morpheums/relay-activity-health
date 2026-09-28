@@ -15,19 +15,17 @@ import { formatCalendarDay, sundayOfWeek } from './week';
     <main>
       <h1>Activity health</h1>
 
-      @if (lastLoadedReport(); as boundsReport) {
-        <app-dashboard-filters
-          [accounts]="state.accounts()"
-          [accountId]="state.accountId()"
-          [week]="selectedWeekRange() ?? boundsReport.week"
-          [earliestWeek]="boundsReport.earliestWeek"
-          [latestCompleteWeek]="boundsReport.latestCompleteWeek"
-          [eventType]="state.eventType()"
-          (accountSelected)="state.selectAccount($event)"
-          (weekSelected)="state.selectWeek($event)"
-          (eventTypeSelected)="state.selectEventType($event)"
-        />
-      }
+      <app-dashboard-filters
+        [accounts]="state.accounts()"
+        [accountId]="state.accountId()"
+        [week]="stepperWeek()"
+        [earliestWeek]="lastLoadedReport()?.earliestWeek ?? null"
+        [latestCompleteWeek]="lastLoadedReport()?.latestCompleteWeek ?? null"
+        [eventType]="state.eventType()"
+        (accountSelected)="state.selectAccount($event)"
+        (weekSelected)="state.selectWeek($event)"
+        (eventTypeSelected)="state.selectEventType($event)"
+      />
 
       @if (state.error()) {
         <div class="load-error" role="alert">
@@ -85,6 +83,11 @@ export class DashboardPage {
       return report.week;
     }
     return week === null ? null : { start: week, end: sundayOfWeek(week) };
+  });
+
+  protected readonly stepperWeek = computed<WeekRange | null>(() => {
+    const boundsReport = this.lastLoadedReport();
+    return boundsReport === undefined ? null : (this.selectedWeekRange() ?? boundsReport.week);
   });
 
   protected readonly dataAsOfLabel = computed(() => {
