@@ -175,10 +175,6 @@ import { formatCalendarDay, sundayOfWeek } from './week';
     .keep-in-mind ul { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 8px; font-size: 14px; line-height: 20px; color: var(--color-ink-2); }
     .keep-in-mind li { display: flex; align-items: flex-start; gap: 10px; }
     .keep-in-mind app-icon { margin-top: 2px; }
-    @media (max-width: 760px) {
-      .fact-tiles, .keep-in-mind { grid-template-columns: minmax(0, 1fr); }
-      .keep-in-mind { gap: 8px; }
-    }
     .footer-base { margin: 0; font-size: 13px; line-height: 18px; color: var(--color-ink-3); }
     .with-footnotes .footer-base { margin-top: 32px; padding-top: 16px; border-top: 1px solid var(--color-line-soft); }
   `,
