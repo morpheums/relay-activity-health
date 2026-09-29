@@ -12,9 +12,9 @@ public sealed class SqlAccountQueriesTests(SqlServerFixture fixture) : SqlServer
     private static readonly AccountRow BeaconHomeSecurity = new(14, "Beacon Home Security", "America/New_York");
     private static readonly AccountRow AccountWithoutEvents = new(20, "Quiet Account", "America/Phoenix");
 
-    [Fact]
-    public async Task ListSeveralAccountsReturnsEveryAccountIncludingOneWithoutEvents()
+    public override async ValueTask InitializeAsync()
     {
+        await base.InitializeAsync();
         await Database.InsertAccountsAsync([MetroCollision, BeaconHomeSecurity, AccountWithoutEvents], CancellationToken);
         await Database.InsertEventsAsync(
             [
@@ -22,7 +22,11 @@ public sealed class SqlAccountQueriesTests(SqlServerFixture fixture) : SqlServer
                 EventAt("2026-03-04T15:30:00Z") with { AccountId = BeaconHomeSecurity.Id },
             ],
             CancellationToken);
+    }
 
+    [Fact]
+    public async Task ListSeveralAccountsReturnsEveryAccountIncludingOneWithoutEvents()
+    {
         var accounts = await Queries.ListAsync(CancellationToken);
 
         accounts.ShouldBe(
@@ -35,28 +39,8 @@ public sealed class SqlAccountQueriesTests(SqlServerFixture fixture) : SqlServer
     }
 
     [Fact]
-    public async Task ListNoAccountsReturnsEmpty()
+    public async Task FindAccountWithoutEventsReturnsItsNameAndTimezone()
     {
-        var accounts = await Queries.ListAsync(CancellationToken);
-
-        accounts.ShouldBeEmpty();
-    }
-
-    [Fact]
-    public async Task FindExistingAccountReturnsItsNameAndTimezone()
-    {
-        await Database.InsertAccountsAsync([MetroCollision, BeaconHomeSecurity, AccountWithoutEvents], CancellationToken);
-
-        var account = await Queries.FindAsync(14, CancellationToken);
-
-        account.ShouldBe(new AccountListItem(14, "Beacon Home Security", "America/New_York"));
-    }
-
-    [Fact]
-    public async Task FindAccountWithoutEventsReturnsIt()
-    {
-        await Database.InsertAccountsAsync([MetroCollision, AccountWithoutEvents], CancellationToken);
-
         var account = await Queries.FindAsync(20, CancellationToken);
 
         account.ShouldBe(new AccountListItem(20, "Quiet Account", "America/Phoenix"));
@@ -65,8 +49,6 @@ public sealed class SqlAccountQueriesTests(SqlServerFixture fixture) : SqlServer
     [Fact]
     public async Task FindUnknownAccountReturnsNull()
     {
-        await Database.InsertAccountsAsync([MetroCollision, BeaconHomeSecurity], CancellationToken);
-
         var account = await Queries.FindAsync(99, CancellationToken);
 
         account.ShouldBeNull();

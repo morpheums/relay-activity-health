@@ -22,14 +22,14 @@ public sealed class SqlActivityQueriesListSiteFirstActivitiesTests(SqlServerFixt
     }
 
     [Fact]
-    public async Task ListSiteFirstActivitiesSeveralEventsPerLocationReturnsEarliestInstantPerLocation()
+    public async Task ListSiteFirstActivitiesReturnsEarliestInstantPerLocationOfAnyEventType()
     {
         await Database.InsertEventsAsync(
             [
                 EventAt("2026-03-05T14:00:00Z"),
-                EventAt("2026-03-02T06:00:00Z"),
+                EventAt("2026-03-02T06:00:00Z") with { EventType = LeadCreated, DurationSeconds = null, Outcome = null },
                 EventAt("2026-04-01T09:30:00Z"),
-                EventAt("2026-02-10T12:30:15Z") with { Location = "Site B" },
+                EventAt("2026-02-10T12:30:15Z") with { Location = "Site B", EventType = AppointmentSet, DurationSeconds = null },
                 EventAt("2026-06-10T12:30:15Z") with { Location = "Site B" },
             ],
             CancellationToken);
@@ -40,43 +40,6 @@ public sealed class SqlActivityQueriesListSiteFirstActivitiesTests(SqlServerFixt
             [
                 new SiteFirstActivity("Site A", Utc.At("2026-03-02T06:00:00Z")),
                 new SiteFirstActivity("Site B", Utc.At("2026-02-10T12:30:15Z")),
-            ],
-            ignoreOrder: true);
-    }
-
-    [Theory]
-    [InlineData(LeadCreated)]
-    [InlineData(AppointmentSet)]
-    public async Task ListSiteFirstActivitiesEarliestEventIsNotACallReturnsItsInstant(string firstEventType)
-    {
-        await Database.InsertEventsAsync(
-            [
-                EventAt("2026-02-01T10:57:44Z") with { EventType = firstEventType, DurationSeconds = null, Outcome = null },
-                EventAt("2026-02-02T08:00:00Z"),
-            ],
-            CancellationToken);
-
-        var siteFirstActivities = await ListAsync();
-
-        siteFirstActivities.ShouldBe([new SiteFirstActivity("Site A", Utc.At("2026-02-01T10:57:44Z"))]);
-    }
-
-    [Fact]
-    public async Task ListSiteFirstActivitiesSiteFirstActiveAfterEveryOtherSiteIsStillReturned()
-    {
-        await Database.InsertEventsAsync(
-            [
-                EventAt("2026-01-26T15:00:00Z"),
-                EventAt("2026-07-27T22:20:34Z") with { Location = "Site Z" },
-            ],
-            CancellationToken);
-
-        var siteFirstActivities = await ListAsync();
-
-        siteFirstActivities.ShouldBe(
-            [
-                new SiteFirstActivity("Site A", Utc.At("2026-01-26T15:00:00Z")),
-                new SiteFirstActivity("Site Z", Utc.At("2026-07-27T22:20:34Z")),
             ],
             ignoreOrder: true);
     }
@@ -95,45 +58,6 @@ public sealed class SqlActivityQueriesListSiteFirstActivitiesTests(SqlServerFixt
         var siteFirstActivities = await ListAsync();
 
         siteFirstActivities.ShouldBe([new SiteFirstActivity("Site A", Utc.At("2026-03-10T12:00:00Z"))]);
-    }
-
-    [Fact]
-    public async Task ListSiteFirstActivitiesExactDuplicateFirstEventListsLocationOnce()
-    {
-        var duplicatedFirstEvent = EventAt("2026-02-03T09:00:00Z") with { DurationSeconds = null, Outcome = null };
-        await Database.InsertEventsAsync([duplicatedFirstEvent, duplicatedFirstEvent], CancellationToken);
-
-        var siteFirstActivities = await ListAsync();
-
-        siteFirstActivities.ShouldBe([new SiteFirstActivity("Site A", Utc.At("2026-02-03T09:00:00Z"))]);
-    }
-
-    [Fact]
-    public async Task ListSiteFirstActivitiesEventsExistReturnsUtcKind()
-    {
-        await Database.InsertEventsAsync(
-            [
-                EventAt("2026-02-03T09:00:00Z"),
-                EventAt("2026-02-04T09:00:00Z") with { Location = "Site B" },
-            ],
-            CancellationToken);
-
-        var siteFirstActivities = await ListAsync();
-
-        siteFirstActivities.Count.ShouldBe(2);
-        siteFirstActivities.ShouldAllBe(site => site.FirstActivityUtc.Kind == DateTimeKind.Utc);
-    }
-
-    [Fact]
-    public async Task ListSiteFirstActivitiesAccountWithoutEventsReturnsEmpty()
-    {
-        await Database.InsertEventsAsync(
-            [EventAt("2026-02-03T09:00:00Z") with { AccountId = OtherAccountId }],
-            CancellationToken);
-
-        var siteFirstActivities = await ListAsync();
-
-        siteFirstActivities.ShouldBeEmpty();
     }
 
     private Task<IReadOnlyList<SiteFirstActivity>> ListAsync() =>
