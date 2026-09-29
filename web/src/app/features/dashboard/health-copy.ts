@@ -14,9 +14,13 @@ export const EVENT_TYPE_LABELS: Record<EventType, string> = {
   appointment_set: 'Appointments',
 };
 
-export function activityCount(count: number, eventType: EventType): string {
+export function activityNoun(count: number, eventType: EventType): string {
   const nouns = ACTIVITY_NOUNS[eventType];
-  return `${count} ${count === 1 ? nouns.singular : nouns.plural}`;
+  return count === 1 ? nouns.singular : nouns.plural;
+}
+
+export function activityCount(count: number, eventType: EventType): string {
+  return `${count} ${activityNoun(count, eventType)}`;
 }
 
 export function usualRange(series: SeriesHealth): string | null {
