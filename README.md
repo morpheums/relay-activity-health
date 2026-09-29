@@ -13,17 +13,23 @@ Open http://localhost:4200 (it redirects to `/dashboard`). The URL is rewritten 
 
 ## Quick start
 
-First, on any OS:
-1. `cp .env.example .env` (on Windows: `copy .env.example .env`)
-2. Set `RELAY_DB_SA_PASSWORD` in `.env`. If it contains `$`, single-quote it: `RELAY_DB_SA_PASSWORD='Pa$w0rd…'`.
+**One command (macOS, Linux):**
 
-**One command (macOS, Linux):** `scripts/dev.sh`. It stops early if `.env` is missing or if port 5080 or 4200 is already in use. Otherwise it starts the DB and waits until it is healthy, runs `npm ci` in `web` on the first run, starts the API and waits for it (up to 120 s), then serves the web app. Open http://localhost:4200. Ctrl+C stops the API and web. The DB keeps running: stop it with `docker compose down`, or `docker compose down -v` to wipe the data.
+```bash
+cp .env.example .env        # then set RELAY_DB_SA_PASSWORD in .env
+scripts/dev.sh              # DB + API + web; open http://localhost:4200
+```
 
-**Step by step (Windows, or any OS):** after steps 1–2, no shell-specific setup is needed; in Development the API reads the repo-root `.env` itself.
+- **Needs:** Docker (Compose v2), .NET 10 SDK, Node.js 22.22+/24.15+/26 with npm. Exact versions: [docs/running.md](docs/running.md#prerequisites). If the password contains `$`, single-quote it: `RELAY_DB_SA_PASSWORD='Pa$w0rd…'`.
+- **What it does:** stops early if `.env` is missing or port 5080 or 4200 is in use. Otherwise it starts the DB and waits until it is healthy, runs `npm ci` in `web` on the first run, starts the API (waits up to 120 s), then serves the web app.
+- **Stop:** Ctrl+C stops the API and web. The DB keeps running: `docker compose down`, or `docker compose down -v` to wipe the data.
 
-3. `docker compose up -d --wait db`
-4. `dotnet run --project src/Relay.Api` (terminal 1, http://localhost:5080)
-5. `cd web && npm start` (terminal 2, http://localhost:4200/dashboard; run `npm ci` in `web` once first)
+**Step by step (Windows, or any OS):** the API reads the repo-root `.env` itself in Development, so no shell setup is needed.
+
+1. `cp .env.example .env` (Windows: `copy .env.example .env`), then set `RELAY_DB_SA_PASSWORD` in `.env`
+2. `docker compose up -d --wait db`
+3. `dotnet run --project src/Relay.Api` (terminal 1, http://localhost:5080)
+4. `cd web && npm ci && npm start` (terminal 2, http://localhost:4200/dashboard; `npm ci` only the first time)
 
 | URL | What |
 |---|---|
