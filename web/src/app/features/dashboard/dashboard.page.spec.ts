@@ -1,6 +1,11 @@
+import { TestbedHarnessEnvironment } from '@angular/cdk/testing/testbed';
 import { TestBed } from '@angular/core/testing';
+import { MAT_DATE_LOCALE } from '@angular/material/core';
+import { MatCalendarHarness } from '@angular/material/datepicker/testing';
+import { provideDateFnsAdapter } from '@angular/material-date-fns-adapter';
 import { Router, provideRouter } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
+import { enUS } from 'date-fns/locale';
 import { routes } from '../../app.routes';
 import { AccountsApi } from '../../core/api/accounts.api';
 import { ActivityHealthApi, ActivityHealthRequest } from '../../core/api/activity-health.api';
@@ -22,6 +27,8 @@ import {
 import { FakeAccountsApi, FakeActivityHealthApi, networkFailure, serverError } from '../../../testing/fake-apis';
 import { RecordedNavigation, currentQueryParams, queryParamsOf, recordNavigations, settle } from '../../../testing/router-testing';
 import { DashboardState } from './dashboard-state';
+
+const enUSWithMondayWeekStart = { ...enUS, options: { ...enUS.options, weekStartsOn: 1 as const } };
 
 interface PageUnderTest {
   root: HTMLElement;
@@ -49,6 +56,9 @@ const PER_TYPE_LINE = 'Per-type counts at a single location are small; only larg
 const FORBIDDEN_ON_SCREEN: RegExp[] = [/\bz\b/, /σ/, /±/, /\bmedian\b/i, /\btypical\b/i, /\bdeviation\b/i, /\bNormal\b/];
 const DEFAULT_URL = '/dashboard?account=14&week=2026-07-20&type=all';
 const DEFAULT_SUMMARY_LINE = '26 inbound events · usually 18–38 a week';
+const DEFAULT_WEEK_LABEL = 'Mon Jul 20 – Sun Jul 26, 2026';
+const FOOTER_HEADING = 'About these numbers';
+const FOOTER_BASE_LINE = 'Relay · Activity health';
 
 async function openPage(url: string, prepareApi?: (activityHealthApi: FakeActivityHealthApi) => void): Promise<PageUnderTest> {
   const activityHealthApi = new FakeActivityHealthApi();
@@ -56,6 +66,8 @@ async function openPage(url: string, prepareApi?: (activityHealthApi: FakeActivi
   TestBed.configureTestingModule({
     providers: [
       provideRouter(routes),
+      provideDateFnsAdapter(),
+      { provide: MAT_DATE_LOCALE, useValue: enUSWithMondayWeekStart },
       { provide: ActivityHealthApi, useValue: activityHealthApi },
       { provide: AccountsApi, useValue: new FakeAccountsApi() },
       DashboardState,
@@ -99,6 +111,57 @@ function pageHeadingTexts(root: HTMLElement): string[] {
 function elementsWithExactText(root: HTMLElement, text: string): Element[] {
   return Array.from(root.querySelectorAll('*')).filter((element) => collapsedText(element) === text);
 }
+
+function accessibleName(element: Element): string {
+  const labelledBy = element.getAttribute('aria-labelledby');
+  if (labelledBy) {
+    return labelledBy
+      .split(/\s+/)
+      .map((labelId) => collapsedText(element.ownerDocument.getElementById(labelId)))
+      .join(' ')
+      .trim();
+  }
+  return element.getAttribute('aria-label')?.trim() ?? collapsedText(element);
+}
+
+function findWeekPickerTrigger(root: HTMLElement): HTMLButtonElement | null {
+  return Array.from(root.querySelectorAll('button')).find((button) => accessibleName(button).endsWith(', choose week')) ?? null;
+}
+
+function getWeekPickerTrigger(root: HTMLElement): HTMLButtonElement {
+  const trigger = findWeekPickerTrigger(root);
+  if (!trigger) {
+    throw new Error(`No week picker trigger named "…, choose week" in: ${collapsedText(root)}`);
+  }
+  return trigger;
+}
+
+function landmarkOutsideMain(root: HTMLElement, landmarkSelector: string, landmarkName: string): HTMLElement {
+  const landmark = Array.from(root.querySelectorAll<HTMLElement>(landmarkSelector)).find((candidate) => candidate.closest('main') === null);
+  if (!landmark) {
+    throw new Error(`No page ${landmarkName} outside <main> in: ${collapsedText(root)}`);
+  }
+  return landmark;
+}
+
+function pageHeader(root: HTMLElement): HTMLElement {
+  return landmarkOutsideMain(root, 'header, [role="banner"]', 'header');
+}
+
+function pageFooter(root: HTMLElement): HTMLElement {
+  return landmarkOutsideMain(root, 'footer, [role="contentinfo"]', 'footer');
+}
+
+function mainText(root: HTMLElement): string {
+  return collapsedText(root.querySelector('main'));
+}
+
+const PAGE_STATES = [
+  { pageState: 'loaded', url: DEFAULT_URL, prepareApi: undefined },
+  { pageState: 'loading', url: DEFAULT_URL, prepareApi: (api: FakeActivityHealthApi) => api.holdNext() },
+  { pageState: 'load error', url: DEFAULT_URL, prepareApi: (api: FakeActivityHealthApi) => api.failNext(serverError()) },
+  { pageState: 'empty account', url: '/dashboard?account=20', prepareApi: undefined },
+];
 
 const FIRST_LOAD_FAILURES = [
   { label: '5xx', failure: serverError },
@@ -323,6 +386,15 @@ describe('DashboardPage', () => {
       expect(pageText(root)).toContain('Data as of Sun Jul 26, 2026');
     });
 
+    it('disables the week picker trigger while it still shows "Mon Jul 20 – Sun Jul 26, 2026" (UI-20, C-07)', async () => {
+      const { root } = await openPage('/dashboard?account=20');
+
+      const trigger = getWeekPickerTrigger(root);
+
+      expect(isDisabled(trigger)).toBe(true);
+      expect(collapsedText(trigger)).toContain(DEFAULT_WEEK_LABEL);
+    });
+
     it('shows the empty-account message whenever locations are empty and weeksUsed is 0, regardless of earliestWeek', async () => {
       const emptyBeaconReport = buildReport({
         account: BEACON_HOME_SECURITY,
@@ -408,6 +480,21 @@ describe('DashboardPage', () => {
       expect(pageText(root)).not.toContain(LOAD_ERROR_MESSAGE);
     });
 
+    it('choosing Mon Jul 13 in the week picker writes week=2026-07-13 as a new history entry and relabels the week (UI-48)', async () => {
+      const { root, navigations, harness } = await openPage(DEFAULT_URL);
+
+      getWeekPickerTrigger(root).click();
+      await settle(harness);
+      const calendar = await TestbedHarnessEnvironment.documentRootLoader(harness.fixture).getHarness(MatCalendarHarness);
+      await calendar.selectCell({ text: '13' });
+      await settle(harness);
+
+      expect(currentQueryParams()).toEqual({ account: '14', week: '2026-07-13', type: 'all' });
+      expect(navigations.at(-1)?.replaceUrl).toBe(false);
+      expect(document.querySelector('[role="dialog"]')).toBeNull();
+      expect(collapsedText(getWeekPickerTrigger(root))).toContain('Mon Jul 13 – Sun Jul 19, 2026');
+    });
+
     it('selections made with the controls survive reopening the written URL (UI-30)', async () => {
       const first = await openPage('/dashboard?account=14&week=2026-06-01&type=all');
       chooseOption(getSelect(first.root, 'Viewing as'), 'Metro Collision Centers');
@@ -459,6 +546,7 @@ describe('DashboardPage', () => {
       expect(selectedOptionText(getSelect(root, 'Activity type'))).toBe('All activity');
       expect(findButton(root, PREVIOUS_WEEK)).toBeNull();
       expect(findButton(root, NEXT_WEEK)).toBeNull();
+      expect(findWeekPickerTrigger(root)).toBeNull();
     });
 
     it.each([
@@ -496,7 +584,64 @@ describe('DashboardPage', () => {
         expect(pageText(root)).not.toContain(LOAD_ERROR_MESSAGE);
         expect(textOutsideTables(root)).toContain(expectedSummaryLine);
         expect(findButton(root, PREVIOUS_WEEK)).not.toBeNull();
+        expect(findWeekPickerTrigger(root)).not.toBeNull();
       },
     );
+  });
+
+  describe('page frame (UI-46, UI-47)', () => {
+    it.each(PAGE_STATES)('shows the header "Relay" and "Customer admin" as plain text, not a link or heading, when $pageState (C-24)', async ({ url, prepareApi }) => {
+      const { root } = await openPage(url, prepareApi);
+
+      const header = pageHeader(root);
+
+      expect(collapsedText(header)).toContain('Relay');
+      expect(collapsedText(header)).toContain('Customer admin');
+      expect(header.querySelector('a')).toBeNull();
+      expect(header.querySelector('h1, h2, h3, h4, h5, h6, [role="heading"]')).toBeNull();
+    });
+
+    it('leaves the URL unchanged when "Relay" or "Customer admin" is clicked (UI-46)', async () => {
+      const { root, navigations, harness } = await openPage(DEFAULT_URL);
+      const urlBefore = TestBed.inject(Router).url;
+      const navigationCountBefore = navigations.length;
+
+      const headerTexts = [...elementsWithExactText(pageHeader(root), 'Relay'), ...elementsWithExactText(pageHeader(root), 'Customer admin')];
+      headerTexts.forEach((headerText) => (headerText as HTMLElement).click());
+      await settle(harness);
+
+      expect(headerTexts.length).toBeGreaterThanOrEqual(2);
+      expect(TestBed.inject(Router).url).toBe(urlBefore);
+      expect(navigations).toHaveLength(navigationCountBefore);
+    });
+
+    it.each(PAGE_STATES)('shows the footer base line "Relay · Activity health" when $pageState (C-26)', async ({ url, prepareApi }) => {
+      const { root } = await openPage(url, prepareApi);
+
+      expect(collapsedText(pageFooter(root))).toContain(FOOTER_BASE_LINE);
+    });
+
+    it.each([
+      { view: 'the default view (UI-06)', url: DEFAULT_URL, mainAnchor: ACCOUNT_METHOD_LINE, footnoteLines: [...FOOTNOTE_LINES, DATA_AS_OF_LINE] },
+      {
+        view: 'the Calls view (UI-13)',
+        url: '/dashboard?account=14&week=2026-07-20&type=call_received',
+        mainAnchor: ACCOUNT_METHOD_LINE,
+        footnoteLines: [...FOOTNOTE_LINES, PER_TYPE_LINE, DATA_AS_OF_LINE],
+      },
+      { view: 'the empty account (UI-20b)', url: '/dashboard?account=20', mainAnchor: EMPTY_ACCOUNT_MESSAGE, footnoteLines: [...FOOTNOTE_LINES, DATA_AS_OF_LINE] },
+    ])('puts the footnote lines in the page footer under "About these numbers", not in <main>, for $view (C-25)', async ({ url, mainAnchor, footnoteLines }) => {
+      const { root } = await openPage(url);
+
+      const footerText = collapsedText(pageFooter(root));
+      const headingPosition = footerText.indexOf(FOOTER_HEADING);
+
+      expect(headingPosition).toBeGreaterThanOrEqual(0);
+      footnoteLines.forEach((line) => {
+        expect(footerText.indexOf(line)).toBeGreaterThan(headingPosition);
+        expect(mainText(root)).not.toContain(line);
+      });
+      expect(mainText(root)).toContain(mainAnchor);
+    });
   });
 });
