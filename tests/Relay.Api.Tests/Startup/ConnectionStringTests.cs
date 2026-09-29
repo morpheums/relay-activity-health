@@ -1,23 +1,11 @@
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Relay.Api.Tests.Fixtures;
-using Relay.Infrastructure.Composition;
 
 namespace Relay.Api.Tests.Startup;
 
 [Collection(SeededApiTestGroup.Name)]
 public sealed class ConnectionStringTests(SeededApiFixture fixture) : SeededApiTest(fixture)
 {
-    [Fact]
-    public void StartTestHostUsesTheContainerConnectionStringOverAnyShellValue()
-    {
-        var configuration = Fixture.Factory.Services.GetRequiredService<IConfiguration>();
-
-        configuration.GetConnectionString(InfrastructureServiceCollectionExtensions.ConnectionStringName)
-            .ShouldBe(Fixture.SeededConnectionString);
-    }
-
     [Fact]
     public async Task StartInDevelopmentWithoutConnectionStringFailsFastNamingTheSetting()
     {

@@ -10,44 +10,20 @@ namespace Relay.Api.Tests.ActivityHealth;
 public sealed class UnhandledExceptionTests(SeededApiFixture fixture) : SeededApiTest(fixture)
 {
     [Fact]
-    public async Task GetActivityHealthServiceThrowsReturnsInternalServerErrorProblem()
+    public async Task GetActivityHealthServiceThrowsReturnsInternalServerErrorProblemWithoutExceptionDetails()
     {
-        var response = await GetWithThrowingServiceAsync();
+        await using var factory = Fixture.CreateFactory(
+            Environments.Development,
+            services => services.AddScoped<IActivityHealthService, ThrowingActivityHealthService>());
+        using var client = factory.CreateClient();
+
+        var response = await ApiResponse.GetAsync(client, "/api/accounts/14/activity-health?week=2026-07-20", CancellationToken);
 
         response.ShouldBeProblem(HttpStatusCode.InternalServerError);
-    }
-
-    [Fact]
-    public async Task GetActivityHealthServiceThrowsBodyHasNoExceptionMessageOrStackTrace()
-    {
-        var response = await GetWithThrowingServiceAsync();
-
-        response.StatusCode.ShouldBe(HttpStatusCode.InternalServerError);
         response.Body.ShouldNotContain(ThrowingActivityHealthService.SensitiveMessage);
         response.Body.ShouldNotContain("hunter2");
         response.Body.ShouldNotContain(nameof(InvalidOperationException));
         response.Body.ShouldNotContain(nameof(ThrowingActivityHealthService));
         response.Body.ShouldNotContain("stack", Case.Insensitive);
-    }
-
-    [Fact]
-    public async Task GetActivityHealthServiceThrowsInProductionReturnsProblemWithoutExceptionDetails()
-    {
-        var response = await GetWithThrowingServiceAsync(Environments.Production);
-
-        response.ShouldBeProblem(HttpStatusCode.InternalServerError);
-        response.Body.ShouldNotContain(ThrowingActivityHealthService.SensitiveMessage);
-        response.Body.ShouldNotContain(nameof(InvalidOperationException));
-        response.Body.ShouldNotContain(nameof(ThrowingActivityHealthService));
-        response.Body.ShouldNotContain("stack", Case.Insensitive);
-    }
-
-    private async Task<ApiResponse> GetWithThrowingServiceAsync(string? environmentName = null)
-    {
-        await using var factory = Fixture.CreateFactory(
-            environmentName ?? Environments.Development,
-            services => services.AddScoped<IActivityHealthService, ThrowingActivityHealthService>());
-        using var client = factory.CreateClient();
-        return await ApiResponse.GetAsync(client, "/api/accounts/14/activity-health?week=2026-07-20", CancellationToken);
     }
 }

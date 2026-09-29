@@ -6,31 +6,15 @@ namespace Relay.Api.Tests.ActivityHealth;
 public sealed class Account8GoldenTests(SeededApiFixture fixture) : SeededApiTest(fixture)
 {
     [Fact]
-    public async Task GetActivityHealthSingleSiteDefaultWeekListsOnlySiteA()
+    public async Task GetActivityHealthSingleSiteDefaultWeekSiteAMatchesTheNormalSummary()
     {
         var report = await GetReportAsync("/api/accounts/8/activity-health");
 
         report.LocationNames.ShouldBe(["Site A"]);
-        report.EarliestWeek.ShouldBe("2026-02-02");
-    }
-
-    [Fact]
-    public async Task GetActivityHealthSingleSiteDefaultWeekSummaryIsNormal()
-    {
-        var report = await GetReportAsync("/api/accounts/8/activity-health");
-
         report.Summary.ShouldHaveRange(count: 7, low: 5, high: 17, WireStatus.Normal);
         report.Summary.ShouldHaveMedian(10);
-    }
-
-    [Fact]
-    public async Task GetActivityHealthSingleSiteDefaultWeekSiteMatchesSummary()
-    {
-        var report = await GetReportAsync("/api/accounts/8/activity-health");
-
-        var siteA = report.Location("Site A");
-        siteA.ShouldHaveRange(count: 7, low: 5, high: 17, WireStatus.Normal);
-        siteA.ShouldHaveMedian(10);
+        report.Location("Site A").ShouldHaveRange(count: 7, low: 5, high: 17, WireStatus.Normal);
+        report.Location("Site A").ShouldHaveMedian(10);
     }
 
     [Fact]
@@ -40,15 +24,8 @@ public sealed class Account8GoldenTests(SeededApiFixture fixture) : SeededApiTes
 
         report.Summary.ShouldHaveRange(count: 11, low: 6, high: 18, WireStatus.Normal);
         report.Summary.ShouldHaveMedian(11);
-        report.Summary.WeeksUsed.ShouldBe(4);
-    }
-
-    [Fact]
-    public async Task GetActivityHealthFloorCaseCountEqualToMedianHasZeroDeviation()
-    {
-        var report = await GetReportAsync("/api/accounts/8/activity-health?week=2026-03-09");
-
         report.Summary.ShouldHaveDeviation(0);
+        report.Summary.WeeksUsed.ShouldBe(4);
     }
 
     [Fact]

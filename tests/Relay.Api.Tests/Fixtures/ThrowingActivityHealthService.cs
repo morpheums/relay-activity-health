@@ -10,14 +10,3 @@ public sealed class ThrowingActivityHealthService : IActivityHealthService
     public Task<ActivityHealthResult> GetAsync(int accountId, DateOnly? week, ActivityType eventType, CancellationToken cancellationToken) =>
         throw new InvalidOperationException(SensitiveMessage);
 }
-
-public sealed class CannedActivityHealthService(ActivityHealthResult cannedResult) : IActivityHealthService
-{
-    public List<(int AccountId, DateOnly? Week, ActivityType EventType)> Requests { get; } = [];
-
-    public Task<ActivityHealthResult> GetAsync(int accountId, DateOnly? week, ActivityType eventType, CancellationToken cancellationToken)
-    {
-        Requests.Add((accountId, week, eventType));
-        return Task.FromResult(cannedResult);
-    }
-}

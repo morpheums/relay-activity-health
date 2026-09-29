@@ -43,9 +43,6 @@ public sealed class SeededApiFixture : IAsyncLifetime
         return scratchDatabase;
     }
 
-    public RelayApiFactory CreateFactory(Action<IServiceCollection> overrideServices) =>
-        CreateFactory(Environments.Development, overrideServices);
-
     public RelayApiFactory CreateFactory(string environmentName, Action<IServiceCollection> overrideServices) =>
         new(SeededConnectionString, environmentName, overrideServices);
 

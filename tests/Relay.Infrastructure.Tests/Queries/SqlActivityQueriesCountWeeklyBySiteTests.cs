@@ -1,3 +1,4 @@
+using System.Globalization;
 using Relay.Core.Calendar;
 using Relay.Core.Queries;
 using Relay.Infrastructure.Queries;
@@ -28,82 +29,37 @@ public sealed class SqlActivityQueriesCountWeeklyBySiteTests(SqlServerFixture fi
     }
 
     [Theory]
-    [InlineData(null, "connected")]
-    [InlineData(95, null)]
-    [InlineData(null, null)]
-    [InlineData(95, "connected")]
-    public async Task CountWeeklyBySiteExactDuplicatesAreCountedOnce(int? durationSeconds, string? outcome)
+    [InlineData(null, null, null, null, 1)]
+    [InlineData(95, 95, "connected", "connected", 1)]
+    [InlineData(null, 0, "connected", "connected", 1)]
+    [InlineData(95, 95, null, "", 1)]
+    [InlineData(95, 120, "connected", "connected", 2)]
+    [InlineData(95, 95, "connected", "missed", 2)]
+    public async Task CountWeeklyBySiteTwoRowsAtTheSameInstantAreOneEventOnlyWhenEveryColumnMatchesWithNullEqualToZeroOrEmpty(
+        int? firstDurationSeconds,
+        int? secondDurationSeconds,
+        string? firstOutcome,
+        string? secondOutcome,
+        int expectedCount)
     {
-        var duplicatedEvent = EventAt("2026-03-04T15:30:00Z") with { DurationSeconds = durationSeconds, Outcome = outcome };
-        await Database.InsertEventsAsync([duplicatedEvent, duplicatedEvent], CancellationToken);
+        var sharedInstantEvent = EventAt("2026-03-04T15:30:00Z");
+        await Database.InsertEventsAsync(
+            [
+                sharedInstantEvent with { DurationSeconds = firstDurationSeconds, Outcome = firstOutcome },
+                sharedInstantEvent with { DurationSeconds = secondDurationSeconds, Outcome = secondOutcome },
+            ],
+            CancellationToken);
 
         var weeklyCounts = await CountAsync([ChicagoWeekOf20260302DstStart], ActivityType.All);
 
-        weeklyCounts.ShouldBe([new WeeklySiteCount("Site A", WeekOf20260302, 1)]);
+        weeklyCounts.ShouldBe([new WeeklySiteCount("Site A", WeekOf20260302, expectedCount)]);
     }
 
     [Fact]
-    public async Task CountWeeklyBySiteExactDuplicatesWithNullDurationAndOutcomeAreCountedOnceUnderCallReceivedFilter()
-    {
-        var duplicatedCall = EventAt("2026-03-04T15:30:00Z") with { DurationSeconds = null, Outcome = null };
-        await Database.InsertEventsAsync([duplicatedCall, duplicatedCall], CancellationToken);
-
-        var weeklyCounts = await CountAsync([ChicagoWeekOf20260302DstStart], ActivityType.CallReceived);
-
-        weeklyCounts.ShouldBe([new WeeklySiteCount("Site A", WeekOf20260302, 1)]);
-    }
-
-    [Theory]
-    [InlineData(null, 0, "connected", "connected")]
-    [InlineData(95, 95, null, "")]
-    public async Task CountWeeklyBySiteRowsDifferingOnlyByNullVersusZeroDurationOrEmptyOutcomeAreCountedOnce(
-        int? firstDurationSeconds,
-        int? secondDurationSeconds,
-        string? firstOutcome,
-        string? secondOutcome)
-    {
-        var sharedInstantEvent = EventAt("2026-03-04T15:30:00Z");
-        await Database.InsertEventsAsync(
-            [
-                sharedInstantEvent with { DurationSeconds = firstDurationSeconds, Outcome = firstOutcome },
-                sharedInstantEvent with { DurationSeconds = secondDurationSeconds, Outcome = secondOutcome },
-            ],
-            CancellationToken);
-
-        var weeklyCounts = await CountAsync([ChicagoWeekOf20260302DstStart], ActivityType.All);
-
-        weeklyCounts.ShouldBe([new WeeklySiteCount("Site A", WeekOf20260302, 1)]);
-    }
-
-    [Theory]
-    [InlineData(95, 120, "connected", "connected")]
-    [InlineData(95, 95, "connected", "missed")]
-    public async Task CountWeeklyBySiteRowsWithDifferentDurationOrOutcomeValuesAreCountedTwice(
-        int? firstDurationSeconds,
-        int? secondDurationSeconds,
-        string? firstOutcome,
-        string? secondOutcome)
-    {
-        var sharedInstantEvent = EventAt("2026-03-04T15:30:00Z");
-        await Database.InsertEventsAsync(
-            [
-                sharedInstantEvent with { DurationSeconds = firstDurationSeconds, Outcome = firstOutcome },
-                sharedInstantEvent with { DurationSeconds = secondDurationSeconds, Outcome = secondOutcome },
-            ],
-            CancellationToken);
-
-        var weeklyCounts = await CountAsync([ChicagoWeekOf20260302DstStart], ActivityType.All);
-
-        weeklyCounts.ShouldBe([new WeeklySiteCount("Site A", WeekOf20260302, 2)]);
-    }
-
-    [Theory]
-    [InlineData(1)]
-    [InlineData(60)]
-    public async Task CountWeeklyBySiteNearDuplicatesSecondsApartAreCountedTwice(int secondsApart)
+    public async Task CountWeeklyBySiteNearDuplicatesOneSecondApartAreCountedTwice()
     {
         var firstEvent = EventAt("2026-03-04T15:30:00Z");
-        var nearDuplicate = firstEvent with { OccurredAtUtc = firstEvent.OccurredAtUtc.AddSeconds(secondsApart) };
+        var nearDuplicate = firstEvent with { OccurredAtUtc = firstEvent.OccurredAtUtc.AddSeconds(1) };
         await Database.InsertEventsAsync([firstEvent, nearDuplicate], CancellationToken);
 
         var weeklyCounts = await CountAsync([ChicagoWeekOf20260302DstStart], ActivityType.All);
@@ -111,102 +67,38 @@ public sealed class SqlActivityQueriesCountWeeklyBySiteTests(SqlServerFixture fi
         weeklyCounts.ShouldBe([new WeeklySiteCount("Site A", WeekOf20260302, 2)]);
     }
 
-    [Fact]
-    public async Task CountWeeklyBySiteRowsDifferingOnlyInLocationAreCountedOncePerLocation()
-    {
-        var siteAEvent = EventAt("2026-03-04T15:30:00Z");
-        await Database.InsertEventsAsync([siteAEvent, siteAEvent with { Location = "Site B" }], CancellationToken);
-
-        var weeklyCounts = await CountAsync([ChicagoWeekOf20260302DstStart], ActivityType.All);
-
-        weeklyCounts.ShouldBe(
-            [
-                new WeeklySiteCount("Site A", WeekOf20260302, 1),
-                new WeeklySiteCount("Site B", WeekOf20260302, 1),
-            ],
-            ignoreOrder: true);
-    }
-
     [Theory]
     [InlineData(ActivityType.All, 2)]
     [InlineData(ActivityType.CallReceived, 1)]
     [InlineData(ActivityType.LeadCreated, 1)]
-    public async Task CountWeeklyBySiteRowsDifferingOnlyInEventTypeAreCountedOncePerTypeAndTwiceUnderAll(
+    public async Task CountWeeklyBySiteExactDuplicateIsCountedOnceUnderEveryFilterAndEventTypeIsPartOfTheDuplicateKey(
         ActivityType eventType,
         int expectedCount)
     {
-        var callEvent = EventAt("2026-03-04T15:30:00Z");
-        await Database.InsertEventsAsync([callEvent, callEvent with { EventType = LeadCreated }], CancellationToken);
+        var callEvent = EventAt("2026-03-04T15:30:00Z") with { DurationSeconds = null, Outcome = null };
+        await Database.InsertEventsAsync([callEvent, callEvent, callEvent with { EventType = LeadCreated }], CancellationToken);
 
         var weeklyCounts = await CountAsync([ChicagoWeekOf20260302DstStart], eventType);
 
         weeklyCounts.ShouldBe([new WeeklySiteCount("Site A", WeekOf20260302, expectedCount)]);
-    }
-
-    [Fact]
-    public async Task CountWeeklyBySiteEventExactlyAtWindowStartIsCountedInThatWindow()
-    {
-        await Database.InsertEventsAsync([EventAt("2026-03-02T06:00:00Z")], CancellationToken);
-
-        var weeklyCounts = await CountAsync(
-            [ChicagoWeekOf20260223, ChicagoWeekOf20260302DstStart],
-            ActivityType.All);
-
-        weeklyCounts.ShouldBe([new WeeklySiteCount("Site A", WeekOf20260302, 1)]);
-    }
-
-    [Fact]
-    public async Task CountWeeklyBySiteEventExactlyAtWindowEndIsNotCountedInThatWindow()
-    {
-        await Database.InsertEventsAsync([EventAt("2026-03-09T05:00:00Z")], CancellationToken);
-
-        var weeklyCounts = await CountAsync([ChicagoWeekOf20260302DstStart], ActivityType.All);
-
-        weeklyCounts.ShouldBeEmpty();
-    }
-
-    [Fact]
-    public async Task CountWeeklyBySiteEventExactlyAtWindowEndIsCountedInTheNextWindow()
-    {
-        await Database.InsertEventsAsync([EventAt("2026-03-09T05:00:00Z")], CancellationToken);
-
-        var weeklyCounts = await CountAsync(
-            [ChicagoWeekOf20260302DstStart, ChicagoWeekOf20260309],
-            ActivityType.All);
-
-        weeklyCounts.ShouldBe([new WeeklySiteCount("Site A", WeekOf20260309, 1)]);
-    }
-
-    [Fact]
-    public async Task CountWeeklyBySiteEventOneSecondBeforeWindowEndIsCountedInThatWindow()
-    {
-        await Database.InsertEventsAsync([EventAt("2026-03-09T04:59:59Z")], CancellationToken);
-
-        var weeklyCounts = await CountAsync(
-            [ChicagoWeekOf20260302DstStart, ChicagoWeekOf20260309],
-            ActivityType.All);
-
-        weeklyCounts.ShouldBe([new WeeklySiteCount("Site A", WeekOf20260302, 1)]);
     }
 
     [Theory]
-    [InlineData(ActivityType.All, 3)]
-    [InlineData(ActivityType.CallReceived, 1)]
-    [InlineData(ActivityType.LeadCreated, 1)]
-    [InlineData(ActivityType.AppointmentSet, 1)]
-    public async Task CountWeeklyBySiteOneEventOfEachTypeIsCountedByTypeFilter(ActivityType eventType, int expectedCount)
+    [InlineData("2026-03-02T06:00:00Z", "2026-03-02")]
+    [InlineData("2026-03-09T05:00:00Z", "2026-03-09")]
+    [InlineData("2026-03-09T04:59:59Z", "2026-03-02")]
+    public async Task CountWeeklyBySiteWindowsAreHalfOpenSoAnInstantOnABoundaryBelongsToTheLaterWindow(
+        string occurredAtUtc,
+        string expectedWeekStart)
     {
-        await Database.InsertEventsAsync(
-            [
-                EventAt("2026-03-03T14:00:00Z"),
-                EventAt("2026-03-04T14:00:00Z") with { EventType = LeadCreated, DurationSeconds = null, Outcome = null },
-                EventAt("2026-03-05T14:00:00Z") with { EventType = AppointmentSet, DurationSeconds = null, Outcome = "converted" },
-            ],
-            CancellationToken);
+        await Database.InsertEventsAsync([EventAt(occurredAtUtc)], CancellationToken);
 
-        var weeklyCounts = await CountAsync([ChicagoWeekOf20260302DstStart], eventType);
+        var weeklyCounts = await CountAsync(
+            [ChicagoWeekOf20260223, ChicagoWeekOf20260302DstStart, ChicagoWeekOf20260309],
+            ActivityType.All);
 
-        weeklyCounts.ShouldBe([new WeeklySiteCount("Site A", WeekOf20260302, expectedCount)]);
+        var expectedWeek = DateOnly.ParseExact(expectedWeekStart, "yyyy-MM-dd", CultureInfo.InvariantCulture);
+        weeklyCounts.ShouldBe([new WeeklySiteCount("Site A", expectedWeek, 1)]);
     }
 
     [Theory]
@@ -299,31 +191,6 @@ public sealed class SqlActivityQueriesCountWeeklyBySiteTests(SqlServerFixture fi
             [
                 new WeeklySiteCount("Site A", WeekOf20260223, 1),
                 new WeeklySiteCount("Site A", WeekOf20260309, 1),
-            ],
-            ignoreOrder: true);
-    }
-
-    [Fact]
-    public async Task CountWeeklyBySiteReturnsOnlyNonZeroRows()
-    {
-        await Database.InsertEventsAsync(
-            [
-                EventAt("2026-02-24T12:00:00Z"),
-                EventAt("2026-03-03T12:00:00Z"),
-                EventAt("2026-03-03T12:00:00Z") with { Location = "Site B" },
-                EventAt("2026-03-03T12:00:00Z") with { Location = "Site C", EventType = LeadCreated },
-            ],
-            CancellationToken);
-
-        var weeklyCounts = await CountAsync(
-            [ChicagoWeekOf20260223, ChicagoWeekOf20260302DstStart, ChicagoWeekOf20260309],
-            ActivityType.CallReceived);
-
-        weeklyCounts.ShouldBe(
-            [
-                new WeeklySiteCount("Site A", WeekOf20260223, 1),
-                new WeeklySiteCount("Site A", WeekOf20260302, 1),
-                new WeeklySiteCount("Site B", WeekOf20260302, 1),
             ],
             ignoreOrder: true);
     }

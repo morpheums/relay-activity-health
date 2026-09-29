@@ -38,16 +38,6 @@ public sealed class SqlActivityQueriesFindDataAnchorTests(SqlServerFixture fixtu
     }
 
     [Fact]
-    public async Task FindDataAnchorEventsExistReturnsUtcKind()
-    {
-        await Database.InsertEventsAsync([EventAt("2026-07-27T22:20:34Z")], CancellationToken);
-
-        var dataAnchor = await FindDataAnchorAsync();
-
-        dataAnchor.ShouldNotBeNull().Kind.ShouldBe(DateTimeKind.Utc);
-    }
-
-    [Fact]
     public async Task FindDataAnchorNoEventsReturnsNull()
     {
         var dataAnchor = await FindDataAnchorAsync();

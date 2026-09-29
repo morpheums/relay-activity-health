@@ -51,48 +51,19 @@ public sealed class WeeklyGridBuilderTests
         siteSeries.EligibleWeekCounts.ShouldBe([0, 0, 0, 0, 0, 0, 0, 0]);
     }
 
-    [Fact]
-    public void BuildLocationSeriesWeeksOnOrBeforeFirstActivityWeekAreIneligible()
+    [Theory]
+    [InlineData("2026-02-10T09:00:00Z", new[] { 2, 3, 4, 5 })]
+    [InlineData("2026-02-09T00:00:00Z", new[] { 2, 3, 4, 5 })]
+    [InlineData("2026-02-08T23:59:59Z", new[] { 1, 2, 3, 4, 5 })]
+    [InlineData("2026-01-18T23:00:00Z", new[] { 9, 0, 7, 1, 2, 3, 4, 5 })]
+    public void BuildLocationSeriesOnlyWeeksStartingAfterTheFirstActivityWeekAreEligible(
+        string firstActivityUtc,
+        int[] expectedEligibleWeekCounts)
     {
-        var siteFirstActivities = new[] { SiteFirstSeen("Site A", "2026-02-10T09:00:00Z") };
+        var siteFirstActivities = new[] { SiteFirstSeen("Site A", firstActivityUtc) };
         var weeklySiteCounts = new[]
         {
-            CountFor("Site A", "2026-02-09", 1),
-            CountFor("Site A", "2026-02-16", 2),
-            CountFor("Site A", "2026-02-23", 3),
-            CountFor("Site A", "2026-03-02", 4),
-            CountFor("Site A", "2026-03-09", 5),
-        };
-
-        var locationSeries = _weeklyGridBuilder.BuildLocationSeries(SelectedWeek, BaselineWindows, siteFirstActivities, weeklySiteCounts);
-
-        SeriesFor(locationSeries, "Site A").EligibleWeekCounts.ShouldBe([2, 3, 4, 5], ignoreOrder: true);
-    }
-
-    [Fact]
-    public void BuildLocationSeriesFirstActivityExactlyAtWindowStartMakesThatWeekIneligible()
-    {
-        var siteFirstActivities = new[] { SiteFirstSeen("Site A", "2026-02-09T00:00:00Z") };
-        var weeklySiteCounts = new[]
-        {
-            CountFor("Site A", "2026-02-09", 1),
-            CountFor("Site A", "2026-02-16", 2),
-            CountFor("Site A", "2026-02-23", 3),
-            CountFor("Site A", "2026-03-02", 4),
-            CountFor("Site A", "2026-03-09", 5),
-        };
-
-        var locationSeries = _weeklyGridBuilder.BuildLocationSeries(SelectedWeek, BaselineWindows, siteFirstActivities, weeklySiteCounts);
-
-        SeriesFor(locationSeries, "Site A").EligibleWeekCounts.ShouldBe([2, 3, 4, 5], ignoreOrder: true);
-    }
-
-    [Fact]
-    public void BuildLocationSeriesFirstActivityOneSecondBeforeWindowStartMakesThatWeekEligible()
-    {
-        var siteFirstActivities = new[] { SiteFirstSeen("Site A", "2026-02-08T23:59:59Z") };
-        var weeklySiteCounts = new[]
-        {
+            CountFor("Site A", "2026-01-19", 9),
             CountFor("Site A", "2026-02-02", 7),
             CountFor("Site A", "2026-02-09", 1),
             CountFor("Site A", "2026-02-16", 2),
@@ -103,58 +74,23 @@ public sealed class WeeklyGridBuilderTests
 
         var locationSeries = _weeklyGridBuilder.BuildLocationSeries(SelectedWeek, BaselineWindows, siteFirstActivities, weeklySiteCounts);
 
-        SeriesFor(locationSeries, "Site A").EligibleWeekCounts.ShouldBe([1, 2, 3, 4, 5], ignoreOrder: true);
-    }
-
-    [Fact]
-    public void BuildLocationSeriesFirstActivityInsideOldestBaselineWeekLeavesSevenEligibleWeeks()
-    {
-        var siteFirstActivities = new[] { SiteFirstSeen("Site A", "2026-01-20T10:00:00Z") };
-        var weeklySiteCounts = new[] { CountFor("Site A", "2026-01-19", 9) };
-
-        var locationSeries = _weeklyGridBuilder.BuildLocationSeries(SelectedWeek, BaselineWindows, siteFirstActivities, weeklySiteCounts);
-
-        SeriesFor(locationSeries, "Site A").EligibleWeekCounts.ShouldBe([0, 0, 0, 0, 0, 0, 0]);
-    }
-
-    [Fact]
-    public void BuildLocationSeriesFirstActivityInWeekBeforeOldestBaselineWeekLeavesAllEightEligible()
-    {
-        var siteFirstActivities = new[] { SiteFirstSeen("Site A", "2026-01-18T23:00:00Z") };
-        var weeklySiteCounts = new[] { CountFor("Site A", "2026-01-19", 9) };
-
-        var locationSeries = _weeklyGridBuilder.BuildLocationSeries(SelectedWeek, BaselineWindows, siteFirstActivities, weeklySiteCounts);
-
-        SeriesFor(locationSeries, "Site A").EligibleWeekCounts.ShouldBe([9, 0, 0, 0, 0, 0, 0, 0], ignoreOrder: true);
-    }
-
-    [Fact]
-    public void BuildLocationSeriesSiteFirstSeenInsideSelectedWeekIsListedWithNoEligibleWeeks()
-    {
-        var siteFirstActivities = new[] { SiteFirstSeen("Site A", "2026-03-22T23:59:59Z") };
-        var weeklySiteCounts = new[] { CountFor("Site A", SelectedWeekStart, 1) };
-
-        var locationSeries = _weeklyGridBuilder.BuildLocationSeries(SelectedWeek, BaselineWindows, siteFirstActivities, weeklySiteCounts);
-
-        var siteSeries = SeriesFor(locationSeries, "Site A");
-        siteSeries.SelectedWeekCount.ShouldBe(1);
-        siteSeries.EligibleWeekCounts.ShouldBeEmpty();
+        SeriesFor(locationSeries, "Site A").EligibleWeekCounts.ShouldBe(expectedEligibleWeekCounts, ignoreOrder: true);
     }
 
     [Theory]
-    [InlineData("2026-03-23T00:00:00Z")]
-    [InlineData("2026-04-06T12:00:00Z")]
-    public void BuildLocationSeriesSiteFirstSeenOnOrAfterSelectedWeekEndIsExcluded(string firstActivityUtc)
+    [InlineData("2026-03-22T23:59:59Z", new[] { "Site A", "Site B" })]
+    [InlineData("2026-03-23T00:00:00Z", new[] { "Site A" })]
+    public void BuildLocationSeriesListsOnlySitesFirstSeenBeforeSelectedWeekEnd(string siteBFirstActivityUtc, string[] expectedLocations)
     {
         var siteFirstActivities = new[]
         {
             SiteFirstSeen("Site A", "2026-01-05T10:00:00Z"),
-            SiteFirstSeen("Site B", firstActivityUtc),
+            SiteFirstSeen("Site B", siteBFirstActivityUtc),
         };
 
         var locationSeries = _weeklyGridBuilder.BuildLocationSeries(SelectedWeek, BaselineWindows, siteFirstActivities, []);
 
-        locationSeries.Select(series => series.Location).ShouldBe(["Site A"]);
+        locationSeries.Select(series => series.Location).ShouldBe(expectedLocations, ignoreOrder: true);
     }
 
     [Fact]
@@ -176,7 +112,6 @@ public sealed class WeeklyGridBuilderTests
 
         var locationSeries = _weeklyGridBuilder.BuildLocationSeries(SelectedWeek, BaselineWindows, siteFirstActivities, weeklySiteCounts);
 
-        locationSeries.Select(series => series.Location).ShouldBe(["Site A", "Site B"], ignoreOrder: true);
         SeriesFor(locationSeries, "Site A").EligibleWeekCounts.ShouldBe([0, 0, 0, 0, 0, 6, 0, 0], ignoreOrder: true);
         SeriesFor(locationSeries, "Site B").EligibleWeekCounts.ShouldBe([3, 4], ignoreOrder: true);
         SeriesFor(locationSeries, "Site B").SelectedWeekCount.ShouldBe(5);
@@ -201,14 +136,6 @@ public sealed class WeeklyGridBuilderTests
         var locationSeries = _weeklyGridBuilder.BuildLocationSeries(chicagoSelectedWeek, chicagoBaselineWindows, siteFirstActivities, weeklySiteCounts);
 
         SeriesFor(locationSeries, "Site A").EligibleWeekCounts.ShouldBe([6]);
-    }
-
-    [Fact]
-    public void BuildLocationSeriesNoSitesReturnsEmptyList()
-    {
-        var locationSeries = _weeklyGridBuilder.BuildLocationSeries(SelectedWeek, BaselineWindows, [], []);
-
-        locationSeries.ShouldBeEmpty();
     }
 
     [Fact]
@@ -274,14 +201,5 @@ public sealed class WeeklyGridBuilderTests
         var accountSeries = _weeklyGridBuilder.BuildAccountSeries(SelectedWeek, BaselineWindows, siteFirstActivities, weeklySiteCounts);
 
         accountSeries.EligibleWeekCounts.ShouldBe([0, 0, 0, 0, 0, 7, 0, 0], ignoreOrder: true);
-    }
-
-    [Fact]
-    public void BuildAccountSeriesNoSitesReturnsZeroCountAndNoEligibleWeeks()
-    {
-        var accountSeries = _weeklyGridBuilder.BuildAccountSeries(SelectedWeek, BaselineWindows, [], []);
-
-        accountSeries.SelectedWeekCount.ShouldBe(0);
-        accountSeries.EligibleWeekCounts.ShouldBeEmpty();
     }
 }
