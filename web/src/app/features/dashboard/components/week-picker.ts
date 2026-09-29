@@ -72,6 +72,9 @@ let nextDialogId = 0;
           <p>Weeks run Monday to Sunday.</p>
           <p>{{ selectableWeeksLabel() }}</p>
         </div>
+        <div class="footer">
+          <button type="button" class="latest-week" [disabled]="isLatestWeekSelected()" (click)="chooseLatestWeek()">Latest week</button>
+        </div>
       </div>
     </ng-template>
   `,
@@ -112,6 +115,7 @@ export class WeekPicker {
   protected readonly weekLabel = computed(() => formatWeekRange(this.week().start, this.week().end));
   protected readonly triggerName = computed(() => `${this.weekLabel()}, choose week`);
   protected readonly selectableWeeksLabel = computed(() => formatSelectableWeeks(this.earliestWeek(), this.latestCompleteWeek()));
+  protected readonly isLatestWeekSelected = computed(() => this.week().start === this.latestCompleteWeek());
   protected readonly selectedMonday = computed(() => parseISO(this.week().start));
   protected readonly selectedSunday = computed(() => parseISO(this.week().end));
   protected readonly earliestMonday = computed(() => parseISO(this.earliestWeek()));
@@ -149,6 +153,11 @@ export class WeekPicker {
 
   protected focusSelectedWeek(): void {
     afterNextRender(() => this.calendar()?.focusActiveCell(), { injector: this.injector });
+  }
+
+  protected chooseLatestWeek(): void {
+    this.close();
+    this.weekSelected.emit(this.latestCompleteWeek());
   }
 
   protected choose(day: Date | null): void {
