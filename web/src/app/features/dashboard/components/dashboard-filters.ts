@@ -62,9 +62,9 @@ import { WeekPicker } from './week-picker';
     :host { display: flex; gap: 24px; align-items: flex-end; }
     .field { display: flex; flex-direction: column; gap: 6px; }
     .field-label { font-size: 13px; line-height: 18px; font-weight: 500; color: var(--color-ink-2); }
-    .account-field { width: 280px; }
-    .week-field { width: 576px; }
-    .type-field { width: 196px; }
+    .account-field { width: var(--account-field-width); }
+    .week-field { width: var(--week-field-width); }
+    .type-field { width: var(--type-field-width); }
     .select-control { position: relative; }
     select {
       appearance: none; width: 100%; height: 44px; padding: 0 40px 0 14px; font: inherit; font-size: 15px; color: var(--color-ink);
@@ -76,11 +76,11 @@ import { WeekPicker } from './week-picker';
     .week-control > :first-child { margin-left: 0; }
     .week-control > :focus-visible, app-week-picker:focus-within { z-index: 1; }
     .step {
-      height: 44px; padding: 0 16px; font: inherit; font-size: 14px; font-weight: 500; color: var(--color-ink); white-space: nowrap;
+      box-sizing: border-box; flex: none; height: 44px; padding: 0 16px; font: inherit; font-size: 14px; font-weight: 500; color: var(--color-ink); white-space: nowrap;
       border: 1px solid var(--color-control-border); background: var(--color-surface); cursor: pointer;
     }
-    .previous { border-radius: 8px 0 0 8px; }
-    .next { border-radius: 0 8px 8px 0; }
+    .previous { width: var(--week-step-previous-width); border-radius: 8px 0 0 8px; }
+    .next { width: var(--week-step-next-width); border-radius: 0 8px 8px 0; }
     .step:disabled { background: var(--color-disabled-fill); border-color: var(--color-disabled-border); color: var(--color-disabled-ink); cursor: not-allowed; }
     .week-placeholder {
       box-sizing: border-box; height: 44px; display: flex; align-items: center; gap: 12px; padding: 0 16px;

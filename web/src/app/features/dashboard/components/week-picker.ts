@@ -66,7 +66,7 @@ let nextDialogId = 0;
           [maxDate]="latestCompleteMonday()"
           [dateFilter]="isSelectableMonday"
           [dateClass]="selectedWeekClass"
-          (selectedChange)="choose($event)"
+          (_userSelection)="choose($event.value)"
         />
         <div class="helper">
           <p>Weeks run Monday to Sunday.</p>
@@ -78,7 +78,7 @@ let nextDialogId = 0;
   styles: `
     :host { display: block; position: relative; }
     .trigger {
-      width: 300px; height: 44px; padding: 0 14px; display: flex; align-items: center; justify-content: space-between; gap: 10px;
+      width: var(--week-picker-trigger-width); height: 44px; padding: 0 14px; display: flex; align-items: center; justify-content: space-between; gap: 10px;
       border: 1px solid var(--color-control-border); background: var(--color-surface); color: var(--color-ink); cursor: pointer; font: inherit;
     }
     .trigger[aria-expanded='true'] { border-color: var(--color-ink); box-shadow: inset 0 0 0 1px var(--color-ink); }
@@ -87,7 +87,7 @@ let nextDialogId = 0;
     .chevron-icon { color: var(--color-ink-2); }
     .trigger[aria-expanded='true'] .chevron-icon { color: var(--color-ink); }
     .trigger:disabled .calendar-icon { color: var(--color-disabled-ink); }
-    .trigger:disabled .chevron-icon { color: #b9bbbf; }
+    .trigger:disabled .chevron-icon { color: var(--color-disabled-chevron); }
   `,
 })
 export class WeekPicker {

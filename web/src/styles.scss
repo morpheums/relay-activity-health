@@ -13,6 +13,7 @@
   --color-disabled-fill: #f1f0ec;
   --color-disabled-ink: #7c7f85;
   --color-disabled-border: #d6d3cc;
+  --color-disabled-chevron: #b9bbbf;
   --color-above-ink: #a8201a;
   --color-above-tint: #fde4e2;
   --color-above-row: #fef4f3;
@@ -22,6 +23,13 @@
   --color-below-row: #f3f6fc;
   --color-danger: #b42318;
   --color-danger-tint: #fdf0ee;
+  --account-field-width: 280px;
+  --week-field-width: 576px;
+  --type-field-width: 196px;
+  --week-picker-trigger-width: 300px;
+  --week-step-previous-width: 150px;
+  --week-step-next-width: 128px;
+  --week-picker-dialog-width: 350px;
   --popover-shadow: 0 16px 40px rgba(26, 27, 30, 0.14), 0 2px 6px rgba(26, 27, 30, 0.08);
 }
 
@@ -33,36 +41,36 @@ html {
     density: 0,
   ));
   @include mat.theme-overrides((
-    primary: #1a1b1e,
-    on-primary: #ffffff,
-    on-surface: #1a1b1e,
-    on-surface-variant: #54575d,
-    surface-container-high: #ffffff,
+    primary: var(--color-ink),
+    on-primary: var(--color-surface),
+    on-surface: var(--color-ink),
+    on-surface-variant: var(--color-ink-2),
+    surface-container-high: var(--color-surface),
   ));
   @include mat.datepicker-overrides((
     calendar-text-font: 'Geist',
     calendar-text-size: 14px,
     calendar-container-background-color: transparent,
-    calendar-container-text-color: #1a1b1e,
-    calendar-date-text-color: #1a1b1e,
-    calendar-date-disabled-state-text-color: #8c8f95,
-    calendar-date-selected-state-background-color: #1a1b1e,
-    calendar-date-selected-state-text-color: #ffffff,
-    calendar-date-hover-state-background-color: #e3e1dc,
-    calendar-date-focus-state-background-color: #f1f0ec,
+    calendar-container-text-color: var(--color-ink),
+    calendar-date-text-color: var(--color-ink),
+    calendar-date-disabled-state-text-color: var(--color-control-border),
+    calendar-date-selected-state-background-color: var(--color-ink),
+    calendar-date-selected-state-text-color: var(--color-surface),
+    calendar-date-hover-state-background-color: var(--color-line),
+    calendar-date-focus-state-background-color: var(--color-disabled-fill),
     calendar-date-today-outline-color: transparent,
     calendar-date-today-disabled-state-outline-color: transparent,
     calendar-date-today-selected-state-outline-color: transparent,
     calendar-header-divider-color: transparent,
-    calendar-header-text-color: #6a6d73,
+    calendar-header-text-color: var(--color-ink-3),
     calendar-header-text-size: 12px,
     calendar-header-text-weight: 500,
-    calendar-body-label-text-color: #6a6d73,
-    calendar-period-button-text-color: #1a1b1e,
+    calendar-body-label-text-color: transparent,
+    calendar-period-button-text-color: var(--color-ink),
     calendar-period-button-text-size: 15px,
     calendar-period-button-text-weight: 600,
-    calendar-period-button-icon-color: #54575d,
-    calendar-navigation-button-icon-color: #1a1b1e,
+    calendar-period-button-icon-color: var(--color-ink-2),
+    calendar-navigation-button-icon-color: var(--color-ink),
   ));
 }
 
@@ -80,7 +88,7 @@ body {
 }
 
 .week-picker-dialog {
-  width: 350px;
+  width: var(--week-picker-dialog-width);
   box-sizing: border-box;
   padding: 12px 20px 18px;
   background: var(--color-surface);
@@ -94,9 +102,9 @@ body {
   .mat-calendar-controls { margin: 0; }
   .mat-calendar-content { padding: 6px 0 0; }
   .mat-calendar-table-header th:first-child { color: var(--color-ink); font-weight: 600; }
+  // MatCalendarHeader upper-cases monthYearLabel in code, so the case is restored here.
   .mat-calendar-period-button .mdc-button__label > span { display: inline-block; text-transform: lowercase; }
   .mat-calendar-period-button .mdc-button__label > span::first-letter { text-transform: uppercase; }
-  .mat-calendar-body-label { visibility: hidden; }
   tr:has(> .mat-calendar-body-label[colspan='7']) { display: none; }
 
   .mat-calendar-body-cell:not(.mat-calendar-body-disabled) > .mat-calendar-body-cell-content:not(.mat-calendar-body-selected) {
