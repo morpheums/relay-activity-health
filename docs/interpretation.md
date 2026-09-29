@@ -1,6 +1,6 @@
 # Interpretation: what "normal" means
 
-[← README](../README.md) · [Running](running.md) · [Testing](testing.md) · [API](api.md) · [Interpretation](interpretation.md) · [Decisions](decisions.md) · [Architecture](architecture.md)
+[← README](../README.md) · [Running](running.md) · [Testing](testing.md) · [API](api.md) · [Interpretation](interpretation.md) · [Decisions](decisions.md) · [Architecture](architecture.md) · [Dashboard](dashboard.md) · [Deferred](deferred.md)
 
 How the ticket was read, the rule that decides "normal", the assumptions behind it, how messy data is handled, and what the dashboard cannot detect.
 
@@ -33,7 +33,7 @@ This is the precise rule (PLAN §13 §5.3, "R2\*").
 - **Ranking.** Flagged rows come before normal ones. Within that, rows are ordered by how far they are from usual (|z| on the T scale, unrounded), then `below` before `above` on a tie, then location name. `insufficient_data` rows come last.
 - **Metric.** Inbound activity events (calls received, leads created, appointments set). The default is all types, and a filter narrows it to one type.
 
-**Not built:** alerting, forecasting and ML (out of scope per product); cross-account benchmarks, which serve a different persona (the account manager); outcome rates (deferred, see [decisions](decisions.md#deliberately-deferred)).
+**Not built:** alerting, forecasting and ML (out of scope per product); cross-account benchmarks, which serve a different persona (the account manager); outcome rates (deferred, see [deferred](deferred.md#deliberately-deferred)).
 
 ---
 
@@ -86,4 +86,4 @@ Also:
 - **By design, about 4 % of location-weeks are flagged** (4.3 % measured) even when nothing has changed. That is the cost of catching 96–98 % of drops to zero.
 - **The seed is not bursty.** Its week-to-week variance is about equal to its mean, which is what the rule was calibrated on. On synthetic bursty data, false flags rise to about 5–8 % per side.
 - **Time zones whose DST change falls at local midnight** (Monday 00:00 skipped or repeated) are out of scope. No seed zone is affected.
-- **"All activity" can hide a single-type change.** Combined totals have wider ranges, so a change in one type at one location may only show when that type is selected. A per-type hint in "All activity" is listed under [another day](decisions.md#with-another-day).
+- **"All activity" can hide a single-type change.** Combined totals have wider ranges, so a change in one type at one location may only show when that type is selected. A per-type hint in "All activity" is listed under [another day](deferred.md#with-another-day).
