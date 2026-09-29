@@ -571,3 +571,12 @@ if there is already a library for that, do not reinvent the wheel"* (the archite
   `cd web && npm start`. A password containing `$` must be single-quoted in `.env`.
 - Test-first: four startup tests (interpolated connection string from `.env`; real env var wins; Production ignores `.env`; process environment untouched).
 
+
+### 2026-09-29 — Test suite pruned to business value (user decision, validated by the architect)
+
+**Reason.** The user ruled that tests which do not test business logic or add real value are removed. Backend 403 → 173 tests (`0b447d8`), web 243 → 124 (`c56cf56`); no `src/` or `db/` change.
+Every §5.3 rule, §7 edge case and golden, and every §13 decision with observable behaviour keeps at least one test (validated by the architect).
+- Supersedes the last bullet of "OS-agnostic local configuration via DotNetEnv": the four DotEnv startup tests are removed; the DotNetEnv behaviour is verified by the documented run steps only.
+- The starter-file SHA-256 guard (`StarterFileChecksumTests`, acceptance DATA-40) is removed; `db/schema.sql` and `db/seed.sql` stay unmodified by rule (CLAUDE.md), not by test.
+- Options-wiring tests (`…ComesFromOptions`) are removed; the default constants stay covered by the goldens.
+- Kept: migrate-on-start fail-fast for a missing connection string, `MigrateOnStartTests`, the seed de-duplication total 12,614, the row-order invariance test.
