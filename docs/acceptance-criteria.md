@@ -16,6 +16,7 @@ User: a customer admin of one Relay account, on Monday morning, who has to act o
 - **"Contract simplification (/simplify)"** keeps the §13 §5.2 JSON unchanged but serialises the Core report records directly (no separate API response types) with a snake_case enum converter, and rounds `deviation` at the API boundary. It is cited below as §13 "Contract simplification".
 - **"Phase 2 review decisions"** (user decisions 2026-09-28, Phase 2 web review) approves the page heading, keeps the filters usable when the first load fails, and confirms the empty "Usual range" cell for rows with insufficient history. It is cited below as §13 "Phase 2 review decisions".
 - **"Test suite pruned to business value"** (user decision 2026-09-29) removes the starter-file checksum test, the DotEnv startup tests and the options-wiring tests. DATA-40 is now enforced by the CLAUDE.md boundary rule, not by a test. It is cited below as §13 "Test suite pruned".
+- **UI/UX redesign** (user approval 2026-09-29: header, footer, footnotes moved to the footer, Material week picker, status colours). PLAN.md has no §13 entry for it yet, so it is cited below as "Redesign 2026-09-29". Copy C-24…C-32 and checks UI-46…UI-49 come from it, and it amends C-07, UI-03, UI-05, UI-06, UI-20 and UI-44 (each marked "amended by Redesign 2026-09-29").
 
 Everything else in PLAN.md still applies, including the §5.4 URL-state rules and the §7 Calendar, Grid and SQL edge cases. The rationale is in `docs/design-consensus.md`.
 
@@ -51,7 +52,7 @@ Sources: PLAN §13 §5.4, D5, §13 "Input handling and UI copy" and §13 "Phase 
 | C-06 | Account summary line, sufficient history | `{count} {noun} · usually X–Y a week`, e.g. `26 inbound events · usually 18–38 a week`, `51 calls · usually 17–79 a week` | §13 §5.4; SPEC §13 "Input handling and UI copy" (noun) |
 | C-06a | `{noun}` by type, plural / singular (count = 1) | all: `inbound events` / `inbound event` · call_received: `calls` / `call` · lead_created: `leads` / `lead` · appointment_set: `appointments` / `appointment` | SPEC §13 "Input handling and UI copy" |
 | C-06b | Account summary line, `insufficient_data` | `{count} {noun}`, with no "usually" part, followed by C-04 (e.g. `8 inbound events` + `Not enough history yet (3 of 4 weeks needed)`) | SPEC §13 "Input handling and UI copy" |
-| C-07 | Empty account | `No activity recorded for this account yet.` It replaces both the summary and the table. Filters stay visible, and both week stepper buttons are disabled | §13 §5.4; SPEC §13 "Input handling and UI copy" (placement) |
+| C-07 | Empty account | `No activity recorded for this account yet.` It replaces both the summary and the table. Filters stay visible. The whole week control is disabled (both stepper buttons and the week picker trigger) but still shows the week label | §13 §5.4; SPEC §13 "Input handling and UI copy" (placement); placement amended by Redesign 2026-09-29 |
 | C-08 | Method line, account summary | `Compared with the last 8 full weeks for this account` | consensus §9; SPEC §13 "Input handling and UI copy" (wording); SPEC §13 "Contract decisions" (capital first letter) |
 | C-09 | Method line, locations (footnote) | `Compared with the last 8 full weeks at this location` | §13 §5.4 |
 | C-10 | Footnote | `Inbound events, not unique customers` | §13 §5.4 |
@@ -75,6 +76,23 @@ Rules on these strings (§13 §5.4 and §13 "Input handling and UI copy"):
 - The word `Normal` never appears on its own.
 - The UI never recomputes X–Y. It prints the API's `low`/`high`.
 - Footnote and method lines are rendered with the first letter capitalised. The wording is otherwise exactly PLAN §13 §5.4 (§13 "Input handling and UI copy"). The strings above are already capitalised.
+- Since Redesign 2026-09-29, the footnote lines (C-09…C-14 and C-13) sit in the page footer under C-25, not under the table. Their wording is unchanged.
+
+### 0.1b Redesign copy (final)
+
+Source: Redesign 2026-09-29, designer proposals finalised by product. The designer id is shown next to each entry. R-01 (shorter range cells) was not adopted, so C-05 and C-19 are unchanged.
+
+| Id | Where | Exact string | Source |
+|---|---|---|---|
+| C-24 | Page header | Wordmark `Relay`, then area label `Customer admin`. Plain text, not a link (it must not reset the URL) and not a heading (C-23 stays the only `<h1>`) | H-01, accepted |
+| C-25 | Footer heading, above the footnote lines | `About these numbers` | F-01, accepted |
+| C-26 | Footer base line. Also shown while loading and on error | `Relay · Activity health` | F-02, accepted |
+| C-27 | Visible label above the week control (also the group's accessible name) | `Week` | W-01, accepted |
+| C-28 | Week picker trigger accessible name / picker dialog accessible name | `{C-17}, choose week`, e.g. `Mon Jul 20 – Sun Jul 26, 2026, choose week` / `Choose week` | W-02, reworded: the name now starts with the visible label (C-17) instead of ending with it |
+| C-29 | Picker helper, line 1 | `Weeks run Monday to Sunday.` | W-03, accepted |
+| C-30 | Picker helper, line 2 | `Weeks from {earliestWeek} to {latestCompleteWeek}`, e.g. `Weeks from Mon Jan 26 to Mon Jul 20, 2026`. Both dates come from the response, never hard-coded. The year is shown once, at the end; if the two years differ, both dates show their year | W-04, accepted (year rule added) |
+| C-31 | Picker navigation (Material built-ins) | `Previous month`, `Next month`, `Choose month and year`. Material's other built-in labels are kept as they are | W-05, accepted (Material defaults, no override) |
+| C-32 | Location table caption | `Locations — most unusual first` | T-01, accepted |
 
 ### 0.2 Proposed copy
 
@@ -257,10 +275,10 @@ Copy ids (C-xx, P-xx) refer to §0.
 |---|---|---|---|
 | UI-01 | Open `/dashboard` with no params | URL becomes `/dashboard?account=14&week=2026-07-20&type=all`. `Viewing as` shows Beacon Home Security | SPEC §5.4 URL rules; §13 D5 |
 | UI-02 | Same | Summary reads `26 inbound events · usually 18–38 a week` and `Within usual range` | GOLDEN; C-03, C-06 |
-| UI-03 | Same | The first table row is Site B: `2`, `Usually 3–12 a week`, `▼ Lower than usual`. The rows below it (C, A, D) each show `Within usual range` | GOLDEN; GOLDEN-P (PLAN §13 "Phase 0 decisions" promoted table) (order B, C, A, D) |
+| UI-03 | Same | The table caption reads `Locations — most unusual first` (C-32). The first table row is Site B: `2`, `Usually 3–12 a week`, `▼ Lower than usual`. The rows below it (C, A, D) each show `Within usual range` | GOLDEN; GOLDEN-P (PLAN §13 "Phase 0 decisions" promoted table) (order B, C, A, D); caption amended by Redesign 2026-09-29 |
 | UI-04 | Same, and every scenario in §4.2 | The rendered page text matches none of: `\bz\b`, `σ`, `±`, `\bmedian\b` (case-insensitive), `\btypical\b` (case-insensitive), `\bdeviation\b` (case-insensitive), and a standalone `\bNormal\b` (capital N, whole word, so `Within usual range` passes). | SPEC §13 §5.4 |
-| UI-05 | Same | Status is readable with colours removed (symbol + text), e.g. by checking the DOM text or a greyscale screenshot | SPEC §13 §5.4 |
-| UI-06 | Same | Footnote contains C-09, C-10, C-11, C-12 and `Data as of Mon Jul 27, 2026`, each starting with a capital letter. The summary carries C-08. C-14 is absent | SPEC §13 §5.4; SPEC §13 "Input handling and UI copy" (capitalisation, C-08) |
+| UI-05 | Same, plus UI-10 (every row tinted `above`) and UI-18 (a `below` row) | Status is readable with colours removed, e.g. by checking the DOM text or a greyscale screenshot. Every tinted row and filled badge also shows its symbol and text (C-01 / C-02); a tint never appears without them. `Within usual range` rows show C-03 as text; their icon is decorative, so a screen reader reads the status once | SPEC §13 §5.4; amended by Redesign 2026-09-29 (row tints, badges, icon) |
+| UI-06 | Same | The page footer, under `About these numbers` (C-25), contains C-09, C-10, C-11, C-12 and `Data as of Mon Jul 27, 2026`, each starting with a capital letter. None of these lines appears under the table any more. The summary carries C-08. C-14 is absent | SPEC §13 §5.4; SPEC §13 "Input handling and UI copy" (capitalisation, C-08); location amended by Redesign 2026-09-29 (was "footnote" under the table) |
 | UI-07 | Same | `Next week ▶` is disabled (2026-07-20 = latestCompleteWeek); `◀ Previous week` is enabled | SPEC §5.4 stepper bounds |
 | UI-43 | Same, and every scenario in §4.2 and §4.3 (including the empty, loading and error states) | The page has exactly one `<h1>`, and its text is `Activity health` (C-23). The summary heading C-22 is not an `<h1>` | SPEC §13 "Phase 2 review decisions" (user decision 2026-09-28) |
 
@@ -278,7 +296,7 @@ Copy ids (C-xx, P-xx) refer to §0.
 | UI-17 | Mixed `?account=14&week=2026-03-02&type=all` | Site D `▲ Higher than usual` first. Sites A and C last, each with `Not enough history yet (3 of 4 weeks needed)` | GOLDEN-P (PLAN §13 "Phase 0 decisions" promoted table), account 14 03-02 |
 | UI-18 | Zero-activity location `?account=6&week=2026-06-29&type=all` | First row Site G, `0`, `Usually 2–9 a week`, `▼ Lower than usual` | GOLDEN-P (PLAN §13 "Phase 0 decisions" promoted table), account 6 06-29 |
 | UI-19 | Zero, small median `?account=14&week=2026-07-20&type=appointment_set` | Sites A and B show `0` and `Within usual range`; Site B reads `Usually 0–2 a week`. Footnote C-12 explains why neither can be lower than usual | GOLDEN-P (PLAN §13 "Phase 0 decisions": Site A) and GOLDEN-P (PLAN §13 "Contract decisions" promoted table) (Site B 0–2); SPEC known limit |
-| UI-20 | Empty account `?account=20` | Shows `No activity recorded for this account yet.` in place of **both** the summary and the table: no `0 inbound events`, no table. The trigger is `locations == [] && summary.baseline.weeksUsed == 0`, not `earliestWeek`. Filters stay visible and usable; both week buttons are disabled (earliestWeek = latestCompleteWeek). No error banner | GOLDEN; SPEC §13 §5.4 (trigger); SPEC §13 "Input handling and UI copy" (replaces summary and table, filters stay) |
+| UI-20 | Empty account `?account=20` | Shows `No activity recorded for this account yet.` in place of **both** the summary and the table: no `0 inbound events`, no table. The trigger is `locations == [] && summary.baseline.weeksUsed == 0`, not `earliestWeek`. Filters stay visible and usable. The whole week control is disabled (both stepper buttons and the week picker trigger, since earliestWeek = latestCompleteWeek) and still shows `Mon Jul 20 – Sun Jul 26, 2026`. No error banner | GOLDEN; SPEC §13 §5.4 (trigger); SPEC §13 "Input handling and UI copy" (replaces summary and table, filters stay); week control amended by Redesign 2026-09-29 |
 | UI-20b | Same as UI-20 (`?account=20`) | The full footnote is still shown, including `Data as of Mon Jul 27, 2026`. The "Data as of" line is hidden only when `dataAsOf` is null (UI-22) | SPEC §13 "Last Phase 0 clarifications" |
 | UI-21 | Stepper at the lower bound `?account=14&week=2026-01-26&type=all` | `◀ Previous week` disabled. Only Site B and Site D listed | SPEC; GOLDEN-P (PLAN §13 "Phase 0 decisions" promoted table), account 14 01-26 |
 | UI-45 | Insufficient history rows, e.g. `?account=14&week=2026-02-02&type=all` (every row) and `?account=14&week=2026-03-02&type=all` (Sites A and C) | Each `insufficient_data` row's "Usual range" cell is empty: no `Usually` text, no `0–0`, no dash or placeholder. The count and C-04 are still shown. Rows with sufficient history in the same table (e.g. Site D on 03-02) still show `Usually X–Y a week` | SPEC §13 "Phase 2 review decisions" (confirms C-05, UI-16); GOLDEN-P (PLAN §13 "Phase 0 decisions" promoted table), account 14 02-02 and 03-02 |
@@ -302,9 +320,18 @@ Copy ids (C-xx, P-xx) refer to §0.
 | UI-39 | At `?account=14&week=2026-03-02&type=call_received`, switch `Viewing as` to 6 | Week and type are kept: `?account=6&week=2026-03-02&type=call_received` | SPEC §13 "Input handling and UI copy" |
 | UI-39b | At `?account=14&week=2026-01-26&type=call_received`, switch `Viewing as` to 8 | The kept week 2026-01-26 is before account 8's earliestWeek (2026-02-02). The UI gets the API's 400 for that week, then rewrites the URL (replaceUrl) to `?account=8&week=2026-07-20&type=call_received`. Type is kept, and no error banner appears | SPEC §13 "Input handling and UI copy" (account switch) |
 | UI-40 | API unreachable or 5xx | C-20 shown; filters stay in the URL. `Try again` calls `DashboardState.reload()` and, once the API is back, shows the data without changing the URL | SPEC §13 "Input handling and UI copy" |
-| UI-44 | Component test: no report has loaded yet and the first load fails (network or 5xx) | C-20 is shown. `Viewing as` (C-15) and `Activity type` (C-16) are still rendered and usable: changing either updates the URL and triggers a new load. Only the week stepper (C-17, C-18) waits for a report: it is hidden or disabled until one loads | SPEC §13 "Phase 2 review decisions" (user decision 2026-09-28) |
+| UI-44 | Component test: no report has loaded yet and the first load fails (network or 5xx) | C-20 is shown. `Viewing as` (C-15) and `Activity type` (C-16) are still rendered and usable: changing either updates the URL and triggers a new load. Only the week control (stepper buttons C-18 and the week picker trigger showing C-17) waits for a report: it is not on the page until one loads, and a same-width placeholder holds its place so nothing shifts | SPEC §13 "Phase 2 review decisions" (user decision 2026-09-28); amended by Redesign 2026-09-29 (picker trigger, placeholder) |
 | UI-41 | Component test: `LocationTable` given a fixture of 4 rows in an order that is neither alphabetical nor by \|deviation\| (e.g. Site C normal 0.1, Site A below −2.5, Site D normal −1.0, Site B above 3.0), with `low`/`high` that no client formula would reproduce (e.g. 7–8) | Rows render in exactly the payload order C, A, D, B, and each shows `Usually 7–8 a week` as given. No client re-sorting or recomputation | SPEC §13 §5.2 ("locations returned sorted"), §5.4 ("never recomputed in the UI") |
 | UI-42 | Each type for account 14, 2026-07-20 | Summary nouns: all → `26 inbound events`, Calls → `16 calls`, Leads → `8 leads`, Appointments → `2 appointments`. Singular (`1 call` etc.) is covered by a component test with count 1 | SPEC §13 "Input handling and UI copy" (C-06a); counts 16 and 8 GOLDEN-P (PLAN §13 "Contract decisions" promoted table); 2 GOLDEN-P (PLAN §13 "Phase 0 decisions") |
+
+### 4.4 Redesign: page frame and week picker (Redesign 2026-09-29)
+
+| Id | Given / When | Then | Tag |
+|---|---|---|---|
+| UI-46 | Open `/dashboard`, and also the loading, error (UI-40) and empty (UI-20) states | The header shows `Relay` and `Customer admin` (C-24). Clicking either does not change the URL. UI-43 still holds: the only `<h1>` is `Activity health` | Redesign 2026-09-29; C-24 |
+| UI-47 | Same states as UI-46 | The footer shows `Relay · Activity health` (C-26) in every state, including loading and error. Where the footnote lines are shown (UI-06, UI-13, UI-20b), they sit under `About these numbers` (C-25) | Redesign 2026-09-29; C-25, C-26 |
+| UI-48 | Default view (account 14, week 2026-07-20). Open the week picker | Mon Jul 20 is selected and its whole week is shaded. Only Mondays from Mon Jan 26 to Mon Jul 20, 2026 can be chosen: Tue–Sun, Mon Jul 27 (the current partial week) and Mon Jan 19 cannot. The picker shows `Weeks run Monday to Sunday.` and `Weeks from Mon Jan 26 to Mon Jul 20, 2026`. Choosing Mon Jul 13 closes the picker, sets `week=2026-07-13` as a new history entry (Back returns to 2026-07-20), and the label reads `Mon Jul 13 – Sun Jul 19, 2026`. For `?account=8` the first Monday that can be chosen is Feb 2, and the helper reads `Weeks from Mon Feb 2 to Mon Jul 20, 2026` | SPEC §13 §5.2 (week bounds; BL-43); SPEC §5.4 URL rules; SPEC §13 "Phase 1 red-suite decisions" (user actions add history entries); GOLDEN API-10, API-16 (earliestWeek); C-29, C-30 |
+| UI-49 | Default view, keyboard only | Tab reaches the week picker trigger. It sits under the visible label `Week` (C-27), and its accessible name is `Mon Jul 20 – Sun Jul 26, 2026, choose week` (C-28). Enter opens a dialog named `Choose week`, with focus on Mon Jul 20. ↑ moves focus to Mon Jul 13, and Enter chooses it with the same result as UI-48. Enter on a non-Monday does nothing. Escape closes the picker without changing the URL. Whenever the picker closes, focus returns to the trigger. Focus is visible at every step | Redesign 2026-09-29; C-27, C-28 |
 
 ---
 
@@ -344,6 +371,7 @@ How to verify: read `README.md` in the merged repo and follow the run steps on a
 | Ranking and ties | BL-30…33, BL-31b, API-11, API-24, UI-41 |
 | Starter files unchanged | DATA-40 (by the CLAUDE.md rule and a manual checksum, not by a test; §13 "Test suite pruned") |
 | Page heading; first-load failure | UI-43, UI-44 |
+| Redesign: header, footer, week picker, status not by colour alone | UI-03, UI-05, UI-06, UI-20, UI-44, UI-46…UI-49 |
 | README | README-01…09 |
 
 ---
