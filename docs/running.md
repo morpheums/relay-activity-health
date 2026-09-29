@@ -63,10 +63,11 @@ The tests need none of these. Testcontainers creates its own databases and conne
 After steps 1 and 2 below (`.env` with a password), run `scripts/dev.sh`. It works from any directory: it changes to the repo root itself.
 
 - If `.env` is missing, it exits with `Copy .env.example to .env and set RELAY_DB_SA_PASSWORD first.`
+- If something already answers on port 5080 or 4200, it exits with `Port 5080 is already in use; stop the other API first.` (or the same for 4200 and the web server).
 - It starts the DB with `docker compose up -d --wait db` and waits until it is healthy.
 - On the first run (no `web/node_modules`), it runs `npm ci` in `web`.
 - It starts the API and waits up to 120 s for `http://localhost:5080/api/accounts` to answer; it exits with a message if the API stops or never answers.
-- It then serves the web app on http://localhost:4200.
+- It then prints `Open http://localhost:4200` and serves the web app there (`/` redirects to `/dashboard`).
 - Ctrl+C stops the API and web. The DB keeps running: stop it with `docker compose down`, or `docker compose down -v` to wipe the data.
 
 ### Step by step (Windows, or any OS)
@@ -86,9 +87,10 @@ Then open **http://localhost:4200/dashboard**.
 
 **What you should see.** The URL is rewritten to `/dashboard?account=14&week=2026-07-20&type=all`:
 - "Viewing as" shows **Beacon Home Security** (account 14).
-- The week label reads **Mon Jul 20 – Sun Jul 26, 2026**.
+- The week control reads **Mon Jul 20 – Sun Jul 26, 2026**. Clicking it opens the week picker, where only Mondays from Mon Jan 26 to Mon Jul 20, 2026 can be chosen.
 - The summary shows 26 inbound events, usually 18–38 a week, within the usual range.
 - The first row of the locations table is **Site B**: 2 events, "Usually 3–12 a week", **"▼ Lower than usual"**. It is followed by Sites C, A and D, all "Within usual range".
+- The footer, "About these numbers", shows **Data as of Mon Jul 27, 2026**.
 
 Other views worth opening:
 
