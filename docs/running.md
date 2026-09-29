@@ -58,6 +58,19 @@ The tests need none of these. Testcontainers creates its own databases and conne
 
 ## Run the app
 
+### One command (macOS, Linux)
+
+After steps 1 and 2 below (`.env` with a password), run `scripts/dev.sh`. It works from any directory: it changes to the repo root itself.
+
+- If `.env` is missing, it exits with `Copy .env.example to .env and set RELAY_DB_SA_PASSWORD first.`
+- It starts the DB with `docker compose up -d --wait db` and waits until it is healthy.
+- On the first run (no `web/node_modules`), it runs `npm ci` in `web`.
+- It starts the API and waits up to 120 s for `http://localhost:5080/api/accounts` to answer; it exits with a message if the API stops or never answers.
+- It then serves the web app on http://localhost:4200.
+- Ctrl+C stops the API and web. The DB keeps running: stop it with `docker compose down`, or `docker compose down -v` to wipe the data.
+
+### Step by step (Windows, or any OS)
+
 The same steps on macOS, Linux and Windows, from the repo root.
 
 1. **Configure:** `cp .env.example .env` (on Windows: `copy .env.example .env`).
