@@ -74,18 +74,32 @@ import { formatCalendarDay, sundayOfWeek } from './week';
 
     <footer class="page-footer" [class.with-footnotes]="footnoteReport()">
       @if (footnoteReport(); as report) {
-        <div class="footnotes">
+        <div class="footnotes-heading-row">
           <h2>About these numbers</h2>
+          @if (dataAsOfLabel(); as dataAsOf) {
+            <p class="data-as-of"><app-icon name="clock" />Data as of {{ dataAsOf }}</p>
+          }
+        </div>
+        <ul class="fact-tiles">
+          <li>
+            <span class="fact-icon"><app-icon name="history" [size]="20" /></span>
+            <span>Compared with the last {{ report.baselineWeeks }} full weeks at this location</span>
+          </li>
+          <li>
+            <span class="fact-icon"><app-icon name="empty-inbox" [size]="20" /></span>
+            <span>Inbound events, not unique customers</span>
+          </li>
+          <li>
+            <span class="fact-icon"><app-icon name="copies" [size]="20" /></span>
+            <span>Exact duplicates counted once</span>
+          </li>
+        </ul>
+        <div class="keep-in-mind">
+          <h3>Keep in mind</h3>
           <ul>
-            <li>Compared with the last {{ report.baselineWeeks }} full weeks at this location</li>
-            <li>Inbound events, not unique customers</li>
-            <li>Exact duplicates counted once</li>
-            <li>Locations that usually get 2 or fewer events a week can't show 'lower than usual'</li>
+            <li><app-icon name="info" /><span>Locations that usually get 2 or fewer events a week can't show 'lower than usual'</span></li>
             @if (report.eventType !== 'all') {
-              <li>Per-type counts at a single location are small; only large changes show up.</li>
-            }
-            @if (dataAsOfLabel(); as dataAsOf) {
-              <li>Data as of {{ dataAsOf }}</li>
+              <li><app-icon name="info" /><span>Per-type counts at a single location are small; only large changes show up.</span></li>
             }
           </ul>
         </div>
@@ -138,12 +152,31 @@ import { formatCalendarDay, sundayOfWeek } from './week';
     @keyframes shimmer { 50% { opacity: 0.55; } }
     @media (prefers-reduced-motion: reduce) { .skeleton { animation: none; } }
     .page-footer { flex-shrink: 0; padding: 20px var(--page-gutter) 24px; background: var(--color-surface); border-top: 1px solid var(--color-line); }
-    .with-footnotes { padding-top: 36px; }
-    .footnotes { display: grid; grid-template-columns: 240px minmax(0, 1fr); gap: 48px; }
-    .footnotes h2 { margin: 0; font-size: 14px; line-height: 20px; font-weight: 600; }
-    .footnotes ul { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 48px; font-size: 14px; line-height: 20px; color: var(--color-ink-2); }
+    .with-footnotes { padding-top: 40px; }
+    .footnotes-heading-row { display: flex; justify-content: space-between; align-items: center; gap: 24px; }
+    .footnotes-heading-row h2 { margin: 0; font-size: 15px; line-height: 22px; font-weight: 600; }
+    .data-as-of {
+      margin: 0; display: inline-flex; align-items: center; gap: 8px; box-sizing: border-box; min-height: 32px; padding: 5px 12px;
+      background: var(--color-surface); border: 1px solid var(--color-line); border-radius: 8px;
+      font-size: 14px; line-height: 20px; font-weight: 500; color: var(--color-ink); font-variant-numeric: tabular-nums;
+    }
+    .fact-tiles { margin: 20px 0 0; padding: 0; list-style: none; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+    .fact-tiles li {
+      display: flex; align-items: center; gap: 14px; min-height: 76px; box-sizing: border-box; padding: 16px 20px;
+      background: var(--color-info-tint); border: 1px solid var(--color-info-border); border-radius: 12px;
+      font-size: 14px; line-height: 20px; font-weight: 500;
+    }
+    .fact-icon {
+      flex-shrink: 0; width: 40px; height: 40px; box-sizing: border-box; display: flex; align-items: center; justify-content: center;
+      border-radius: 999px; background: var(--color-surface); border: 1px solid var(--color-info-border); color: var(--color-info-icon);
+    }
+    .keep-in-mind { margin-top: 24px; display: grid; grid-template-columns: 120px minmax(0, 1fr); gap: 24px; align-items: start; }
+    .keep-in-mind h3 { margin: 0; font-size: 13px; line-height: 20px; font-weight: 500; color: var(--color-ink-3); }
+    .keep-in-mind ul { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 8px; font-size: 14px; line-height: 20px; color: var(--color-ink-2); }
+    .keep-in-mind li { display: flex; align-items: flex-start; gap: 10px; }
+    .keep-in-mind app-icon { margin-top: 2px; }
     .footer-base { margin: 0; font-size: 13px; line-height: 18px; color: var(--color-ink-3); }
-    .with-footnotes .footer-base { margin-top: 28px; padding-top: 16px; border-top: 1px solid var(--color-line-soft); }
+    .with-footnotes .footer-base { margin-top: 32px; padding-top: 16px; border-top: 1px solid var(--color-line-soft); }
   `,
 })
 export class DashboardPage {
