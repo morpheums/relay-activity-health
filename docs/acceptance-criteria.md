@@ -17,6 +17,7 @@ User: a customer admin of one Relay account, on Monday morning, who has to act o
 - **"Phase 2 review decisions"** (user decisions 2026-09-28, Phase 2 web review) approves the page heading, keeps the filters usable when the first load fails, and confirms the empty "Usual range" cell for rows with insufficient history. It is cited below as §13 "Phase 2 review decisions".
 - **"Test suite pruned to business value"** (user decision 2026-09-29) removes the starter-file checksum test, the DotEnv startup tests and the options-wiring tests. DATA-40 is now enforced by the CLAUDE.md boundary rule, not by a test. It is cited below as §13 "Test suite pruned".
 - **UI/UX redesign** (user approval 2026-09-29: header, footer, footnotes moved to the footer, Material week picker, status colours). PLAN.md has no §13 entry for it yet, so it is cited below as "Redesign 2026-09-29". Copy C-24…C-32 and checks UI-46…UI-49 come from it, and it amends C-07, UI-03, UI-05, UI-06, UI-20 and UI-44 (each marked "amended by Redesign 2026-09-29").
+- **Week picker decisions** (user decisions 2026-09-29, after the redesign landed): keep the Material calendar (option A), and add a "Latest week" button to the picker footer. PLAN.md has no §13 entry for them yet, so they are cited below as "Picker decisions 2026-09-29". C-33 and UI-50 come from them.
 
 Everything else in PLAN.md still applies, including the §5.4 URL-state rules and the §7 Calendar, Grid and SQL edge cases. The rationale is in `docs/design-consensus.md`.
 
@@ -93,6 +94,7 @@ Source: Redesign 2026-09-29, designer proposals finalised by product. The design
 | C-30 | Picker helper, line 2 | `Weeks from {earliestWeek} to {latestCompleteWeek}`, e.g. `Weeks from Mon Jan 26 to Mon Jul 20, 2026`. Both dates come from the response, never hard-coded. The year is shown once, at the end; if the two years differ, both dates show their year | W-04, accepted (year rule added) |
 | C-31 | Picker navigation (Material built-ins) | `Previous month`, `Next month`, `Choose month and year`. Material's other built-in labels are kept as they are | W-05, accepted (Material defaults, no override) |
 | C-32 | Location table caption | `Locations — most unusual first` | T-01, accepted |
+| C-33 | Picker footer button, under C-30. Its accessible name is the visible text, with nothing added | `Latest week` | L-01, accepted (Picker decisions 2026-09-29). Rejected: `Go to latest week` (longer, and every other control is a short noun phrase), `Latest complete week` (C-30 already shows the range ending at that week) |
 
 ### 0.2 Proposed copy
 
@@ -332,6 +334,9 @@ Copy ids (C-xx, P-xx) refer to §0.
 | UI-47 | Same states as UI-46 | The footer shows `Relay · Activity health` (C-26) in every state, including loading and error. Where the footnote lines are shown (UI-06, UI-13, UI-20b), they sit under `About these numbers` (C-25) | Redesign 2026-09-29; C-25, C-26 |
 | UI-48 | Default view (account 14, week 2026-07-20). Open the week picker | Mon Jul 20 is selected and its whole week is shaded. Only Mondays from Mon Jan 26 to Mon Jul 20, 2026 can be chosen: Tue–Sun, Mon Jul 27 (the current partial week) and Mon Jan 19 cannot. The picker shows `Weeks run Monday to Sunday.` and `Weeks from Mon Jan 26 to Mon Jul 20, 2026`. Choosing Mon Jul 13 closes the picker, sets `week=2026-07-13` as a new history entry (Back returns to 2026-07-20), and the label reads `Mon Jul 13 – Sun Jul 19, 2026`. For `?account=8` the first Monday that can be chosen is Feb 2, and the helper reads `Weeks from Mon Feb 2 to Mon Jul 20, 2026` | SPEC §13 §5.2 (week bounds; BL-43); SPEC §5.4 URL rules; SPEC §13 "Phase 1 red-suite decisions" (user actions add history entries); GOLDEN API-10, API-16 (earliestWeek); C-29, C-30 |
 | UI-49 | Default view, keyboard only | Tab reaches the week picker trigger. It sits under the visible label `Week` (C-27), and its accessible name is `Mon Jul 20 – Sun Jul 26, 2026, choose week` (C-28). Enter opens a dialog named `Choose week`, with focus on Mon Jul 20. ↑ moves focus to Mon Jul 13, and Enter chooses it with the same result as UI-48. Enter on a non-Monday does nothing. Escape closes the picker without changing the URL. Whenever the picker closes, focus returns to the trigger. Focus is visible at every step | Redesign 2026-09-29; C-27, C-28 |
+| UI-50 | Account 14, `week=2026-07-13`. Open the week picker | A `Latest week` button (C-33) is visible under the C-30 line. Clicking it closes the dialog, returns focus to the trigger and sets `week=2026-07-20` as a new history entry (Back returns to 2026-07-13). With `week=2026-07-20` the button is still visible but natively disabled. It never selects Mon Jul 27, the week in progress | Picker decisions 2026-09-29; SPEC D1 (latest complete week only); SPEC §13 "Phase 1 red-suite decisions" (user actions add history entries); C-33 |
+
+Note on the picker (Picker decisions 2026-09-29, option A): days from the previous and next month stay blank in each month view. This is a known Material `MatCalendar` limitation, kept by user decision. It is not a defect and no test should assert adjacent-month days.
 
 ---
 
@@ -371,7 +376,7 @@ How to verify: read `README.md` in the merged repo and follow the run steps on a
 | Ranking and ties | BL-30…33, BL-31b, API-11, API-24, UI-41 |
 | Starter files unchanged | DATA-40 (by the CLAUDE.md rule and a manual checksum, not by a test; §13 "Test suite pruned") |
 | Page heading; first-load failure | UI-43, UI-44 |
-| Redesign: header, footer, week picker, status not by colour alone | UI-03, UI-05, UI-06, UI-20, UI-44, UI-46…UI-49 |
+| Redesign: header, footer, week picker, status not by colour alone | UI-03, UI-05, UI-06, UI-20, UI-44, UI-46…UI-50 |
 | README | README-01…09 |
 
 ---
