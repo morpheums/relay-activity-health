@@ -596,3 +596,7 @@ Every §5.3 rule, §7 edge case and golden, and every §13 decision with observa
 - **States:** loading keeps C-21 in `role=status` plus an `aria-hidden` skeleton. Error is a card with C-20 in `role=alert` and a primary "Try again" button. Account 20's C-07 is a centred card, with the week control disabled.
 - **Scope:** desktop only (no breakpoints) and no pagination. **Rejected:** R-01 (shortened "3–12" cells under a new header), so C-05 and C-19 stay.
 - **Order:** the Playwright e2e specs (§13 "End-to-end smoke layer") are written after the redesign lands. New copy (header, footer heading, picker labels, table caption) waits for `product`'s approval.
+- **Amendment (2026-09-29, user decisions, validated by the architect):** (1) `MatCalendar` stays (option A). Days from adjacent months stay blank because `MatCalendar` cannot show them
+  (angular/components #26768, #29549, both open). **Rejected:** ng-bootstrap datepicker, and a CDK listbox week list. (2) The picker popover footer gets a "Latest week" button. It emits `weekSelected(latestCompleteWeek)`,
+  closes the picker and returns focus to the trigger. It is disabled when `week.start == latestCompleteWeek`, and it never selects the in-progress week (D1). No contract change:
+  the button uses the existing `latestCompleteWeek` input and `weekSelected` output. The button label is new copy and waits for `product`'s approval (see Order).
