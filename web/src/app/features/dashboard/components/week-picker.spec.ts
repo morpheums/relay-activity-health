@@ -285,6 +285,19 @@ describe('WeekPicker', () => {
       expect(document.activeElement).toBe(getTrigger(picker.root));
     });
 
+    it('Enter on the already selected Mon Jul 20 closes the dialog, returns focus to the trigger and does not emit weekSelected', async () => {
+      const picker = await renderPicker(BEACON_BOUNDS);
+      const calendar = await openPicker(picker);
+
+      const focusedDay = await (await activeCell(calendar)).getText();
+      await pressOnActiveCell(picker, calendar, TestKey.ENTER);
+
+      expect(focusedDay).toBe('20');
+      expect(openDialogs()).toEqual([]);
+      expect(document.activeElement).toBe(getTrigger(picker.root));
+      expect(picker.selectedWeeks).toEqual([]);
+    });
+
     it('Enter on a non-Monday (Sun Jul 19) does nothing and keeps the dialog open', async () => {
       const picker = await renderPicker(BEACON_BOUNDS);
       const calendar = await openPicker(picker);
