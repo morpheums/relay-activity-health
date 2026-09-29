@@ -26,12 +26,6 @@ export function currentQueryParams(): Params {
   return queryParamsOf(router.url);
 }
 
-export function currentPath(): string {
-  const router = TestBed.inject(Router);
-  const primary = router.parseUrl(router.url).root.children['primary'];
-  return `/${primary ? primary.segments.map((segment) => segment.path).join('/') : ''}`;
-}
-
 export async function settle(harness?: RouterTestingHarness): Promise<void> {
   for (let round = 0; round < 12; round++) {
     await new Promise<void>((resolve) => setTimeout(resolve, 0));

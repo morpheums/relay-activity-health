@@ -48,11 +48,9 @@ export function networkFailure(): HttpErrorResponse {
 }
 
 export class FakeAccountsApi extends AccountsApi {
-  listAccountsCalls = 0;
   readonly accounts: Account[] = seedAccounts();
 
   listAccounts(): Observable<Account[]> {
-    this.listAccountsCalls += 1;
     return afterMicrotask(() => of(this.accounts.map((account) => ({ ...account }))));
   }
 }
