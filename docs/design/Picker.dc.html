@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Activity health · week picker open</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&amp;display=swap">
+<style>
+body{margin:0;font-family:'Geist',ui-sans-serif,system-ui,-apple-system,'Segoe UI',sans-serif;background:#F6F5F2;color:#1A1B1E;-webkit-font-smoothing:antialiased}
+a{color:#1A1B1E}a:hover{color:#54575D}
+</style>
+</helmet>
+<div style="width: 1440px; height: 1180px; box-sizing: border-box; display: flex; flex-direction: column; background: #F6F5F2; color: #1A1B1E; font-family: 'Geist', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;">
+
+  <header style="height: 64px; flex-shrink: 0; box-sizing: border-box; background: #FFFFFF; border-bottom: 1px solid #E3E1DC; padding: 0 160px; display: flex; align-items: center; gap: 16px;">
+    <span style="font-size: 18px; font-weight: 600; letter-spacing: -0.02em; color: #1A1B1E;">Relay</span>
+    <span aria-hidden="true" style="width: 1px; height: 20px; background: #E3E1DC;"></span>
+    <span style="font-size: 14px; color: #54575D;">Customer admin</span>
+  </header>
+
+  <main style="flex-grow: 1; padding: 48px 160px 64px; box-sizing: border-box;">
+    <h1 style="margin: 0; font-weight: 600; font-size: 48px; line-height: 52px; letter-spacing: -0.025em;">Activity health</h1>
+
+    <div style="margin-top: 28px; display: flex; gap: 24px; align-items: flex-end;">
+      <div style="display: flex; flex-direction: column; gap: 6px; width: 280px;">
+        <label for="viewing-as" style="font-size: 13px; line-height: 18px; font-weight: 500; color: #54575D;">Viewing as</label>
+        <div style="position: relative;">
+          <select id="viewing-as" style="appearance: none; -webkit-appearance: none; width: 100%; height: 44px; box-sizing: border-box; padding: 0 40px 0 14px; border: 1px solid #8C8F95; border-radius: 8px; background: #FFFFFF; font-family: inherit; font-size: 15px; color: #1A1B1E;">
+            <option value="14">Beacon Home Security</option>
+          </select>
+          <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#54575D" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="position: absolute; right: 14px; top: 13px; pointer-events: none;"><path d="M6 9l6 6 6-6"></path></svg>
+        </div>
+      </div>
+
+      <div role="group" aria-labelledby="week-control-label" style="display: flex; flex-direction: column; gap: 6px;">
+        <span id="week-control-label" style="font-size: 13px; line-height: 18px; font-weight: 500; color: #54575D;">Week</span>
+        <div style="display: flex; height: 44px;">
+          <button type="button" style="height: 44px; padding: 0 16px; border: 1px solid #8C8F95; border-radius: 8px 0 0 8px; background: #FFFFFF; font-family: inherit; font-size: 14px; font-weight: 500; color: #1A1B1E; cursor: pointer;">◀ Previous week</button>
+          <div style="position: relative; margin-left: -1px; z-index: 2;">
+            <button type="button" aria-haspopup="dialog" aria-expanded="true" aria-controls="week-picker" aria-label="Choose week, Mon Jul 20 – Sun Jul 26, 2026" style="width: 300px; height: 44px; padding: 0 14px; border: 1px solid #1A1B1E; box-shadow: inset 0 0 0 1px #1A1B1E; background: #FFFFFF; font-family: inherit; color: #1A1B1E; display: flex; align-items: center; justify-content: space-between; gap: 10px; cursor: pointer;">
+              <span style="display: flex; align-items: center; gap: 10px;">
+                <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1A1B1E" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15.5" rx="2"></rect><path d="M3.5 10h17M8 3v4M16 3v4"></path></svg>
+                <span aria-live="polite" style="font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums;">Mon Jul 20 – Sun Jul 26, 2026</span>
+              </span>
+              <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1A1B1E" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M18 15l-6-6-6 6"></path></svg>
+            </button>
+
+            <div id="week-picker" role="dialog" aria-label="Choose week" style="position: absolute; top: 52px; left: 0; width: 350px; box-sizing: border-box; background: #FFFFFF; border: 1px solid #E3E1DC; border-radius: 12px; box-shadow: 0 16px 40px rgba(26, 27, 30, 0.14), 0 2px 6px rgba(26, 27, 30, 0.08); padding: 12px 20px 18px;">
+              <div style="display: flex; align-items: center; justify-content: space-between; height: 44px;">
+                <button type="button" aria-label="Choose month and year" style="height: 44px; margin-left: -10px; padding: 0 10px; border: none; border-radius: 8px; background: transparent; font-family: inherit; font-size: 15px; font-weight: 600; color: #1A1B1E; display: flex; align-items: center; gap: 6px; cursor: pointer;">July 2026<svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#54575D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"></path></svg></button>
+                <div style="display: flex; gap: 4px; margin-right: -10px;">
+                  <button type="button" aria-label="Previous month" style="width: 44px; height: 44px; border: none; border-radius: 8px; background: transparent; display: flex; align-items: center; justify-content: center; cursor: pointer;"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1A1B1E" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"></path></svg></button>
+                  <button type="button" aria-label="Next month" disabled="disabled" style="width: 44px; height: 44px; border: none; border-radius: 8px; background: transparent; display: flex; align-items: center; justify-content: center; cursor: not-allowed;"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#B9BBBF" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"></path></svg></button>
+                </div>
+              </div>
+
+              <table role="grid" aria-label="July 2026" style="border-collapse: collapse; margin-top: 6px; font-variant-numeric: tabular-nums;">
+                <thead>
+                  <tr>
+                    <th scope="col" abbr="Monday" style="width: 44px; height: 28px; font-size: 12px; font-weight: 600; color: #1A1B1E;">Mon</th>
+                    <th scope="col" abbr="Tuesday" style="width: 44px; height: 28px; font-size: 12px; font-weight: 500; color: #6A6D73;">Tue</th>
+                    <th scope="col" abbr="Wednesday" style="width: 44px; height: 28px; font-size: 12px; font-weight: 500; color: #6A6D73;">Wed</th>
+                    <th scope="col" abbr="Thursday" style="width: 44px; height: 28px; font-size: 12px; font-weight: 500; color: #6A6D73;">Thu</th>
+                    <th scope="col" abbr="Friday" style="width: 44px; height: 28px; font-size: 12px; font-weight: 500; color: #6A6D73;">Fri</th>
+                    <th scope="col" abbr="Saturday" style="width: 44px; height: 28px; font-size: 12px; font-weight: 500; color: #6A6D73;">Sat</th>
+                    <th scope="col" abbr="Sunday" style="width: 44px; height: 28px; font-size: 12px; font-weight: 500; color: #6A6D73;">Sun</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td style="padding: 0; width: 44px; height: 44px;"></td>
+                    <td style="padding: 0; width: 44px; height: 44px;"></td>
+                    <td style="padding: 0;"><button type="button" aria-disabled="true" aria-label="Wednesday, July 1, 2026" style="width: 44px; height: 44px; border: none; border-radius: 999px; background: transparent; font-family: inherit; font-size: 14px; color: #8C8F95; cursor: default;">1</button></td>
+                    <td style="padding: 0;"><button type="button" aria-disabled="true" aria-label="Thursday, July 2, 2026" style="width: 44px; height: 44px; border: none; border-radius: 999px; background: transparent; font-family: inherit; font-size: 14px; color: #8C8F95; cursor: default;">2</button></td>
+                    <td style="padding: 0;"><button type="button" aria-disabled="true" aria-label="Friday, July 3, 2026" style="width: 44px; height: 44px; border: none; border-radius: 999px; background: transparent; font-family: inherit; font-size: 14px; color: #8C8F95; cursor: default;">3</button></td>
+                    <td style="padding: 0;"><button type="button" aria-disabled="true" aria-label="Saturday, July 4, 2026" style="width: 44px; height: 44px; border: none; border-radius: 999px; background: transparent; font-family: inherit; font-size: 14px; color: #8C8F95; cursor: default;">4</button></td>
+                    <td style="padding: 0;"><button type="button" aria-disabled="true" aria-label="Sunday, July 5, 2026" style="width: 44px; height: 44px; border: none; border-radius: 999px; background: transparent; font-family: inherit; font-size: 14px; color: #8C8F95; cursor: default;">5</button></td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 0;"><button type="button" aria-label="Monday, July 6, 2026" style="width: 44px; height: 44px; border: none; border-radius: 999px; background: #F1F0EC; font-family: inherit; font-size: 14px; font-weight: 600; color: #1A1B1E; cursor: pointer;">6</button></td>
+                    <td style="padding: 0;"><button type="button" aria-disabled="true" aria-label="Tuesday, July 7, 2026" style="width: 44px; height: 44px; border: none; border-radius: 999px; background: transparent; font-family: inherit; font-size: 14px; color: #8C8F95; cursor: default;">7</button></td>
+                    <td style="padding: 0;"><button type="button" aria-disabled="true" aria-label="Wednesday, July 8, 2026" style="width: 44px; height: 44px; border: none; border-radius: 999px; background: transparent; font-family: inherit; font-size: 14px; color: #8C8F95; cursor: default;">8</button></td>
+                    <td style="padding: 0;"><button type="button" aria-disabled="true" aria-label="Thursday, July 9, 2026" style="width: 44px; height: 44px; border: none; border-radius: 999px; background: transparent; font-family: inherit; font-size: 14px; color: #8C8F95; cursor: default;">9</button></td>
+                    <td style="padding: 0;"><button type="button" aria-disabled="true" aria-label="Friday, July 10, 2026" style="width: 44px; height: 44px; border: none; border-radius: 999px; background: transparent; font-family: inherit; font-size: 14px; color: #8C8F95; cursor: default;">10</button></td>
+                    <td style="padding: 0;"><button type="button" aria-disabled="true" aria-label="Saturday, July 11, 2026" style="width: 44px; height: 44px; border: none; border-radius: 999px; background: transparent; font-family: inherit; font-size: 14px; color: #8C8F95; cursor: default;">11</button></td>
+                    <td style="padding: 0;"><button type="button" aria-disabled="true" aria-label="Sunday, July 12, 2026" style="width: 44px; height: 44px; border: none; border-radius: 999px; background: transparent; font-family: inherit; font-size: 14px; color: #8C8F95; cursor: default;">12</button></td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 0;"><button type="button" aria-label="Monday, July 13, 2026" style="width: 44px; height: 44px; border: none; border-radius: 999px; background: #F1F0EC; outline: 2px solid #1A1B1E; outline-offset: -2px; font-family: inherit; font-size: 14px; font-weight: 600; color: #1A1B1E; cursor: pointer;">13</button></td>
+                    <td style="padding: 0;"><button type="button" aria-disabled="true" aria-label="Tuesday, July 14, 2026" style="width: 44px; height: 44px; border: none; border-radius: 999px; background: transparent; font-family: inherit; font-size: 14px; color: #8C8F95; cursor: default;">14</button></td>
+                    <td style="padding: 0;"><button type="button" aria-disabled="true" aria-label="Wednesday, July 15, 2026" style="width: 44px; height: 44px; border: none; border-radius: 999px; background: transparent; font-family: inherit; font-size: 14px; color: #8C8F95; cursor: default;">15</button></td>
+                    <td style="padding: 0;"><button type="button" aria-disabled="true" aria-label="Thursday, July 16, 2026" style="width: 44px; height: 44px; border: none; border-radius: 999px; background: transparent; font-family: inherit; font-size: 14px; color: #8C8F95; cursor: default;">16</button></td>
+                    <td style="padding: 0;"><button type="button" aria-disabled="true" aria-label="Friday, July 17, 2026" style="width: 44px; height: 44px; border: none; border-radius: 999px; background: transparent; font-family: inherit; font-size: 14px; color: #8C8F95; cursor: default;">17</button></td>
+                    <td style="padding: 0;"><button type="button" aria-disabled="true" aria-label="Saturday, July 18, 2026" style="width: 44px; height: 44px; border: none; border-radius: 999px; background: transparent; font-family: inherit; font-size: 14px; color: #8C8F95; cursor: default;">18</button></td>
+                    <td style="padding: 0;"><button type="button" aria-disabled="true" aria-label="Sunday, July 19, 2026" style="width: 44px; height: 44px; border: none; border-radius: 999px; background: transparent; font-family: inherit; font-size: 14px; color: #8C8F95; cursor: default;">19</button></td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 0; background: linear-gradient(to right, transparent 50%, #ECEAE5 50%);"><button type="button" aria-pressed="true" aria-label="Monday, July 20, 2026" style="width: 44px; height: 44px; border: none; border-radius: 999px; background: #1A1B1E; font-family: inherit; font-size: 14px; font-weight: 600; color: #FFFFFF; cursor: pointer;">20</button></td>
+                    <td style="padding: 0; background: #ECEAE5;"><button type="button" aria-disabled="true" aria-label="Tuesday, July 21, 2026" style="width: 44px; height: 44px; border: none; background: transparent; font-family: inherit; font-size: 14px; color: #54575D; cursor: default;">21</button></td>
+                    <td style="padding: 0; background: #ECEAE5;"><button type="button" aria-disabled="true" aria-label="Wednesday, July 22, 2026" style="width: 44px; height: 44px; border: none; background: transparent; font-family: inherit; font-size: 14px; color: #54575D; cursor: default;">22</button></td>
+                    <td style="padding: 0; background: #ECEAE5;"><button type="button" aria-disabled="true" aria-label="Thursday, July 23, 2026" style="width: 44px; height: 44px; border: none; background: transparent; font-family: inherit; font-size: 14px; color: #54575D; cursor: default;">23</button></td>
+                    <td style="padding: 0; background: #ECEAE5;"><button type="button" aria-disabled="true" aria-label="Friday, July 24, 2026" style="width: 44px; height: 44px; border: none; background: transparent; font-family: inherit; font-size: 14px; color: #54575D; cursor: default;">24</button></td>
+                    <td style="padding: 0; background: #ECEAE5;"><button type="button" aria-disabled="true" aria-label="Saturday, July 25, 2026" style="width: 44px; height: 44px; border: none; background: transparent; font-family: inherit; font-size: 14px; color: #54575D; cursor: default;">25</button></td>
+                    <td style="padding: 0; background: linear-gradient(to left, transparent 50%, #ECEAE5 50%);"><button type="button" aria-disabled="true" aria-label="Sunday, July 26, 2026" style="width: 44px; height: 44px; border: none; border-radius: 999px; background: #ECEAE5; font-family: inherit; font-size: 14px; color: #54575D; cursor: default;">26</button></td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 0;"><button type="button" aria-disabled="true" aria-label="Monday, July 27, 2026" style="width: 44px; height: 44px; border: none; border-radius: 999px; background: transparent; font-family: inherit; font-size: 14px; color: #8C8F95; cursor: default;">27</button></td>
+                    <td style="padding: 0;"><button type="button" aria-disabled="true" aria-label="Tuesday, July 28, 2026" style="width: 44px; height: 44px; border: none; border-radius: 999px; background: transparent; font-family: inherit; font-size: 14px; color: #8C8F95; cursor: default;">28</button></td>
+                    <td style="padding: 0;"><button type="button" aria-disabled="true" aria-label="Wednesday, July 29, 2026" style="width: 44px; height: 44px; border: none; border-radius: 999px; background: transparent; font-family: inherit; font-size: 14px; color: #8C8F95; cursor: default;">29</button></td>
+                    <td style="padding: 0;"><button type="button" aria-disabled="true" aria-label="Thursday, July 30, 2026" style="width: 44px; height: 44px; border: none; border-radius: 999px; background: transparent; font-family: inherit; font-size: 14px; color: #8C8F95; cursor: default;">30</button></td>
+                    <td style="padding: 0;"><button type="button" aria-disabled="true" aria-label="Friday, July 31, 2026" style="width: 44px; height: 44px; border: none; border-radius: 999px; background: transparent; font-family: inherit; font-size: 14px; color: #8C8F95; cursor: default;">31</button></td>
+                    <td style="padding: 0; width: 44px; height: 44px;"></td>
+                    <td style="padding: 0; width: 44px; height: 44px;"></td>
+                  </tr>
+                </tbody>
+              </table>
+
+              <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #EEECE7; font-size: 13px; line-height: 18px; color: #54575D;">
+                <p style="margin: 0;">Weeks run Monday to Sunday.</p>
+                <p style="margin: 2px 0 0;">Weeks from Mon Jan 26 to Mon Jul 20, 2026</p>
+              </div>
+            </div>
+          </div>
+          <button type="button" disabled="disabled" style="margin-left: -1px; height: 44px; padding: 0 16px; border: 1px solid #D6D3CC; border-radius: 0 8px 8px 0; background: #F1F0EC; font-family: inherit; font-size: 14px; font-weight: 500; color: #7C7F85; cursor: not-allowed;">Next week ▶</button>
+        </div>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 6px; width: 196px;">
+        <label for="activity-type" style="font-size: 13px; line-height: 18px; font-weight: 500; color: #54575D;">Activity type</label>
+        <div style="position: relative;">
+          <select id="activity-type" style="appearance: none; -webkit-appearance: none; width: 100%; height: 44px; box-sizing: border-box; padding: 0 40px 0 14px; border: 1px solid #8C8F95; border-radius: 8px; background: #FFFFFF; font-family: inherit; font-size: 15px; color: #1A1B1E;">
+            <option value="all">All activity</option>
+            <option value="call_received">Calls</option>
+            <option value="lead_created">Leads</option>
+            <option value="appointment_set">Appointments</option>
+          </select>
+          <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#54575D" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="position: absolute; right: 14px; top: 13px; pointer-events: none;"><path d="M6 9l6 6 6-6"></path></svg>
+        </div>
+      </div>
+    </div>
+
+    <section aria-labelledby="summary-heading" style="margin-top: 32px; background: #FFFFFF; border: 1px solid #E3E1DC; border-radius: 12px; padding: 32px 40px; display: flex; justify-content: space-between; align-items: flex-end; gap: 32px;">
+      <div>
+        <h2 id="summary-heading" style="margin: 0; font-size: 20px; line-height: 28px; font-weight: 600; letter-spacing: -0.01em;">Beacon Home Security — all locations</h2>
+        <p style="margin: 4px 0 0; font-size: 14px; line-height: 20px; color: #54575D;">Compared with the last 8 full weeks for this account</p>
+        <p style="margin: 20px 0 0; font-size: 18px; line-height: 24px; color: #54575D;"><span style="font-weight: 600; font-size: 72px; line-height: 72px; letter-spacing: -0.035em; color: #1A1B1E; font-variant-numeric: tabular-nums;">26</span><span> inbound events · usually <span style="color: #1A1B1E; font-weight: 600; font-variant-numeric: tabular-nums;">18–38</span> a week</span></p>
+      </div>
+      <p style="margin: 0 0 10px; display: inline-flex; align-items: center; gap: 8px; height: 40px; padding: 0 16px; border-radius: 999px; background: #ECEAE5; color: #1A1B1E; font-size: 15px; font-weight: 600; white-space: nowrap;"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1A1B1E" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"></circle><path d="M8.5 12.2l2.4 2.4 4.6-4.9"></path></svg>Within usual range</p>
+    </section>
+
+    <section style="margin-top: 24px; background: #FFFFFF; border: 1px solid #E3E1DC; border-radius: 12px; overflow: hidden;">
+      <table style="width: 100%; border-collapse: collapse; table-layout: fixed;">
+        <caption style="text-align: left; padding: 20px 24px 14px; font-size: 15px; line-height: 20px; font-weight: 600; color: #1A1B1E;">Locations — most unusual first</caption>
+        <thead>
+          <tr>
+            <th scope="col" style="width: 30%; text-align: left; padding: 0 24px; height: 40px; font-size: 13px; font-weight: 500; color: #6A6D73; border-top: 1px solid #E3E1DC;">Location</th>
+            <th scope="col" style="width: 12%; text-align: right; padding: 0 24px; height: 40px; font-size: 13px; font-weight: 500; color: #6A6D73; border-top: 1px solid #E3E1DC;">Events</th>
+            <th scope="col" style="width: 28%; text-align: left; padding: 0 24px 0 48px; height: 40px; font-size: 13px; font-weight: 500; color: #6A6D73; border-top: 1px solid #E3E1DC;">Usual range</th>
+            <th scope="col" style="width: 30%; text-align: left; padding: 0 24px; height: 40px; font-size: 13px; font-weight: 500; color: #6A6D73; border-top: 1px solid #E3E1DC;">Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="background: #F3F6FC;">
+            <th scope="row" style="text-align: left; padding: 0 24px; height: 56px; font-size: 15px; font-weight: 600; border-top: 1px solid #E3E1DC;">Site B</th>
+            <td style="text-align: right; padding: 0 24px; font-size: 16px; font-weight: 600; font-variant-numeric: tabular-nums; border-top: 1px solid #E3E1DC;">2</td>
+            <td style="padding: 0 24px 0 48px; font-size: 15px; border-top: 1px solid #E3E1DC;"><span style="color: #6A6D73;">Usually </span><span style="font-variant-numeric: tabular-nums;">3–12</span><span style="color: #6A6D73;"> a week</span></td>
+            <td style="padding: 0 24px; border-top: 1px solid #E3E1DC;"><span style="display: inline-flex; align-items: center; height: 28px; padding: 0 12px; border-radius: 999px; background: #C9D8F2; color: #173F8A; font-size: 14px; font-weight: 600; white-space: nowrap;">▼ Lower than usual</span></td>
+          </tr>
+          <tr>
+            <th scope="row" style="text-align: left; padding: 0 24px; height: 56px; font-size: 15px; font-weight: 500; border-top: 1px solid #EEECE7;">Site C</th>
+            <td style="text-align: right; padding: 0 24px; font-size: 16px; font-variant-numeric: tabular-nums; border-top: 1px solid #EEECE7;">9</td>
+            <td style="padding: 0 24px 0 48px; font-size: 15px; border-top: 1px solid #EEECE7;"><span style="color: #6A6D73;">Usually </span><span style="font-variant-numeric: tabular-nums;">2–12</span><span style="color: #6A6D73;"> a week</span></td>
+            <td style="padding: 0 24px; border-top: 1px solid #EEECE7;"><span style="display: inline-flex; align-items: center; gap: 8px; font-size: 14px; color: #54575D;"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#54575D" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"></circle><path d="M8.5 12.2l2.4 2.4 4.6-4.9"></path></svg>Within usual range</span></td>
+          </tr>
+          <tr>
+            <th scope="row" style="text-align: left; padding: 0 24px; height: 56px; font-size: 15px; font-weight: 500; border-top: 1px solid #EEECE7;">Site A</th>
+            <td style="text-align: right; padding: 0 24px; font-size: 16px; font-variant-numeric: tabular-nums; border-top: 1px solid #EEECE7;">9</td>
+            <td style="padding: 0 24px 0 48px; font-size: 15px; border-top: 1px solid #EEECE7;"><span style="color: #6A6D73;">Usually </span><span style="font-variant-numeric: tabular-nums;">2–16</span><span style="color: #6A6D73;"> a week</span></td>
+            <td style="padding: 0 24px; border-top: 1px solid #EEECE7;"><span style="display: inline-flex; align-items: center; gap: 8px; font-size: 14px; color: #54575D;"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#54575D" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"></circle><path d="M8.5 12.2l2.4 2.4 4.6-4.9"></path></svg>Within usual range</span></td>
+          </tr>
+          <tr>
+            <th scope="row" style="text-align: left; padding: 0 24px; height: 56px; font-size: 15px; font-weight: 500; border-top: 1px solid #EEECE7;">Site D</th>
+            <td style="text-align: right; padding: 0 24px; font-size: 16px; font-variant-numeric: tabular-nums; border-top: 1px solid #EEECE7;">6</td>
+            <td style="padding: 0 24px 0 48px; font-size: 15px; border-top: 1px solid #EEECE7;"><span style="color: #6A6D73;">Usually </span><span style="font-variant-numeric: tabular-nums;">3–12</span><span style="color: #6A6D73;"> a week</span></td>
+            <td style="padding: 0 24px; border-top: 1px solid #EEECE7;"><span style="display: inline-flex; align-items: center; gap: 8px; font-size: 14px; color: #54575D;"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#54575D" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"></circle><path d="M8.5 12.2l2.4 2.4 4.6-4.9"></path></svg>Within usual range</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+  </main>
+
+  <footer style="flex-shrink: 0; background: #FFFFFF; border-top: 1px solid #E3E1DC; padding: 36px 160px 24px; box-sizing: border-box;">
+    <div style="display: grid; grid-template-columns: 240px minmax(0, 1fr); gap: 48px;">
+      <h2 style="margin: 0; font-size: 14px; line-height: 20px; font-weight: 600; color: #1A1B1E;">About these numbers</h2>
+      <ul style="list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 48px; font-size: 14px; line-height: 20px; color: #54575D;">
+        <li>Compared with the last 8 full weeks at this location</li>
+        <li>Inbound events, not unique customers</li>
+        <li>Exact duplicates counted once</li>
+        <li>Locations that usually get 2 or fewer events a week can't show 'lower than usual'</li>
+        <li>Data as of Mon Jul 27, 2026</li>
+      </ul>
+    </div>
+    <div style="margin-top: 28px; padding-top: 16px; border-top: 1px solid #EEECE7; font-size: 13px; line-height: 18px; color: #6A6D73;">Relay · Activity health</div>
+  </footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1180}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,136 @@
+{
+  "v": 3,
+  "attachments": {},
+  "boards": {
+    "EmptyAccount.dc.html": {
+      "h": 900,
+      "title": "State · empty account 20",
+      "w": 1440,
+      "x": 1520,
+      "y": 3860
+    },
+    "Error.dc.html": {
+      "h": 700,
+      "title": "State · load failed after a week change",
+      "w": 1440,
+      "x": 4560,
+      "y": 3860
+    },
+    "InsufficientData.dc.html": {
+      "h": 1180,
+      "title": "State · not enough history (account 14, week of Feb 2)",
+      "w": 1440,
+      "x": 0,
+      "y": 3860
+    },
+    "Loading.dc.html": {
+      "h": 1000,
+      "title": "State · first load (week slot held)",
+      "w": 1440,
+      "x": 3040,
+      "y": 3860
+    },
+    "Main.dc.html": {
+      "h": 1180,
+      "title": "Desktop · account 14 · week of Jul 20 (default)",
+      "w": 1440,
+      "x": 0,
+      "y": 0
+    },
+    "Picker.dc.html": {
+      "h": 1180,
+      "title": "Desktop · week picker open (keyboard focus on Jul 13)",
+      "w": 1440,
+      "x": 1520,
+      "y": 0
+    },
+    "Spec.dc.html": {
+      "h": 4300,
+      "title": "Design spec · tokens, badges, picker, library",
+      "w": 1440,
+      "x": 0,
+      "y": 5460
+    },
+    "Spike.dc.html": {
+      "h": 1840,
+      "title": "Desktop · account 6 · spike week of Jun 1",
+      "w": 1440,
+      "x": 0,
+      "y": 1600
+    },
+    "SpikeAfter.dc.html": {
+      "h": 1840,
+      "title": "Desktop · account 6 · week after the spike (Jun 8)",
+      "w": 1440,
+      "x": 1520,
+      "y": 1600
+    }
+  },
+  "createdOnFiles": {
+    "at": "2026-09-29T12:00:00Z",
+    "v": 1
+  },
+  "designSystems": [],
+  "launch": {
+    "view": "canvas"
+  },
+  "notes": {
+    "row-default": {
+      "kind": "title1",
+      "maxW": 2960,
+      "text": "Default view and week picker",
+      "w": 240,
+      "x": 0,
+      "y": -300
+    },
+    "row-spec": {
+      "kind": "title1",
+      "maxW": 1440,
+      "text": "Design spec",
+      "w": 240,
+      "x": 0,
+      "y": 5160
+    },
+    "row-spike": {
+      "kind": "title1",
+      "maxW": 2960,
+      "text": "Account 6 — spike and the week after",
+      "w": 240,
+      "x": 0,
+      "y": 1300
+    },
+    "row-states": {
+      "kind": "title1",
+      "maxW": 6000,
+      "text": "States",
+      "w": 240,
+      "x": 0,
+      "y": 3560
+    },
+    "sticky-picker-keys": {
+      "text": "Picker keyboard (Angular Material MatCalendar, built in):\n• Enter or Space on the trigger opens it and moves focus to the selected Monday.\n• Arrows move one day; Up and Down move one week, so from Monday to Monday.\n• Page Up / Page Down go to the previous / next month. Home / End go to the first / last day of the month.\n• Enter selects a Monday. Disabled days ignore it (aria-disabled).\n• Escape closes and returns focus to the trigger.\n• Selecting closes the popover and writes ?week= to the URL as a new history entry.",
+      "w": 340,
+      "x": 3040,
+      "y": 0
+    },
+    "sticky-spike-source": {
+      "text": "Where the values come from: Site C (67, usually 1–7) and 'all 15 above' are PLAN §7 goldens. The other 14 rows for Jun 1 are the running app's API output (coordinator screenshot desktop-spike-6.png). The Jun 8 rows come from analysis/goldens/promoted_goldens_out.md, the source of the §13 promoted table.",
+      "w": 400,
+      "x": 3040,
+      "y": 1600
+    }
+  },
+  "order": [
+    "Main.dc.html",
+    "Picker.dc.html",
+    "Spike.dc.html",
+    "SpikeAfter.dc.html",
+    "InsufficientData.dc.html",
+    "EmptyAccount.dc.html",
+    "Loading.dc.html",
+    "Error.dc.html",
+    "Spec.dc.html"
+  ],
+  "pages": [],
+  "title": "Relay Activity Health — Redesign"
+}
