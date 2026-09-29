@@ -1,7 +1,6 @@
 import { Routes } from '@angular/router';
-import { DashboardPage } from './features/dashboard/dashboard.page';
 
 export const routes: Routes = [
   { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
-  { path: 'dashboard', component: DashboardPage },
+  { path: 'dashboard', loadComponent: () => import('./features/dashboard/dashboard.page').then((module) => module.DashboardPage) },
 ];

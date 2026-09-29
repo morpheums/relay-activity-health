@@ -48,11 +48,19 @@ function dayWithYear(parts: CalendarDayParts): string {
   return `${dayWithoutYear(parts)}, ${parts.year}`;
 }
 
+function formatCalendarDayPair(firstDay: string, lastDay: string, separator: string): string {
+  const firstParts = calendarDayParts(utcMidnightOf(firstDay), 'UTC');
+  const lastParts = calendarDayParts(utcMidnightOf(lastDay), 'UTC');
+  const firstLabel = firstParts.year === lastParts.year ? dayWithoutYear(firstParts) : dayWithYear(firstParts);
+  return `${firstLabel}${separator}${dayWithYear(lastParts)}`;
+}
+
 export function formatWeekRange(weekStart: string, weekEnd: string): string {
-  const startParts = calendarDayParts(utcMidnightOf(weekStart), 'UTC');
-  const endParts = calendarDayParts(utcMidnightOf(weekEnd), 'UTC');
-  const startLabel = startParts.year === endParts.year ? dayWithoutYear(startParts) : dayWithYear(startParts);
-  return `${startLabel} – ${dayWithYear(endParts)}`;
+  return formatCalendarDayPair(weekStart, weekEnd, ' – ');
+}
+
+export function formatSelectableWeeks(earliestWeek: string, latestCompleteWeek: string): string {
+  return `Weeks from ${formatCalendarDayPair(earliestWeek, latestCompleteWeek, ' to ')}`;
 }
 
 export function formatCalendarDay(instant: string, timeZone: string): string | null {

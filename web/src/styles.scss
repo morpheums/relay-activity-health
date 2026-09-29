@@ -1,5 +1,30 @@
 @use '@angular/material' as mat;
 
+:root {
+  --color-ground: #f6f5f2;
+  --color-surface: #ffffff;
+  --color-ink: #1a1b1e;
+  --color-ink-2: #54575d;
+  --color-ink-3: #6a6d73;
+  --color-control-border: #8c8f95;
+  --color-line: #e3e1dc;
+  --color-line-soft: #eeece7;
+  --color-fill-muted: #eceae5;
+  --color-disabled-fill: #f1f0ec;
+  --color-disabled-ink: #7c7f85;
+  --color-disabled-border: #d6d3cc;
+  --color-above-ink: #a8201a;
+  --color-above-tint: #fde4e2;
+  --color-above-row: #fef4f3;
+  --color-above-border: #f4dedb;
+  --color-below-ink: #173f8a;
+  --color-below-tint: #c9d8f2;
+  --color-below-row: #f3f6fc;
+  --color-danger: #b42318;
+  --color-danger-tint: #fdf0ee;
+  --popover-shadow: 0 16px 40px rgba(26, 27, 30, 0.14), 0 2px 6px rgba(26, 27, 30, 0.08);
+}
+
 html {
   color-scheme: light;
   @include mat.theme((
@@ -7,4 +32,118 @@ html {
     typography: 'Geist',
     density: 0,
   ));
+  @include mat.theme-overrides((
+    primary: #1a1b1e,
+    on-primary: #ffffff,
+    on-surface: #1a1b1e,
+    on-surface-variant: #54575d,
+    surface-container-high: #ffffff,
+  ));
+  @include mat.datepicker-overrides((
+    calendar-text-font: 'Geist',
+    calendar-text-size: 14px,
+    calendar-container-background-color: transparent,
+    calendar-container-text-color: #1a1b1e,
+    calendar-date-text-color: #1a1b1e,
+    calendar-date-disabled-state-text-color: #8c8f95,
+    calendar-date-selected-state-background-color: #1a1b1e,
+    calendar-date-selected-state-text-color: #ffffff,
+    calendar-date-hover-state-background-color: #e3e1dc,
+    calendar-date-focus-state-background-color: #f1f0ec,
+    calendar-date-today-outline-color: transparent,
+    calendar-date-today-disabled-state-outline-color: transparent,
+    calendar-date-today-selected-state-outline-color: transparent,
+    calendar-header-divider-color: transparent,
+    calendar-header-text-color: #6a6d73,
+    calendar-header-text-size: 12px,
+    calendar-header-text-weight: 500,
+    calendar-body-label-text-color: #6a6d73,
+    calendar-period-button-text-color: #1a1b1e,
+    calendar-period-button-text-size: 15px,
+    calendar-period-button-text-weight: 600,
+    calendar-period-button-icon-color: #54575d,
+    calendar-navigation-button-icon-color: #1a1b1e,
+  ));
+}
+
+body {
+  margin: 0;
+  background: var(--color-ground);
+  color: var(--color-ink);
+  font-family: 'Geist', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-ink);
+  outline-offset: 2px;
+}
+
+.week-picker-dialog {
+  width: 350px;
+  box-sizing: border-box;
+  padding: 12px 20px 18px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
+  border-radius: 12px;
+  box-shadow: var(--popover-shadow);
+  font-variant-numeric: tabular-nums;
+  animation: week-picker-open 120ms ease-out;
+
+  .mat-calendar-header { padding: 0; }
+  .mat-calendar-controls { margin: 0; }
+  .mat-calendar-content { padding: 6px 0 0; }
+  .mat-calendar-table-header th:first-child { color: var(--color-ink); font-weight: 600; }
+  .mat-calendar-period-button .mdc-button__label > span { display: inline-block; text-transform: lowercase; }
+  .mat-calendar-period-button .mdc-button__label > span::first-letter { text-transform: uppercase; }
+  .mat-calendar-body-label { visibility: hidden; }
+  tr:has(> .mat-calendar-body-label[colspan='7']) { display: none; }
+
+  .mat-calendar-body-cell:not(.mat-calendar-body-disabled) > .mat-calendar-body-cell-content:not(.mat-calendar-body-selected) {
+    background: var(--color-disabled-fill);
+    font-weight: 600;
+  }
+
+  .mat-calendar-body-selected { font-weight: 600; }
+
+  .mat-calendar-body-cell:focus-visible > .mat-calendar-body-cell-content {
+    outline: 2px solid var(--color-ink);
+    outline-offset: -2px;
+  }
+
+  .mat-calendar-body-cell-container:has(.mat-calendar-body-selected) {
+    background: linear-gradient(to right, transparent 50%, var(--color-fill-muted) 50%);
+  }
+
+  .mat-calendar-body-cell-container:has(.week-picker-selected-week) { background: var(--color-fill-muted); }
+
+  .mat-calendar-body-cell-container:has(.week-picker-selected-week):nth-child(7) {
+    background: linear-gradient(to left, transparent 50%, var(--color-fill-muted) 50%);
+  }
+
+  .week-picker-selected-week > .mat-calendar-body-cell-content { color: var(--color-ink-2); }
+
+  .mat-calendar-body-cell-container:nth-child(7) .week-picker-selected-week > .mat-calendar-body-cell-content {
+    background: var(--color-fill-muted);
+  }
+
+  .helper {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--color-line-soft);
+    font-size: 13px;
+    line-height: 18px;
+    color: var(--color-ink-2);
+
+    p { margin: 0; }
+    p + p { margin-top: 2px; }
+  }
+}
+
+@keyframes week-picker-open {
+  from { opacity: 0; transform: scale(0.97); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .week-picker-dialog { animation: none; }
 }
