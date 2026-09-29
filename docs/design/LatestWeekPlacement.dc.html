@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Latest week control · placement compared</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&amp;display=swap">
+<style>
+body{margin:0;font-family:'Geist',ui-sans-serif,system-ui,-apple-system,'Segoe UI',sans-serif;background:#F6F5F2;color:#1A1B1E;-webkit-font-smoothing:antialiased}
+a{color:#1A1B1E}a:hover{color:#54575D}
+</style>
+</helmet>
+<div style="width: 1440px; height: 1260px; box-sizing: border-box; padding: 56px 40px 64px; display: flex; flex-direction: column; gap: 24px; background: #F6F5F2; color: #1A1B1E; font-family: 'Geist', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;">
+
+  <div style="padding-left: 120px; display: flex; flex-direction: column; gap: 8px;">
+    <h1 style="margin: 0; font-size: 32px; line-height: 40px; font-weight: 600; letter-spacing: -0.02em;">Latest week control — where it goes</h1>
+    <p style="margin: 0; max-width: 820px; font-size: 15px; line-height: 22px; color: #54575D;">Drawn 1:1 on the approved filter row (Viewing as 280 · Week group 576 · Activity type 196, gaps 24, inside the 1120 content column). The control jumps to latestCompleteWeek, Mon Jul 20; the partial week of Jul 27 is never offered.</p>
+  </div>
+
+  <section aria-labelledby="placement-stepper" style="position: relative; background: #FFFFFF; border: 1px solid #E3E1DC; border-radius: 12px; padding: 28px 0 28px 120px; display: flex; flex-direction: column; gap: 20px;">
+    <div style="display: flex; align-items: baseline; gap: 12px;">
+      <h2 id="placement-stepper" style="margin: 0; font-size: 18px; line-height: 24px; font-weight: 600;">1 · In the stepper row</h2>
+      <span style="font-size: 13px; line-height: 18px; font-weight: 600; color: #54575D;">Not chosen</span>
+    </div>
+    <div style="display: flex; gap: 24px; align-items: flex-end;">
+      <div style="display: flex; flex-direction: column; gap: 6px; width: 280px; flex-shrink: 0;">
+        <span style="font-size: 13px; line-height: 18px; font-weight: 500; color: #54575D;">Viewing as</span>
+        <span style="height: 44px; box-sizing: border-box; padding: 0 14px; border: 1px solid #8C8F95; border-radius: 8px; display: flex; align-items: center; font-size: 15px;">Metro Collision Centers</span>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 6px; flex-shrink: 0;">
+        <span style="font-size: 13px; line-height: 18px; font-weight: 500; color: #54575D;">Week</span>
+        <div style="display: flex; gap: 8px;">
+          <div style="display: flex; height: 44px;">
+            <button type="button" style="width: 150px; height: 44px; border: 1px solid #8C8F95; border-radius: 8px 0 0 8px; background: #FFFFFF; font-family: inherit; font-size: 14px; font-weight: 500; color: #1A1B1E; white-space: nowrap;">◀ Previous week</button>
+            <button type="button" aria-label="Mon Jun 29 – Sun Jul 5, 2026, choose week" style="width: 300px; margin-left: -1px; height: 44px; padding: 0 14px; border: 1px solid #8C8F95; background: #FFFFFF; font-family: inherit; font-size: 15px; font-weight: 600; color: #1A1B1E; text-align: left; white-space: nowrap; font-variant-numeric: tabular-nums;">Mon Jun 29 – Sun Jul 5, 2026</button>
+            <button type="button" style="width: 128px; margin-left: -1px; height: 44px; border: 1px solid #8C8F95; border-radius: 0 8px 8px 0; background: #FFFFFF; font-family: inherit; font-size: 14px; font-weight: 500; color: #1A1B1E; white-space: nowrap;">Next week ▶</button>
+          </div>
+          <button type="button" style="width: 124px; height: 44px; border: 1px solid #8C8F95; border-radius: 8px; background: #FFFFFF; font-family: inherit; font-size: 14px; font-weight: 500; color: #1A1B1E; white-space: nowrap;">Latest week</button>
+        </div>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 6px; width: 196px; flex-shrink: 0;">
+        <span style="font-size: 13px; line-height: 18px; font-weight: 500; color: #54575D;">Activity type</span>
+        <span style="height: 44px; box-sizing: border-box; padding: 0 14px; border: 1px solid #8C8F95; border-radius: 8px; display: flex; align-items: center; font-size: 15px;">Leads</span>
+      </div>
+    </div>
+    <span aria-hidden="true" style="position: absolute; left: 1239px; top: 16px; bottom: 16px; border-left: 2px dashed #A8201A;"></span>
+    <span style="position: absolute; left: 1100px; top: 22px; width: 130px; text-align: right; font-size: 12px; line-height: 16px; font-weight: 600; color: #A8201A;">Content edge (1120)</span>
+    <p style="margin: 0; max-width: 880px; font-size: 14px; line-height: 21px; color: #54575D;">One click and always visible. But it needs 132 px (8 gap + 124 button) and the row has 20 px spare (280 + 24 + 576 + 24 + 196 = 1100 of 1120). Activity type is pushed 112 px past the content edge, or the fixed 576 week group (Spec §8) and the UI-44 placeholder have to change.</p>
+  </section>
+
+  <section aria-labelledby="placement-label" style="position: relative; background: #FFFFFF; border: 1px solid #E3E1DC; border-radius: 12px; padding: 28px 0 28px 120px; display: flex; flex-direction: column; gap: 20px;">
+    <div style="display: flex; align-items: baseline; gap: 12px;">
+      <h2 id="placement-label" style="margin: 0; font-size: 18px; line-height: 24px; font-weight: 600;">2 · Beside the Week label</h2>
+      <span style="font-size: 13px; line-height: 18px; font-weight: 600; color: #54575D;">Not chosen</span>
+    </div>
+    <div style="display: flex; gap: 24px; align-items: flex-end;">
+      <div style="display: flex; flex-direction: column; gap: 6px; width: 280px; flex-shrink: 0;">
+        <span style="font-size: 13px; line-height: 18px; font-weight: 500; color: #54575D;">Viewing as</span>
+        <span style="height: 44px; box-sizing: border-box; padding: 0 14px; border: 1px solid #8C8F95; border-radius: 8px; display: flex; align-items: center; font-size: 15px;">Metro Collision Centers</span>
+      </div>
+      <div style="position: relative; display: flex; flex-direction: column; gap: 6px; width: 576px; flex-shrink: 0;">
+        <div style="display: flex; justify-content: space-between; align-items: center; height: 18px;">
+          <span style="font-size: 13px; line-height: 18px; font-weight: 500; color: #54575D;">Week</span>
+          <button type="button" style="height: 18px; padding: 0; border: none; background: transparent; font-family: inherit; font-size: 13px; line-height: 18px; font-weight: 500; color: #1A1B1E; text-decoration: underline; text-underline-offset: 3px;">Latest week</button>
+        </div>
+        <span aria-hidden="true" style="position: absolute; right: -8px; top: -13px; width: 96px; height: 44px; box-sizing: border-box; border: 2px dashed #A8201A; border-radius: 8px;"></span>
+        <div style="display: flex; height: 44px;">
+          <button type="button" style="width: 150px; height: 44px; border: 1px solid #8C8F95; border-radius: 8px 0 0 8px; background: #FFFFFF; font-family: inherit; font-size: 14px; font-weight: 500; color: #1A1B1E; white-space: nowrap;">◀ Previous week</button>
+          <button type="button" aria-label="Mon Jun 29 – Sun Jul 5, 2026, choose week" style="width: 300px; margin-left: -1px; height: 44px; padding: 0 14px; border: 1px solid #8C8F95; background: #FFFFFF; font-family: inherit; font-size: 15px; font-weight: 600; color: #1A1B1E; text-align: left; white-space: nowrap; font-variant-numeric: tabular-nums;">Mon Jun 29 – Sun Jul 5, 2026</button>
+          <button type="button" style="width: 128px; margin-left: -1px; height: 44px; border: 1px solid #8C8F95; border-radius: 0 8px 8px 0; background: #FFFFFF; font-family: inherit; font-size: 14px; font-weight: 500; color: #1A1B1E; white-space: nowrap;">Next week ▶</button>
+        </div>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 6px; width: 196px; flex-shrink: 0;">
+        <span style="font-size: 13px; line-height: 18px; font-weight: 500; color: #54575D;">Activity type</span>
+        <span style="height: 44px; box-sizing: border-box; padding: 0 14px; border: 1px solid #8C8F95; border-radius: 8px; display: flex; align-items: center; font-size: 15px;">Leads</span>
+      </div>
+    </div>
+    <p style="margin: 0; max-width: 880px; font-size: 14px; line-height: 21px; color: #54575D;">One click, no width change. But the label row is 18 px high with 6 px to the stepper, so the 44 px target (dashed) covers the top 7 px of Next week ▶. Making room moves the week group 26 px lower than the other two fields. A small underlined link in a label row also reads as a label, not as an action.</p>
+  </section>
+
+  <section aria-labelledby="placement-footer" style="background: #FFFFFF; border: 1.5px solid #1A1B1E; border-radius: 12px; padding: 28px 0 28px 120px; display: flex; flex-direction: column; gap: 20px;">
+    <div style="display: flex; align-items: baseline; gap: 12px;">
+      <h2 id="placement-footer" style="margin: 0; font-size: 18px; line-height: 24px; font-weight: 600;">3 · In the picker footer</h2>
+      <span style="display: inline-flex; align-items: center; gap: 6px; font-size: 13px; line-height: 18px; font-weight: 600; color: #1A1B1E;"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1A1B1E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg>Chosen</span>
+    </div>
+    <div style="display: flex; gap: 48px; align-items: flex-start;">
+      <div style="display: flex; flex-direction: column; gap: 10px;">
+        <span style="font-size: 13px; line-height: 18px; font-weight: 500; color: #6A6D73;">Week of Jun 29 · enabled</span>
+        <div style="width: 350px; box-sizing: border-box; background: #FFFFFF; border: 1px solid #E3E1DC; border-radius: 12px; box-shadow: 0 16px 40px rgba(26, 27, 30, 0.14), 0 2px 6px rgba(26, 27, 30, 0.08); padding: 0 20px 18px;">
+          <div style="padding-top: 12px; border-top: 1px solid #EEECE7; margin-top: 12px; font-size: 13px; line-height: 18px; color: #54575D;">
+            <p style="margin: 0;">Weeks run Monday to Sunday.</p>
+            <p style="margin: 2px 0 0;">Weeks from Mon Jan 26 to Mon Jul 20, 2026</p>
+          </div>
+          <div style="margin-top: 14px; display: flex;">
+            <button type="button" style="height: 44px; padding: 0 16px; border: 1px solid #8C8F95; border-radius: 8px; background: #FFFFFF; font-family: inherit; font-size: 14px; font-weight: 500; color: #1A1B1E; cursor: pointer; white-space: nowrap;">Latest week</button>
+          </div>
+        </div>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 10px;">
+        <span style="font-size: 13px; line-height: 18px; font-weight: 500; color: #6A6D73;">Week of Jul 20 (latest) · disabled, still visible</span>
+        <div style="width: 350px; box-sizing: border-box; background: #FFFFFF; border: 1px solid #E3E1DC; border-radius: 12px; box-shadow: 0 16px 40px rgba(26, 27, 30, 0.14), 0 2px 6px rgba(26, 27, 30, 0.08); padding: 0 20px 18px;">
+          <div style="padding-top: 12px; border-top: 1px solid #EEECE7; margin-top: 12px; font-size: 13px; line-height: 18px; color: #54575D;">
+            <p style="margin: 0;">Weeks run Monday to Sunday.</p>
+            <p style="margin: 2px 0 0;">Weeks from Mon Jan 26 to Mon Jul 20, 2026</p>
+          </div>
+          <div style="margin-top: 14px; display: flex;">
+            <button type="button" disabled="disabled" style="height: 44px; padding: 0 16px; border: 1px solid #D6D3CC; border-radius: 8px; background: #F1F0EC; font-family: inherit; font-size: 14px; font-weight: 500; color: #7C7F85; cursor: not-allowed; white-space: nowrap;">Latest week</button>
+          </div>
+        </div>
+      </div>
+      <ul style="margin: 28px 0 0; padding: 0 0 0 18px; max-width: 380px; display: flex; flex-direction: column; gap: 8px; font-size: 14px; line-height: 21px; color: #54575D;">
+        <li>No layout change: the 576 week group, the UI-44 placeholder and the table stay as approved.</li>
+        <li>It sits under the range line (C-30), so “latest” visibly means Mon Jul 20, not the partial week of Jul 27.</li>
+        <li>Two clicks, not one. Next week ▶ already covers one step; the jump matters when far back (from Jan 26 it saves 25 clicks).</li>
+        <li>Click: close, return focus to the trigger, emit weekSelected(latestCompleteWeek) — the same path as choosing a day.</li>
+      </ul>
+    </div>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1260}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

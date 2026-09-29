@@ -23,6 +23,13 @@
       "x": 0,
       "y": 3860
     },
+    "LatestWeekPlacement.dc.html": {
+      "h": 1260,
+      "title": "Latest week control · three placements compared",
+      "w": 1440,
+      "x": 4560,
+      "y": 10180
+    },
     "Loading.dc.html": {
       "h": 1000,
       "title": "State · first load (week slot held)",
@@ -43,6 +50,27 @@
       "w": 1440,
       "x": 1520,
       "y": 0
+    },
+    "PickerOptionA.dc.html": {
+      "h": 1800,
+      "title": "Picker option A · keep MatCalendar (June view, gap stays)",
+      "w": 1440,
+      "x": 0,
+      "y": 10180
+    },
+    "PickerOptionB.dc.html": {
+      "h": 1800,
+      "title": "Picker option B · ng-bootstrap calendar with outside days",
+      "w": 1440,
+      "x": 1520,
+      "y": 10180
+    },
+    "PickerOptionC.dc.html": {
+      "h": 1800,
+      "title": "Picker option C · week list (CDK listbox), recommended",
+      "w": 1440,
+      "x": 3040,
+      "y": 10180
     },
     "Spec.dc.html": {
       "h": 4300,
@@ -75,6 +103,14 @@
     "view": "canvas"
   },
   "notes": {
+    "row-picker-follow-up": {
+      "kind": "title1",
+      "maxW": 6000,
+      "text": "Picker follow-up",
+      "w": 240,
+      "x": 0,
+      "y": 9880
+    },
     "row-default": {
       "kind": "title1",
       "maxW": 2960,
@@ -118,6 +154,18 @@
       "w": 400,
       "x": 3040,
       "y": 1600
+    },
+    "sticky-follow-up-source": {
+      "text": "Where the values come from: account 6 (Metro Collision Centers), week of Jun 29, Leads. The summary (15 leads, usually 8–27, within usual range) and all 15 rows (Site H 3 vs 0–2 higher, ranked first) are the running API's output: GET /api/accounts/6/activity-health?week=2026-06-29&type=lead_created on port 5080, read 2026-09-29. PLAN §13 has a golden for this week only for type all (total 69, Site G below).",
+      "w": 400,
+      "x": 6080,
+      "y": 10180
+    },
+    "sticky-option-c-keys": {
+      "text": "Option C keyboard (Angular CDK listbox, built in):\n• Enter or Space on the trigger opens it; focus goes to the selected week.\n• Up / Down move one week (Up from Jul 20 reaches Jul 13, as in UI-49). Month headings are skipped.\n• Home / End go to the first / last week. Wrapping is off (cdkListboxNavigationWrapDisabled).\n• Typeahead uses a label like 'Jun 29' (cdkOptionTypeaheadLabel), so typing 'Jun' jumps to June.\n• Enter or Space selects: closes, focus returns to the trigger, ?week= is written as a history entry.\n• Tab moves to Latest week; Escape closes without change.",
+      "w": 400,
+      "x": 6080,
+      "y": 10640
     }
   },
   "order": [
@@ -129,7 +177,11 @@
     "EmptyAccount.dc.html",
     "Loading.dc.html",
     "Error.dc.html",
-    "Spec.dc.html"
+    "Spec.dc.html",
+    "PickerOptionA.dc.html",
+    "PickerOptionB.dc.html",
+    "PickerOptionC.dc.html",
+    "LatestWeekPlacement.dc.html"
   ],
   "pages": [],
   "title": "Relay Activity Health — Redesign"
