@@ -28,7 +28,7 @@ Versions are read from `global.json`, `Directory.Packages.props`, `web/package-l
 ## Project structure
 
 ```
-db/                        schema.sql, seed.sql — the starter files, unmodified (checksums pinned in tests)
+db/                        schema.sql, seed.sql — the starter files, never modified (CLAUDE.md rule)
 src/
   Relay.Core/              no project references, no packages
     Calendar/              IWeekCalendar: local Monday ↔ UTC window (DST-aware), week containing an instant, latest complete week

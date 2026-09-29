@@ -15,6 +15,7 @@ User: a customer admin of one Relay account, on Monday morning, who has to act o
 - **"Calendar contract simplified"** reduces `IWeekCalendar` to `Window`, `WeekContaining` and `LatestCompleteWeek`; the Monday check and the 8 baseline windows move into `ActivityHealthService`. It is cited below as §13 "Calendar contract simplified".
 - **"Contract simplification (/simplify)"** keeps the §13 §5.2 JSON unchanged but serialises the Core report records directly (no separate API response types) with a snake_case enum converter, and rounds `deviation` at the API boundary. It is cited below as §13 "Contract simplification".
 - **"Phase 2 review decisions"** (user decisions 2026-09-28, Phase 2 web review) approves the page heading, keeps the filters usable when the first load fails, and confirms the empty "Usual range" cell for rows with insufficient history. It is cited below as §13 "Phase 2 review decisions".
+- **"Test suite pruned to business value"** (user decision 2026-09-29) removes the starter-file checksum test, the DotEnv startup tests and the options-wiring tests. DATA-40 is now enforced by the CLAUDE.md boundary rule, not by a test. It is cited below as §13 "Test suite pruned".
 
 Everything else in PLAN.md still applies, including the §5.4 URL-state rules and the §7 Calendar, Grid and SQL edge cases. The rationale is in `docs/design-consensus.md`.
 
@@ -169,7 +170,7 @@ How to verify: run `dotnet test tests/Relay.Infrastructure.Tests` and read each 
 | DATA-33 | Sites query, fixture with a site whose first event is later than any window passed elsewhere | The site is still returned with its first-event instant; the query is unbounded, and filtering by W happens in Core | SPEC consensus §3 |
 | DATA-34 | Schema after `InitialCreate` | Index `IX_activity_events_account_occurred` on `(account_id, occurred_at)` INCLUDE `(location, event_type, duration_seconds, outcome)`; no unique constraint | SPEC §13 §5.1 |
 
-### 2.2 Seed load and starter files (`Relay.Api.Tests` against the real seed, plus the repo)
+### 2.2 Seed load and starter files (`Relay.Api.Tests` against the real seed; DATA-40 by rule)
 
 | Id | Given / When | Then | Tag |
 |---|---|---|---|
@@ -177,7 +178,7 @@ How to verify: run `dotnet test tests/Relay.Infrastructure.Tests` and read each 
 | DATA-02 | De-duplicated weekly counts for every account (1–20), with windows covering every local week from 2026-01-26 through 2026-07-27 inclusive (the partial week too) | The counts sum to **12,614** in total, so nothing is lost or double-counted at the week edges. Per account: 1: 1,221 · 2: 729 · 3: 477 · 4: 796 · 5: 884 · 6: 2,637 · 7: 437 · 8: 260 · 9: 546 · 10: 342 · 11: 354 · 12: 1,303 · 13: 205 · 14: 638 · 15: 499 · 16: 167 · 17: 323 · 18: 586 · 19: 210 · 20: 0 | GOLDEN-P (PLAN §13 "Contract decisions" promoted table); total also SPEC §2 / consensus §4.2 |
 | DATA-03 | Account 1, Site C, local week 2026-07-06 (America/Chicago), all | Count **4** (raw rows 5; ids 11266/11267 are one event) | GOLDEN |
 | DATA-10 | Account 14 sites | Sites B and D first active in local week 2026-01-26; Sites A and C in 2026-02-02 | GOLDEN-P (PLAN §13 "Contract decisions" promoted table) |
-| DATA-40 | `db/schema.sql`, `db/seed.sql` after the Phase 0 `git mv` | Content unchanged. SHA-256 must equal the originals committed at the repo root in `4898e69`: `schema.sql` `348912f4fd6dade1728058a4f666780c60b94578f4276135583f502616e51d3d`, `seed.sql` `40e60ee81d999eb32057b4437bc84e9ec197265d4e58c13c0bfbad150e6eaea2`. `git log --follow` shows a rename | SPEC §13 (starter files), CLAUDE.md boundaries |
+| DATA-40 | `db/schema.sql`, `db/seed.sql` after the Phase 0 `git mv` | Content unchanged. Enforced by the CLAUDE.md boundary rule ("`db/seed.sql` and `db/schema.sql` are never modified"), **not by an automated test**: the SHA-256 guard was removed in §13 "Test suite pruned". Manual check: `shasum -a 256 db/schema.sql db/seed.sql` equals the originals committed at the repo root in `4898e69`: `schema.sql` `348912f4fd6dade1728058a4f666780c60b94578f4276135583f502616e51d3d`, `seed.sql` `40e60ee81d999eb32057b4437bc84e9ec197265d4e58c13c0bfbad150e6eaea2`. `git log --follow` shows a rename | CLAUDE.md boundaries; SPEC §13 "Test suite pruned" |
 
 ---
 
@@ -341,7 +342,7 @@ How to verify: read `README.md` in the merged repo and follow the run steps on a
 | Location with zero activity in the week | BL-20, BL-21, API-22, API-23, API-25, UI-18, UI-19 |
 | Duplicates | DATA-20…24, DATA-02, DATA-03 |
 | Ranking and ties | BL-30…33, BL-31b, API-11, API-24, UI-41 |
-| Starter files unchanged | DATA-40 |
+| Starter files unchanged | DATA-40 (by the CLAUDE.md rule and a manual checksum, not by a test; §13 "Test suite pruned") |
 | Page heading; first-load failure | UI-43, UI-44 |
 | README | README-01…09 |
 
