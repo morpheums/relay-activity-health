@@ -595,7 +595,7 @@ Every §5.3 rule, §7 edge case and golden, and every §13 decision with observa
   Decorative status icons are `aria-hidden` and add no text. Flagged rows are tinted, and the rendered text of every cell is unchanged.
 - **States:** loading keeps C-21 in `role=status` plus an `aria-hidden` skeleton. Error is a card with C-20 in `role=alert` and a primary "Try again" button. Account 20's C-07 is a centred card, with the week control disabled.
 - **Scope:** desktop only (no breakpoints) and no pagination. **Rejected:** R-01 (shortened "3–12" cells under a new header), so C-05 and C-19 stay.
-- **Order:** the Playwright e2e specs (§13 "End-to-end smoke layer") are written after the redesign lands. New copy (header, footer heading, picker labels, table caption) waits for `product`'s approval.
+- **Order:** the Playwright e2e specs are deferred (see §13 "Playwright e2e deferred", 2026-09-29). New copy (header, footer heading, picker labels, table caption) waits for `product`'s approval.
 - **Amendment (2026-09-29, user decisions, validated by the architect):** (1) `MatCalendar` stays (option A). Days from adjacent months stay blank because `MatCalendar` cannot show them
   (angular/components #26768, #29549, both open). **Rejected:** ng-bootstrap datepicker, and a CDK listbox week list. (2) The picker popover footer gets a "Latest week" button. It emits `weekSelected(latestCompleteWeek)`,
   closes the picker and returns focus to the trigger. It is disabled when `week.start == latestCompleteWeek`, and it never selects the in-progress week (D1). No contract change:
@@ -606,3 +606,8 @@ Every §5.3 rule, §7 edge case and golden, and every §13 decision with observa
   That label is new copy and waits for `product`'s approval (see Order). (4) C-26 is unchanged. New tokens: `--color-info-tint #E6F7E9`, `--color-info-border #B8D8BD` and `--color-info-icon #498D5A`.
   Only these tiles use them, never status. This is the one exception to "Colour only shows status direction" under Visual system.
   Contract: no API, TS-model or abstract-token change. `IconName` gains `history`, `copies`, `info` and `clock`, and the existing names are unchanged.
+
+### 2026-09-29 — Playwright e2e deferred (user decision)
+
+**Reason.** The user deferred the e2e smoke layer (§13 "End-to-end smoke layer") after the redesign. The unmerged branch `e2e-scaffold` keeps the Playwright tooling and a placeholder spec.
+Its deviation (Playwright starts only `ng serve`, so the API must already be running via `scripts/dev.sh`) was never adopted. Layer 6 and its README command are not delivered.
