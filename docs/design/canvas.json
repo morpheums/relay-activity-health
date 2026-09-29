@@ -16,6 +16,27 @@
       "x": 4560,
       "y": 3860
     },
+    "FooterOptionA.dc.html": {
+      "h": 1120,
+      "title": "Footer option A · grouped columns with subheads",
+      "w": 1440,
+      "x": 0,
+      "y": 12400
+    },
+    "FooterOptionB.dc.html": {
+      "h": 574,
+      "title": "Footer option B · fact strip with icons, caveats below",
+      "w": 1440,
+      "x": 1520,
+      "y": 12400
+    },
+    "FooterOptionC.dc.html": {
+      "h": 1060,
+      "title": "Footer option C · freshness tag and ruled notes, recommended",
+      "w": 1440,
+      "x": 3040,
+      "y": 12400
+    },
     "InsufficientData.dc.html": {
       "h": 1180,
       "title": "State · not enough history (account 14, week of Feb 2)",
@@ -72,6 +93,14 @@
       "x": 3040,
       "y": 10180
     },
+    "Piece-iynb.dc.html": {
+      "frameless": true,
+      "h": 501,
+      "title": "Div",
+      "w": 1440,
+      "x": 3014,
+      "y": 8712
+    },
     "Spec.dc.html": {
       "h": 4300,
       "title": "Design spec · tokens, badges, picker, library",
@@ -103,14 +132,6 @@
     "view": "canvas"
   },
   "notes": {
-    "row-picker-follow-up": {
-      "kind": "title1",
-      "maxW": 6000,
-      "text": "Picker follow-up",
-      "w": 240,
-      "x": 0,
-      "y": 9880
-    },
     "row-default": {
       "kind": "title1",
       "maxW": 2960,
@@ -118,6 +139,22 @@
       "w": 240,
       "x": 0,
       "y": -300
+    },
+    "row-footer-options": {
+      "kind": "title1",
+      "maxW": 4480,
+      "text": "Footer options",
+      "w": 240,
+      "x": 0,
+      "y": 12100
+    },
+    "row-picker-follow-up": {
+      "kind": "title1",
+      "maxW": 6000,
+      "text": "Picker follow-up",
+      "w": 240,
+      "x": 0,
+      "y": 9880
     },
     "row-spec": {
       "kind": "title1",
@@ -143,18 +180,6 @@
       "x": 0,
       "y": 3560
     },
-    "sticky-picker-keys": {
-      "text": "Picker keyboard (Angular Material MatCalendar, built in):\n• Enter or Space on the trigger opens it and moves focus to the selected Monday.\n• Arrows move one day; Up and Down move one week, so from Monday to Monday.\n• Page Up / Page Down go to the previous / next month. Home / End go to the first / last day of the month.\n• Enter selects a Monday. Disabled days ignore it (aria-disabled).\n• Escape closes and returns focus to the trigger.\n• Selecting closes the popover and writes ?week= to the URL as a new history entry.",
-      "w": 340,
-      "x": 3040,
-      "y": 0
-    },
-    "sticky-spike-source": {
-      "text": "Where the values come from: Site C (67, usually 1–7) and 'all 15 above' are PLAN §7 goldens. The other 14 rows for Jun 1 are the running app's API output (coordinator screenshot desktop-spike-6.png). The Jun 8 rows come from analysis/goldens/promoted_goldens_out.md, the source of the §13 promoted table.",
-      "w": 400,
-      "x": 3040,
-      "y": 1600
-    },
     "sticky-follow-up-source": {
       "text": "Where the values come from: account 6 (Metro Collision Centers), week of Jun 29, Leads. The summary (15 leads, usually 8–27, within usual range) and all 15 rows (Site H 3 vs 0–2 higher, ranked first) are the running API's output: GET /api/accounts/6/activity-health?week=2026-06-29&type=lead_created on port 5080, read 2026-09-29. PLAN §13 has a golden for this week only for type all (total 69, Site G below).",
       "w": 400,
@@ -166,6 +191,18 @@
       "w": 400,
       "x": 6080,
       "y": 10640
+    },
+    "sticky-picker-keys": {
+      "text": "Picker keyboard (Angular Material MatCalendar, built in):\n• Enter or Space on the trigger opens it and moves focus to the selected Monday.\n• Arrows move one day; Up and Down move one week, so from Monday to Monday.\n• Page Up / Page Down go to the previous / next month. Home / End go to the first / last day of the month.\n• Enter selects a Monday. Disabled days ignore it (aria-disabled).\n• Escape closes and returns focus to the trigger.\n• Selecting closes the popover and writes ?week= to the URL as a new history entry.",
+      "w": 340,
+      "x": 3040,
+      "y": 0
+    },
+    "sticky-spike-source": {
+      "text": "Where the values come from: Site C (67, usually 1–7) and 'all 15 above' are PLAN §7 goldens. The other 14 rows for Jun 1 are the running app's API output (coordinator screenshot desktop-spike-6.png). The Jun 8 rows come from analysis/goldens/promoted_goldens_out.md, the source of the §13 promoted table.",
+      "w": 400,
+      "x": 3040,
+      "y": 1600
     }
   },
   "order": [
@@ -181,7 +218,11 @@
     "PickerOptionA.dc.html",
     "PickerOptionB.dc.html",
     "PickerOptionC.dc.html",
-    "LatestWeekPlacement.dc.html"
+    "LatestWeekPlacement.dc.html",
+    "FooterOptionA.dc.html",
+    "FooterOptionB.dc.html",
+    "FooterOptionC.dc.html",
+    "Piece-iynb.dc.html"
   ],
   "pages": [],
   "title": "Relay Activity Health — Redesign"

@@ -23,3 +23,23 @@ Approved by the user on 2026-09-29: desktop only, no pagination, Geist type, lig
 - `PickerOptionB.dc.html`: week picker option B. Rejected; kept for the record.
 - `PickerOptionC.dc.html`: week picker option C. Rejected; kept for the record.
 - `LatestWeekPlacement.dc.html`: where the "Latest week" shortcut goes. Chosen: the footer variant, so "Latest week" goes in the picker footer.
+- `FooterOptionA.dc.html`: footer option A, grouped columns with subheads. Rejected; kept for the record.
+- `FooterOptionB.dc.html`: footer option B, fact strip with icons and caveats below, All activity state. CHOSEN by the user on 2026-09-29, with green fact tiles and a more prominent date.
+- `Piece-iynb.dc.html`: the Leads/C-14 state of footer option B (account 6, week of Jun 29), same green tiles and date.
+- `FooterOptionC.dc.html`: footer option C, freshness tag and ruled notes. Rejected; kept for the record.
+
+## Footer tokens and styles (option B)
+
+Fact tiles only; nothing else on the page uses these:
+
+- `--color-info-tint: #E6F7E9`: tile background.
+- `--color-info-border: #B8D8BD`: tile border and the icon circle's border (the circle itself is `#FFFFFF`).
+- `--color-info-icon: #498D5A`: tile icon stroke (decorative, `aria-hidden`).
+- Tile text stays `--color-ink` `#1A1B1E`, 14px/20px, weight 500, about 15.2:1 on `#E6F7E9`.
+
+"Data as of" date: one `<p>` after the h2, text verbatim, vertically centred with the h2.
+
+- Outlined tag, not a filled pill and not green: `#FFFFFF` background, 1px `--color-line` `#E3E1DC` border, radius 8px, padding 5px 12px, min-height 32px, gap 8px.
+- Text `--color-ink` `#1A1B1E`, 14px/20px, weight 500, tabular numbers: about 17:1 on `#FFFFFF`.
+- Clock icon 16px, stroke `#1A1B1E`, `aria-hidden`.
+- The border is decorative; it is lighter than `--color-control-border` so the tag does not read as a button.
