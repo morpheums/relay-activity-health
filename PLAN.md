@@ -600,3 +600,9 @@ Every §5.3 rule, §7 edge case and golden, and every §13 decision with observa
   (angular/components #26768, #29549, both open). **Rejected:** ng-bootstrap datepicker, and a CDK listbox week list. (2) The picker popover footer gets a "Latest week" button. It emits `weekSelected(latestCompleteWeek)`,
   closes the picker and returns focus to the trigger. It is disabled when `week.start == latestCompleteWeek`, and it never selects the in-progress week (D1). No contract change:
   the button uses the existing `latestCompleteWeek` input and `weekSelected` output. The button label is new copy and waits for `product`'s approval (see Order).
+- **Amendment (2026-09-29, footer option B, user decision, validated by the architect):** The footer stays in `DashboardPage`, and only its template and styles change. The footnote text stays verbatim.
+  (1) C-25 is the heading. C-13 moves to the right side of the heading row as a modest outlined tag with the `clock` icon. The tag uses neutral ink, and it is not a filled pill and not green.
+  (2) C-09, C-10 and C-11 become three fact tiles with the icons `history`, `empty-inbox` and `copies`. (3) C-12 sits in a "Keep in mind" list with the `info` icon, and so does C-14 when the type is not `all`.
+  That label is new copy and waits for `product`'s approval (see Order). (4) C-26 is unchanged. New tokens: `--color-info-tint #E6F7E9`, `--color-info-border #B8D8BD` and `--color-info-icon #498D5A`.
+  Only these tiles use them, never status. This is the one exception to "Colour only shows status direction" under Visual system.
+  Contract: no API, TS-model or abstract-token change. `IconName` gains `history`, `copies`, `info` and `clock`, and the existing names are unchanged.

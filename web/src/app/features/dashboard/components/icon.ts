@@ -9,7 +9,11 @@ export type IconName =
   | 'alert'
   | 'retry'
   | 'empty-inbox'
-  | 'loading';
+  | 'loading'
+  | 'history'
+  | 'copies'
+  | 'info'
+  | 'clock';
 
 @Component({
   selector: 'app-icon',
@@ -61,6 +65,23 @@ export type IconName =
         @case ('loading') {
           <circle cx="12" cy="12" r="8.5" stroke="var(--color-line)" />
           <path d="M12 3.5a8.5 8.5 0 0 1 8.5 8.5" />
+        }
+        @case ('history') {
+          <path d="M4 12a8 8 0 1 0 2.3-5.7L4 8.5" />
+          <path d="M4 4v4.5h4.5" />
+          <path d="M12 8v4l2.5 1.5" />
+        }
+        @case ('copies') {
+          <rect x="9" y="9" width="11" height="11" rx="2" />
+          <path d="M15 9V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h3" />
+        }
+        @case ('info') {
+          <circle cx="12" cy="12" r="8.5" />
+          <path d="M12 11v5.5M12 7.5v.01" />
+        }
+        @case ('clock') {
+          <circle cx="12" cy="12" r="8.5" />
+          <path d="M12 7.5V12l3 2" />
         }
       }
     </svg>
