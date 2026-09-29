@@ -1,26 +1,47 @@
-# Relay — Take-Home Starter
+# Relay — Activity health (DASH-247)
 
-Seed data and context for the take-home exercise. **Copy the contents into a fresh repo of your own** (please don't fork — forks are publicly linked to the source), then follow the instructions in the take-home prompt you received by email.
+A dashboard feature for a Relay customer admin on Monday morning. For last week, it shows whether the account's inbound activity (calls, leads, appointments) was **normal for this account**, and which **locations need attention**. Each location is compared with its own last 8 full weeks and gets a plain-language status and a "Usually X–Y a week" range; unusual locations are listed first. Backend: .NET 10 Minimal API over SQL Server 2022 (EF Core migrations load the provided seed). Frontend: Angular 22.
 
-**Give your repo a name of your own choosing** — please don't keep `relay-analytics-starter`. A distinct name keeps your submission from being trivially discoverable alongside everyone else's.
+## What you'll see
 
-You don't need to carry `docs/` into your own repo; it's context for you, not part of what you're building.
+Open http://localhost:4200/dashboard. The URL is rewritten to `/dashboard?account=14&week=2026-07-20&type=all`:
+- "Viewing as" shows **Beacon Home Security** (account 14).
+- The week label reads **Mon Jul 20 – Sun Jul 26, 2026**.
+- The summary shows 26 inbound events, usually 18–38 a week, within the usual range.
+- The first row of the locations table is **Site B**: 2 events, "Usually 3–12 a week", **"▼ Lower than usual"**. It is followed by Sites C, A and D, all "Within usual range".
 
-## Contents
+## Quick start
 
-| Path | What it is |
+The same five steps on macOS, Linux and Windows. No shell-specific setup: in Development the API reads the repo-root `.env` itself.
+
+1. `cp .env.example .env` (on Windows: `copy .env.example .env`)
+2. Set `RELAY_DB_SA_PASSWORD` in `.env`. If it contains `$`, single-quote it: `RELAY_DB_SA_PASSWORD='Pa$w0rd…'`.
+3. `docker compose up -d --wait db`
+4. `dotnet run --project src/Relay.Api` (terminal 1, http://localhost:5080)
+5. `cd web && npm start` (terminal 2, http://localhost:4200/dashboard; run `npm ci` in `web` once first)
+
+Tests: `dotnet test` (Docker running) and `cd web && npm test`.
+
+Full setup, configuration and troubleshooting: [docs/running.md](docs/running.md).
+
+## Documentation
+
+| File | What it covers |
 |---|---|
-| `docs/PRODUCT_BACKGROUND.md` | One-page background on Relay, the fictional product |
-| `docs/TICKET.md` | The ticket you're picking up (DASH-247) |
-| `schema.sql` | Schema for the two seed tables (`accounts`, `activity_events`) |
-| `seed.sql` | The seed dataset (~12.6k events across 20 accounts) |
+| [docs/running.md](docs/running.md) | Prerequisites and versions, `.env` configuration and precedence, running, stopping and resetting the app, EF Core commands, troubleshooting |
+| [docs/testing.md](docs/testing.md) | Every test suite, its command, what it needs (Docker or not) and what it checks; the planned E2E smoke layer |
+| [docs/api.md](docs/api.md) | `GET /api/accounts` and `GET /api/accounts/{id}/activity-health`: parameters, validation order, status codes, example response |
+| [docs/interpretation.md](docs/interpretation.md) | How the ticket was read, how "normal" is decided, key assumptions with seed evidence, data handling, known limits |
+| [docs/decisions.md](docs/decisions.md) | Design decisions and rejected options, the numbers behind the band rule, later PLAN §13 decisions, what was deferred, what comes with another day |
+| [docs/architecture.md](docs/architecture.md) | Stack with versions and reasons, project structure |
+| [PLAN.md](PLAN.md) | The spec, written before the code; §13 is the append-only log of later decisions |
+| [docs/acceptance-criteria.md](docs/acceptance-criteria.md) | Given/When/Then acceptance criteria per slice and the approved UI copy |
+| [docs/design-consensus.md](docs/design-consensus.md) | The four-agent debate that chose the normality rule, the contract and the data-layer fixes |
+| [docs/battle-test/](docs/battle-test/) | Pre-code verification of the plan against the seed: independent re-implementation, SQL Server findings, plan review, statistician report, industry survey |
+| [analysis/](analysis/) | Python models and scripts behind every number in these documents and the golden tests |
 
-## Using the data
+## How AI was used
 
-- Load `schema.sql` then `seed.sql` into a relational database of your choice. The SQL is written portably; adapt types to your stack's migration tooling as needed (e.g., `TIMESTAMP` → `DATETIME2` on SQL Server).
-- Wire the schema into **your own migrations** rather than hand-running the DDL — treat this like a real project.
-- All `occurred_at` values are stored in **UTC**. Each account has an IANA `timezone`.
-- `location` identifies the account's site/branch where the activity occurred; accounts range from single-site to 15 locations.
-- Use this dataset as-is — don't regenerate, extend, or replace it. Treat it like production data: it's real-world messy, not idealized.
+The work was agent-first with Claude Code. A coordinator on the main thread dispatched specialist agents ([`.claude/agents/`](.claude/agents/): architect, backend, database, frontend, test-author, product, statistician, reviewer). Each worked in its own git worktree, bound by [CLAUDE.md](CLAUDE.md). The reviewer deliberately ran on a different model from the authors.
 
-Questions? Route them through the recruiter, per the prompt.
+The plan was battle-tested against the seed before any code, and the normality rule was reopened when that test found the drop-to-zero blind spot. Every accept, reject, redirect and catch is in [AI_LOG.md](AI_LOG.md), with raw transcripts in [ai-log/raw/](ai-log/raw/) and readable renders in [ai-log/sessions/](ai-log/sessions/).
