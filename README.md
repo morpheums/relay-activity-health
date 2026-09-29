@@ -12,10 +12,14 @@ Open http://localhost:4200/dashboard. The URL is rewritten to `/dashboard?accoun
 
 ## Quick start
 
-The same five steps on macOS, Linux and Windows. No shell-specific setup: in Development the API reads the repo-root `.env` itself.
-
+First, on any OS:
 1. `cp .env.example .env` (on Windows: `copy .env.example .env`)
 2. Set `RELAY_DB_SA_PASSWORD` in `.env`. If it contains `$`, single-quote it: `RELAY_DB_SA_PASSWORD='Pa$w0rd…'`.
+
+**One command (macOS, Linux):** `scripts/dev.sh`. It starts the DB and waits until it is healthy, runs `npm ci` in `web` on the first run, starts the API and waits for it, then serves http://localhost:4200. Ctrl+C stops the API and web. The DB keeps running: stop it with `docker compose down`, or `docker compose down -v` to wipe the data.
+
+**Step by step (Windows, or any OS):** after steps 1–2, no shell-specific setup is needed; in Development the API reads the repo-root `.env` itself.
+
 3. `docker compose up -d --wait db`
 4. `dotnet run --project src/Relay.Api` (terminal 1, http://localhost:5080)
 5. `cd web && npm start` (terminal 2, http://localhost:4200/dashboard; run `npm ci` in `web` once first)
