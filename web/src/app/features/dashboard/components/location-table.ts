@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 import { LocationHealth } from '../../../core/models';
-import { statusLabel, usualRange } from '../health-copy';
+import { statusIcon, statusLabel, usualRange } from '../health-copy';
 import { Icon } from './icon';
 
 @Component({
@@ -29,16 +29,10 @@ import { Icon } from './icon';
               }
             </td>
             <td>
-              @switch (row.status) {
-                @case ('normal') {
-                  <span class="status-text"><app-icon name="within-range" />{{ row.statusText }}</span>
-                }
-                @case ('insufficient_data') {
-                  <span class="status-text"><app-icon name="not-enough-history" />{{ row.statusText }}</span>
-                }
-                @default {
-                  <span class="status-badge">{{ row.statusText }}</span>
-                }
+              @if (row.icon; as iconName) {
+                <span class="status-text"><app-icon [name]="iconName" />{{ row.statusText }}</span>
+              } @else {
+                <span class="status-badge" [attr.data-status]="row.status">{{ row.statusText }}</span>
               }
             </td>
           </tr>
@@ -47,7 +41,7 @@ import { Icon } from './icon';
     </table>
   `,
   styles: `
-    :host { display: block; background: var(--color-surface); border: 1px solid var(--color-line); border-radius: 12px; overflow: hidden; }
+    :host { display: block; background: var(--color-surface); border: 1px solid var(--color-line); border-radius: var(--radius-card); overflow: hidden; }
     table { width: 100%; border-collapse: collapse; table-layout: fixed; }
     caption { text-align: left; padding: 20px 24px 14px; font-size: 15px; line-height: 20px; font-weight: 600; }
     th, td { text-align: left; padding: 0 24px; border-top: 1px solid var(--color-line-soft); }
@@ -68,8 +62,6 @@ import { Icon } from './icon';
     .status-text { display: inline-flex; align-items: flex-start; gap: 8px; font-size: 14px; line-height: 20px; color: var(--color-ink-2); }
     .status-text app-icon { margin-top: 2px; }
     .status-badge { display: inline-flex; align-items: center; height: 28px; padding: 0 12px; border-radius: 999px; font-size: 14px; font-weight: 600; white-space: nowrap; }
-    tr[data-status='above'] .status-badge { background: var(--color-above-tint); color: var(--color-above-ink); }
-    tr[data-status='below'] .status-badge { background: var(--color-below-tint); color: var(--color-below-ink); }
   `,
 })
 export class LocationTable {
@@ -84,6 +76,7 @@ export class LocationTable {
       isFlagged: location.status === 'above' || location.status === 'below',
       range: usualRange(location),
       statusText: statusLabel(location, this.minimumEligibleWeeks()),
+      icon: statusIcon(location.status),
     })),
   );
 }

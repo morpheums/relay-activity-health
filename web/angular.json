@@ -19,9 +19,9 @@
             "browser": "src/main.ts",
             "tsConfig": "tsconfig.app.json",
             "styles": [
-              "@fontsource/geist/400.css",
-              "@fontsource/geist/500.css",
-              "@fontsource/geist/600.css",
+              "@fontsource/geist/latin-400.css",
+              "@fontsource/geist/latin-500.css",
+              "@fontsource/geist/latin-600.css",
               "src/styles.scss"
             ]
           },
