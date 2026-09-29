@@ -51,7 +51,10 @@ Other options rejected in the debate: k = 1.75 (false "below" doubles to 5.5 %);
 | API on port 5080. Connection string never in `appsettings*.json` | macOS holds port 5000. No committed secrets |
 | In Development the API reads the repo-root `.env` with the DotNetEnv library; real environment variables win; Production never reads `.env`. The EF design-time factory was removed in favour of `--startup-project src/Relay.Api` | The earlier step that loaded `.env` into the shell worked only in bash/zsh. One library call makes setup identical on Windows, macOS and Linux, and was preferred over a hand-written `.env` reader |
 | Time zones whose DST change falls at local midnight are out of scope | No seed zone is affected, because the US zones switch at 02:00. An untested branch for them disagreed with the rest of the calendar, so it was removed rather than half-supported |
-| Process: every agent works in its own git worktree; the red test suite is committed before the implementation; a reviewer on a different model after each layer; E2E smoke tests planned as the last step (not built yet) | See [`AI_LOG.md`](../AI_LOG.md) |
+| Process: every agent works in its own git worktree; the red test suite is committed before the implementation; a reviewer on a different model after each layer | See [`AI_LOG.md`](../AI_LOG.md) |
+| UI redesign (session 3): header and footer, the footnote lines moved into the footer, Geist type, colour only for status direction, desktop only, no pagination. Behaviour, copy and the API are unchanged. Approved mockups: [docs/design/](design/README.md) | The user asked for a proper week picker, a header and footer, and a minimal modern look. Designing first on a canvas let the user approve the look before any Angular change |
+| Week picker: Angular Material's calendar in an overlay, only Mondays from `earliestWeek` to `latestCompleteWeek` selectable; the ◀/▶ stepper stays; a "Latest week" button in the picker footer | A maintained library over a hand-built calendar. The bounds come from the API, so the admin can't pick a week that would return 400. Rejected: ng-bootstrap's datepicker and a CDK listbox of weeks |
+| Footer option B: the three method facts as tiles, "Keep in mind" for the limits, "Data as of" beside the heading | Facts and caveats read differently: the tiles say how the numbers are made, "Keep in mind" says what they can't show. Rejected: grouped columns (option A) and ruled notes (option C) |
 
 ---
 
@@ -70,6 +73,9 @@ From PLAN §11 and the design debate.
 | Auth | Out of scope per the brief. "Viewing as" is impersonation for the demo |
 | Caching | Not needed at seed scale (the weekly query takes milliseconds) |
 | A "too few to judge" status | Covered by the footnote, at no cost to the contract or tests |
+| Playwright E2E smoke tests (PLAN §13 layer 6) | Deferred by user decision (2026-09-29). The unmerged branch `e2e-scaffold` holds the tooling (`@playwright/test`, `playwright.config.ts`, an `e2e` script) and a placeholder spec. Unlike PLAN §13, its config starts only `ng serve`, so the API must already be running (`scripts/dev.sh`) |
+| Days from adjacent months in the week picker | They stay blank because Angular Material's calendar cannot show them (angular/components #26768, #29549, both open). User decision: keep the Material calendar rather than switch library |
+| Mobile layout and pagination | Desktop only by the redesign's scope decision. Accounts have at most 15 locations, so one page holds them all |
 
 ---
 
@@ -77,11 +83,12 @@ From PLAN §11 and the design debate.
 
 In priority order.
 
-1. **Add the E2E smoke layer (PLAN §13 layer 6).** It is the only test that proves the browser, API and seeded DB work together; the current tests stop at each boundary.
+1. **Add the E2E smoke layer (PLAN §13 layer 6), starting from the `e2e-scaffold` branch.** It is the only test that proves the browser, API and seeded DB work together; the current tests stop at each boundary. The specs target the final UI, so they come after the redesign.
 2. **Outcome rates, starting with the missed-call rate.** "Calls are normal but we missed half of them" is the most actionable thing the data holds.
 3. **Recalibrate on bursty data.** The ≈ 4 % flag rate holds only for Poisson-like data. Real customers with campaigns would see 5–8 % false flags per side; a negative-binomial check or a per-account k would address that.
 4. **Make the global data-anchor query cheap.** `MAX(occurred_at)` scans the index on every request. That is fine for 12k rows but not for production, so it should be cached or indexed.
 5. **Show an error when the account list fails to load.** Today "Viewing as" is just left empty (an accepted reviewer note).
-6. **Add a second severity tier.** Once there is real usage data to calibrate it on.
-7. **Add a trend sparkline per location.** It helps tell a one-off week from a slide.
-8. **Support time zones with a DST change at midnight.** Needed before onboarding customers outside the US zones in the seed.
+6. **Add a per-type hint in "All activity".** Combined totals have wider ranges, so a change in one type can stay hidden until the admin picks that type.
+7. **Add a second severity tier.** Once there is real usage data to calibrate it on.
+8. **Add a trend sparkline per location.** It helps tell a one-off week from a slide.
+9. **Support time zones with a DST change at midnight.** Needed before onboarding customers outside the US zones in the seed.

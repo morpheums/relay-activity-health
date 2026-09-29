@@ -57,10 +57,10 @@ None of these went to the recruiter. Each is a working assumption stated in PLAN
 
 | Messy part | What the app does |
 |---|---|
-| **Exact duplicates** | 12 pairs (adjacent ids, every column equal) are counted once at query time. The raw rows are kept, so the data is used as-is: 12,626 rows give 12,614 events. The footnote says "exact duplicates counted once" |
+| **Exact duplicates** | 12 pairs (adjacent ids, every column equal) are counted once at query time. The raw rows are kept, so the data is used as-is: 12,626 rows give 12,614 events. The page footer says "Exact duplicates counted once" |
 | **Near-duplicates** | 27 near-duplicates within 60 seconds look like ordinary traffic and are **kept** |
 | **Account 6 spike** | 880 events in the week of Jun 1 (805 on Jun 3) against about 70 a week. That week shows ▲ Higher than usual at all 15 sites. It is never removed. Because the baseline uses the median, the week of Jul 20 still reads 87 vs usually 30–134, within range. A mean baseline would have been 171 |
-| **Empty account (20)** | Zero events is a valid state, not an error. The API returns 200 with count 0, and the page shows "No activity recorded for this account yet." with the week stepper disabled |
+| **Empty account (20)** | Zero events is a valid state, not an error. The API returns 200 with count 0, and the page shows "No activity recorded for this account yet." with the whole week control (both stepper buttons and the week picker) disabled |
 | **Partial weeks** | Only complete weeks are shown. The data ends on a Monday, so the week of Jul 27 is never compared |
 | **Time zones** | Weeks run Monday 00:00 to Monday 00:00 in the account's IANA time zone and are converted to UTC windows (DST-aware). The events are stored in UTC |
 | **Silent weeks** | A week with no events at a site counts as 0. It is not skipped. A site with nothing in the selected week is still listed, with 0 |
@@ -86,3 +86,4 @@ Also:
 - **By design, about 4 % of location-weeks are flagged** (4.3 % measured) even when nothing has changed. That is the cost of catching 96–98 % of drops to zero.
 - **The seed is not bursty.** Its week-to-week variance is about equal to its mean, which is what the rule was calibrated on. On synthetic bursty data, false flags rise to about 5–8 % per side.
 - **Time zones whose DST change falls at local midnight** (Monday 00:00 skipped or repeated) are out of scope. No seed zone is affected.
+- **"All activity" can hide a single-type change.** Combined totals have wider ranges, so a change in one type at one location may only show when that type is selected. A per-type hint in "All activity" is listed under [another day](decisions.md#with-another-day).
