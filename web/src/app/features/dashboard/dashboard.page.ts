@@ -121,13 +121,12 @@ import { formatCalendarDay, sundayOfWeek } from './week';
     app-dashboard-filters { margin-top: 28px; }
     app-account-summary, .card { margin-top: 32px; }
     app-location-table, .loading-table { margin-top: 24px; }
-    .card { background: var(--color-surface); border: 1px solid var(--color-line); border-radius: 12px; }
     .load-error { display: flex; align-items: center; gap: 16px; padding: 28px 40px; }
     .load-error p { margin: 0; flex-grow: 1; font-size: 16px; line-height: 24px; font-weight: 500; }
     .load-error-icon, .empty-account-icon { display: flex; align-items: center; justify-content: center; border-radius: 999px; }
     .load-error-icon { width: 40px; height: 40px; background: var(--color-danger-tint); color: var(--color-danger); }
     .primary-button {
-      height: 44px; padding: 0 20px; display: flex; align-items: center; gap: 8px; border: none; border-radius: 8px;
+      height: var(--control-height); padding: 0 20px; display: flex; align-items: center; gap: 8px; border: none; border-radius: var(--radius-control);
       background: var(--color-ink); color: var(--color-surface); font: inherit; font-size: 15px; font-weight: 600; cursor: pointer;
     }
     .empty-account { padding: 64px 40px; display: flex; flex-direction: column; align-items: center; gap: 16px; }
@@ -163,7 +162,7 @@ import { formatCalendarDay, sundayOfWeek } from './week';
     .fact-tiles { margin: 20px 0 0; padding: 0; list-style: none; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
     .fact-tiles li {
       display: flex; align-items: center; gap: 14px; min-height: 76px; box-sizing: border-box; padding: 16px 20px;
-      background: var(--color-info-tint); border: 1px solid var(--color-info-border); border-radius: 12px;
+      background: var(--color-info-tint); border: 1px solid var(--color-info-border); border-radius: var(--radius-card);
       font-size: 14px; line-height: 20px; font-weight: 500;
     }
     .fact-icon {

@@ -34,8 +34,21 @@ export function sundayOfWeek(weekStart: string): string {
   return isoDateOf(new Date(utcMidnightOf(weekStart).getTime() + (DAYS_PER_WEEK - 1) * MILLISECONDS_PER_DAY));
 }
 
-function calendarDayParts(instant: Date, timeZone: string): CalendarDayParts {
-  const parts = new Intl.DateTimeFormat('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric', timeZone }).formatToParts(instant);
+const calendarDayFormatters = new Map<string, Intl.DateTimeFormat>();
+
+function calendarDayFormatter(timeZone: string): Intl.DateTimeFormat {
+  let formatter = calendarDayFormatters.get(timeZone);
+  if (formatter === undefined) {
+    formatter = new Intl.DateTimeFormat('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric', timeZone });
+    calendarDayFormatters.set(timeZone, formatter);
+  }
+  return formatter;
+}
+
+const utcCalendarDayFormatter = calendarDayFormatter('UTC');
+
+function calendarDayParts(instant: Date, formatter: Intl.DateTimeFormat): CalendarDayParts {
+  const parts = formatter.formatToParts(instant);
   const partValue = (type: Intl.DateTimeFormatPartTypes): string => parts.find((part) => part.type === type)?.value ?? '';
   return { weekday: partValue('weekday'), month: partValue('month'), day: partValue('day'), year: partValue('year') };
 }
@@ -49,8 +62,8 @@ function dayWithYear(parts: CalendarDayParts): string {
 }
 
 function formatCalendarDayPair(firstDay: string, lastDay: string, separator: string): string {
-  const firstParts = calendarDayParts(utcMidnightOf(firstDay), 'UTC');
-  const lastParts = calendarDayParts(utcMidnightOf(lastDay), 'UTC');
+  const firstParts = calendarDayParts(utcMidnightOf(firstDay), utcCalendarDayFormatter);
+  const lastParts = calendarDayParts(utcMidnightOf(lastDay), utcCalendarDayFormatter);
   const firstLabel = firstParts.year === lastParts.year ? dayWithoutYear(firstParts) : dayWithYear(firstParts);
   return `${firstLabel}${separator}${dayWithYear(lastParts)}`;
 }
@@ -65,5 +78,5 @@ export function formatSelectableWeeks(earliestWeek: string, latestCompleteWeek: 
 
 export function formatCalendarDay(instant: string, timeZone: string): string | null {
   const parsed = new Date(instant);
-  return Number.isNaN(parsed.getTime()) ? null : dayWithYear(calendarDayParts(parsed, timeZone));
+  return Number.isNaN(parsed.getTime()) ? null : dayWithYear(calendarDayParts(parsed, calendarDayFormatter(timeZone)));
 }

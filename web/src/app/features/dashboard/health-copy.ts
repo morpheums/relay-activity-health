@@ -1,4 +1,5 @@
-import { EventType, SeriesHealth } from '../../core/models';
+import { EventType, HealthStatus, SeriesHealth } from '../../core/models';
+import { IconName } from './components/icon';
 
 const ACTIVITY_NOUNS: Record<EventType, { singular: string; plural: string }> = {
   all: { singular: 'inbound event', plural: 'inbound events' },
@@ -38,5 +39,17 @@ export function statusLabel(series: SeriesHealth, minimumEligibleWeeks: number):
       return 'Within usual range';
     case 'insufficient_data':
       return `Not enough history yet (${series.baseline.weeksUsed} of ${minimumEligibleWeeks} weeks needed)`;
+  }
+}
+
+export function statusIcon(status: HealthStatus): IconName | null {
+  switch (status) {
+    case 'normal':
+      return 'within-range';
+    case 'insufficient_data':
+      return 'not-enough-history';
+    case 'above':
+    case 'below':
+      return null;
   }
 }

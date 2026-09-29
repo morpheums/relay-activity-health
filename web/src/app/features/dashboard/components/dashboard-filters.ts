@@ -14,7 +14,7 @@ import { WeekPicker } from './week-picker';
     <div class="field account-field">
       <label class="field-label" for="viewing-as">Viewing as</label>
       <div class="select-control">
-        <select id="viewing-as" (change)="onAccountChange($event)">
+        <select id="viewing-as" class="control" (change)="onAccountChange($event)">
           @for (account of accounts(); track account.id) {
             <option [value]="account.id" [selected]="account.id === accountId()">{{ account.name }}</option>
           }
@@ -27,7 +27,7 @@ import { WeekPicker } from './week-picker';
       <div class="field week-field" role="group" aria-labelledby="week-control-label">
         <span class="field-label" id="week-control-label">Week</span>
         <div class="week-control">
-          <button type="button" class="step previous" [disabled]="!stepper.canGoToPreviousWeek" (click)="stepWeek(stepper.week.start, -1)">
+          <button type="button" class="step previous control" [disabled]="!stepper.canGoToPreviousWeek" (click)="stepWeek(stepper.week.start, -1)">
             ◀ Previous week
           </button>
           <app-week-picker
@@ -36,7 +36,7 @@ import { WeekPicker } from './week-picker';
             [latestCompleteWeek]="stepper.latestCompleteWeek"
             (weekSelected)="weekSelected.emit($event)"
           />
-          <button type="button" class="step next" [disabled]="!stepper.canGoToNextWeek" (click)="stepWeek(stepper.week.start, 1)">Next week ▶</button>
+          <button type="button" class="step next control" [disabled]="!stepper.canGoToNextWeek" (click)="stepWeek(stepper.week.start, 1)">Next week ▶</button>
         </div>
       </div>
     } @else {
@@ -49,7 +49,7 @@ import { WeekPicker } from './week-picker';
     <div class="field type-field">
       <label class="field-label" for="activity-type">Activity type</label>
       <div class="select-control">
-        <select id="activity-type" (change)="onEventTypeChange($event)">
+        <select id="activity-type" class="control" (change)="onEventTypeChange($event)">
           @for (option of eventTypeOptions; track option.value) {
             <option [value]="option.value" [selected]="option.value === eventType()">{{ option.label }}</option>
           }
@@ -66,25 +66,18 @@ import { WeekPicker } from './week-picker';
     .week-field { width: var(--week-field-width); }
     .type-field { width: var(--type-field-width); }
     .select-control { position: relative; }
-    select {
-      appearance: none; width: 100%; height: 44px; padding: 0 40px 0 14px; font: inherit; font-size: 15px; color: var(--color-ink);
-      border: 1px solid var(--color-control-border); border-radius: 8px; background: var(--color-surface); cursor: pointer;
-    }
+    select { appearance: none; width: 100%; height: var(--control-height); padding: 0 40px 0 14px; font-size: 15px; border-radius: var(--radius-control); }
     .select-chevron { position: absolute; right: 14px; top: 13px; pointer-events: none; color: var(--color-ink-2); }
-    .week-control { display: flex; height: 44px; }
+    .week-control { display: flex; height: var(--control-height); }
     .week-control > * { margin-left: -1px; }
     .week-control > :first-child { margin-left: 0; }
     .week-control > :focus-visible, app-week-picker:focus-within { z-index: 1; }
-    .step {
-      box-sizing: border-box; flex: none; height: 44px; padding: 0 16px; font: inherit; font-size: 14px; font-weight: 500; color: var(--color-ink); white-space: nowrap;
-      border: 1px solid var(--color-control-border); background: var(--color-surface); cursor: pointer;
-    }
-    .previous { width: var(--week-step-previous-width); border-radius: 8px 0 0 8px; }
-    .next { width: var(--week-step-next-width); border-radius: 0 8px 8px 0; }
-    .step:disabled { background: var(--color-disabled-fill); border-color: var(--color-disabled-border); color: var(--color-disabled-ink); cursor: not-allowed; }
+    .step { box-sizing: border-box; flex: none; height: var(--control-height); padding: 0 16px; font-size: 14px; font-weight: 500; white-space: nowrap; }
+    .previous { width: var(--week-step-previous-width); border-radius: var(--radius-control) 0 0 var(--radius-control); }
+    .next { width: var(--week-step-next-width); border-radius: 0 var(--radius-control) var(--radius-control) 0; }
     .week-placeholder {
-      box-sizing: border-box; height: 44px; display: flex; align-items: center; gap: 12px; padding: 0 16px;
-      border: 1px dashed var(--color-disabled-border); border-radius: 8px; background: var(--color-disabled-fill);
+      box-sizing: border-box; height: var(--control-height); display: flex; align-items: center; gap: 12px; padding: 0 16px;
+      border: 1px dashed var(--color-disabled-border); border-radius: var(--radius-control); background: var(--color-disabled-fill);
     }
     .week-placeholder span { width: 110px; height: 12px; border-radius: 6px; background: var(--color-line); }
     .week-placeholder span:nth-child(2) { width: 220px; margin-left: 40px; }

@@ -1,4 +1,4 @@
-import { A11yModule } from '@angular/cdk/a11y';
+import { CdkTrapFocus } from '@angular/cdk/a11y';
 import { CdkConnectedOverlay, CdkOverlayOrigin, ConnectedPosition } from '@angular/cdk/overlay';
 import {
   ChangeDetectionStrategy,
@@ -12,9 +12,10 @@ import {
   output,
   signal,
   viewChild,
+  ViewEncapsulation,
 } from '@angular/core';
 import { MatCalendar, MatCalendarCellClassFunction, DateFilterFn } from '@angular/material/datepicker';
-import { format, isMonday, isWithinInterval, parseISO } from 'date-fns';
+import { format, isMonday, isSameWeek, parseISO } from 'date-fns';
 import { WeekRange } from '../../../core/models';
 import { formatSelectableWeeks, formatWeekRange } from '../week';
 import { Icon } from './icon';
@@ -27,12 +28,13 @@ let nextDialogId = 0;
 @Component({
   selector: 'app-week-picker',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [A11yModule, CdkConnectedOverlay, CdkOverlayOrigin, Icon, MatCalendar],
+  encapsulation: ViewEncapsulation.None,
+  imports: [CdkTrapFocus, CdkConnectedOverlay, CdkOverlayOrigin, Icon, MatCalendar],
   template: `
     <button
       #trigger
       type="button"
-      class="trigger"
+      class="trigger control"
       cdkOverlayOrigin
       #triggerOrigin="cdkOverlayOrigin"
       aria-haspopup="dialog"
@@ -58,7 +60,7 @@ let nextDialogId = 0;
       (detach)="close()"
       (overlayOutsideClick)="closeOnOutsideClick($event)"
     >
-      <div class="week-picker-dialog" role="dialog" aria-label="Choose week" [id]="dialogId" cdkTrapFocus>
+      <div class="week-picker-dialog card" role="dialog" aria-label="Choose week" [id]="dialogId" cdkTrapFocus>
         <mat-calendar
           [startAt]="selectedMonday()"
           [selected]="selectedMonday()"
@@ -73,24 +75,64 @@ let nextDialogId = 0;
           <p>{{ selectableWeeksLabel() }}</p>
         </div>
         <div class="footer">
-          <button type="button" class="latest-week" [disabled]="isLatestWeekSelected()" (click)="chooseLatestWeek()">Latest week</button>
+          <button type="button" class="latest-week control" [disabled]="isLatestWeekSelected()" (click)="chooseLatestWeek()">Latest week</button>
         </div>
       </div>
     </ng-template>
   `,
   styles: `
-    :host { display: block; position: relative; }
-    .trigger {
-      width: var(--week-picker-trigger-width); height: 44px; padding: 0 14px; display: flex; align-items: center; justify-content: space-between; gap: 10px;
-      border: 1px solid var(--color-control-border); background: var(--color-surface); color: var(--color-ink); cursor: pointer; font: inherit;
+    app-week-picker { display: block; position: relative; }
+    app-week-picker .trigger {
+      width: var(--week-picker-trigger-width); height: var(--control-height); padding: 0 14px; display: flex; align-items: center; justify-content: space-between; gap: 10px;
     }
-    .trigger[aria-expanded='true'] { border-color: var(--color-ink); box-shadow: inset 0 0 0 1px var(--color-ink); }
-    .trigger:disabled { background: var(--color-disabled-fill); border-color: var(--color-disabled-border); color: var(--color-ink-2); cursor: not-allowed; }
-    .trigger-label { display: flex; align-items: center; gap: 10px; font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
-    .chevron-icon { color: var(--color-ink-2); }
-    .trigger[aria-expanded='true'] .chevron-icon { color: var(--color-ink); }
-    .trigger:disabled .calendar-icon { color: var(--color-disabled-ink); }
-    .trigger:disabled .chevron-icon { color: var(--color-disabled-chevron); }
+    app-week-picker .trigger[aria-expanded='true'] { border-color: var(--color-ink); box-shadow: inset 0 0 0 1px var(--color-ink); }
+    app-week-picker .trigger:disabled { color: var(--color-ink-2); }
+    app-week-picker .trigger-label { display: flex; align-items: center; gap: 10px; font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
+    app-week-picker .chevron-icon { color: var(--color-ink-2); }
+    app-week-picker .trigger[aria-expanded='true'] .chevron-icon { color: var(--color-ink); }
+    app-week-picker .trigger:disabled .calendar-icon { color: var(--color-disabled-ink); }
+    app-week-picker .trigger:disabled .chevron-icon { color: var(--color-disabled-chevron); }
+
+    .week-picker-dialog {
+      width: var(--week-picker-dialog-width); box-sizing: border-box; padding: 12px 20px 18px;
+      box-shadow: var(--popover-shadow);
+      font-variant-numeric: tabular-nums; animation: week-picker-open 120ms ease-out;
+    }
+    .week-picker-dialog .mat-calendar-header { padding: 0; }
+    .week-picker-dialog .mat-calendar-controls { margin: 0; }
+    .week-picker-dialog .mat-calendar-content { padding: 6px 0 0; }
+    .week-picker-dialog .mat-calendar-table-header th:first-child { color: var(--color-ink); font-weight: 600; }
+    /* MatCalendarHeader upper-cases monthYearLabel in code, so the case is restored here. */
+    .week-picker-dialog .mat-calendar-period-button .mdc-button__label > span { display: inline-block; text-transform: lowercase; }
+    .week-picker-dialog .mat-calendar-period-button .mdc-button__label > span::first-letter { text-transform: uppercase; }
+    .week-picker-dialog tr:has(> .mat-calendar-body-label[colspan='7']) { display: none; }
+    .week-picker-dialog .mat-calendar-body-cell:not(.mat-calendar-body-disabled) > .mat-calendar-body-cell-content:not(.mat-calendar-body-selected) {
+      background: var(--color-disabled-fill); font-weight: 600;
+    }
+    .week-picker-dialog .mat-calendar-body-selected { font-weight: 600; }
+    .week-picker-dialog .mat-calendar-body-cell:focus-visible > .mat-calendar-body-cell-content { outline: 2px solid var(--color-ink); outline-offset: -2px; }
+    .week-picker-dialog .mat-calendar-body-cell-container:has(.mat-calendar-body-selected) {
+      background: linear-gradient(to right, transparent 50%, var(--color-fill-muted) 50%);
+    }
+    .week-picker-dialog .mat-calendar-body-cell-container:has(.week-picker-selected-week) { background: var(--color-fill-muted); }
+    .week-picker-dialog .mat-calendar-body-cell-container:has(.week-picker-selected-week):nth-child(7) {
+      background: linear-gradient(to left, transparent 50%, var(--color-fill-muted) 50%);
+    }
+    .week-picker-dialog .week-picker-selected-week > .mat-calendar-body-cell-content { color: var(--color-ink-2); }
+    .week-picker-dialog .mat-calendar-body-cell-container:nth-child(7) .week-picker-selected-week > .mat-calendar-body-cell-content {
+      background: var(--color-fill-muted);
+    }
+    .week-picker-dialog .helper {
+      margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--color-line-soft); font-size: 13px; line-height: 18px; color: var(--color-ink-2);
+    }
+    .week-picker-dialog .helper p { margin: 0; }
+    .week-picker-dialog .helper p + p { margin-top: 2px; }
+    .week-picker-dialog .footer { margin-top: 14px; display: flex; }
+    .week-picker-dialog .latest-week {
+      height: var(--control-height); padding: 0 16px; border-radius: var(--radius-control); font-size: 14px; font-weight: 500; white-space: nowrap;
+    }
+    @keyframes week-picker-open { from { opacity: 0; transform: scale(0.97); } }
+    @media (prefers-reduced-motion: reduce) { .week-picker-dialog { animation: none; } }
   `,
 })
 export class WeekPicker {
@@ -117,17 +159,13 @@ export class WeekPicker {
   protected readonly selectableWeeksLabel = computed(() => formatSelectableWeeks(this.earliestWeek(), this.latestCompleteWeek()));
   protected readonly isLatestWeekSelected = computed(() => this.week().start === this.latestCompleteWeek());
   protected readonly selectedMonday = computed(() => parseISO(this.week().start));
-  protected readonly selectedSunday = computed(() => parseISO(this.week().end));
   protected readonly earliestMonday = computed(() => parseISO(this.earliestWeek()));
   protected readonly latestCompleteMonday = computed(() => parseISO(this.latestCompleteWeek()));
 
-  protected readonly isSelectableMonday: DateFilterFn<Date> = (day) =>
-    day !== null && isMonday(day) && isWithinInterval(day, { start: this.earliestMonday(), end: this.latestCompleteMonday() });
+  protected readonly isSelectableMonday: DateFilterFn<Date> = (day) => day !== null && isMonday(day);
 
   protected readonly selectedWeekClass: MatCalendarCellClassFunction<Date> = (day, view) =>
-    view === 'month' && !isMonday(day) && isWithinInterval(day, { start: this.selectedMonday(), end: this.selectedSunday() })
-      ? SELECTED_WEEK_CLASS
-      : '';
+    view === 'month' && isSameWeek(day, this.selectedMonday(), { weekStartsOn: 1 }) && !isMonday(day) ? SELECTED_WEEK_CLASS : '';
 
   protected toggle(): void {
     if (this.isOpen()) {
