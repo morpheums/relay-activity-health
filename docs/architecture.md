@@ -1,6 +1,6 @@
 # Architecture and stack
 
-[← README](../README.md) · [Running](running.md) · [Testing](testing.md) · [API](api.md) · [Interpretation](interpretation.md) · [Decisions](decisions.md) · [Architecture](architecture.md)
+[← README](../README.md) · [Running](running.md) · [Testing](testing.md) · [API](api.md) · [Interpretation](interpretation.md) · [Decisions](decisions.md) · [Architecture](architecture.md) · [Dashboard](dashboard.md) · [Deferred](deferred.md)
 
 Stack components with versions and reasons, and the project layout.
 
@@ -74,4 +74,6 @@ scripts/export-ai-log.sh   exports and redacts the AI log
 | [`docs/acceptance-criteria.md`](acceptance-criteria.md) | Given/When/Then criteria per slice, and the approved UI copy |
 | [`docs/design-consensus.md`](design-consensus.md) | The four-agent debate that chose the R2\* rule, the contract and the data-layer fixes |
 | [`docs/battle-test/`](battle-test/) | Pre-code verification: independent re-implementation, SQL Server findings, adversarial plan review, statistician report, industry survey |
-| [`AI_LOG.md`](../AI_LOG.md) | Curated decision log |
+| [`docs/design/`](design/README.md) | The approved UI mockups and design spec (session 3), including the rejected picker and footer options |
+| [`analysis/`](../analysis/) | Python models and scripts behind every number in these documents and the golden tests |
+| [`AI_LOG.md`](../AI_LOG.md) | Curated decision log and how AI was used |

@@ -15,6 +15,12 @@ This file is the curated index: where the AI was accepted, rejected or redirecte
 | `485c1256` | 18:45– | Session 2: four-agent design debate (statistician, product, architect, reviewer talking directly via `SendMessage`), user approval, PLAN §13 |
 | `74b25094` | 2026-09-29 | Session 3: design-first UI/UX redesign on a design canvas (designer agent), picker and footer follow-ups, /simplify, final docs |
 
+## How AI was used
+
+The work was agent-first with Claude Code. A coordinator on the main thread dispatched specialist agents ([`.claude/agents/`](.claude/agents/): architect, backend, database, frontend, test-author, product, statistician, designer, reviewer). Each worked in its own git worktree, bound by [CLAUDE.md](CLAUDE.md). The reviewer deliberately ran on a different model from the authors.
+
+The plan was battle-tested against the seed before any code, and the normality rule was reopened when that test found the drop-to-zero blind spot. Every accept, reject, redirect and catch is in the log below, with raw transcripts in [ai-log/raw/](ai-log/raw/) and readable renders in [ai-log/sessions/](ai-log/sessions/), exported by `scripts/export-ai-log.sh`.
+
 ## Decision and correction log
 
 Legend: **ACCEPTED** (AI proposal taken as is) · **REDIRECTED** (human changed direction) · **REJECTED** (AI proposal dropped) · **AI CAUGHT** (the AI found its own mistake through verification) · **HUMAN CAUGHT**

@@ -1,6 +1,6 @@
 # Running locally
 
-[← README](../README.md) · [Running](running.md) · [Testing](testing.md) · [API](api.md) · [Interpretation](interpretation.md) · [Decisions](decisions.md) · [Architecture](architecture.md)
+[← README](../README.md) · [Running](running.md) · [Testing](testing.md) · [API](api.md) · [Interpretation](interpretation.md) · [Decisions](decisions.md) · [Architecture](architecture.md) · [Dashboard](dashboard.md) · [Deferred](deferred.md)
 
 Prerequisites, configuration, running and stopping the app, and troubleshooting.
 
@@ -84,6 +84,12 @@ The same steps on macOS, Linux and Windows, from the repo root.
 5. **Web** (terminal 2): `cd web && npm start`. The first time, run `npm ci` in `web` before it. `ng serve` proxies `/api` to `http://localhost:5080` (`web/proxy.conf.json`).
 
 Then open **http://localhost:4200/dashboard**.
+
+| URL | What |
+|---|---|
+| http://localhost:4200/dashboard | The dashboard (`/` redirects here) |
+| http://localhost:5080/api/accounts | The account list (20 accounts) |
+| http://localhost:5080/api/accounts/14/activity-health | Account 14, latest complete week ([api.md](api.md)) |
 
 **What you should see.** The URL is rewritten to `/dashboard?account=14&week=2026-07-20&type=all`:
 - "Viewing as" shows **Beacon Home Security** (account 14).
