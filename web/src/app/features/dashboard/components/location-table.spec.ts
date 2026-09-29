@@ -27,6 +27,34 @@ function rowFor(root: HTMLElement, location: string): HTMLElement {
   return row;
 }
 
+function tableAccessibleName(table: Element): string {
+  const labelledBy = table.getAttribute('aria-labelledby');
+  if (labelledBy) {
+    return labelledBy
+      .split(/\s+/)
+      .map((labelId) => collapsedText(table.ownerDocument.getElementById(labelId)))
+      .join(' ')
+      .trim();
+  }
+  return table.getAttribute('aria-label')?.trim() ?? collapsedText(table.querySelector('caption'));
+}
+
+function statusCell(root: HTMLElement, location: string): Element {
+  const statusColumn = columnHeaderTexts(root).indexOf('Status');
+  const cells = rowFor(root, location).querySelectorAll('td, th, [role="cell"], [role="gridcell"], [role="rowheader"]');
+  return cells[statusColumn];
+}
+
+function textReadByScreenReader(element: Element): string {
+  const withoutHidden = element.cloneNode(true) as Element;
+  withoutHidden.querySelectorAll('[aria-hidden="true"]').forEach((hidden) => hidden.remove());
+  return collapsedText(withoutHidden);
+}
+
+function iconsNotHidden(element: Element): Element[] {
+  return Array.from(element.querySelectorAll('svg, mat-icon, img, i')).filter((icon) => icon.closest('[aria-hidden="true"]') === null);
+}
+
 function usualRangeCellText(root: HTMLElement, location: string): string {
   const usualRangeColumn = columnHeaderTexts(root).indexOf('Usual range');
   expect(usualRangeColumn).toBeGreaterThanOrEqual(0);
@@ -91,5 +119,33 @@ describe('LocationTable', () => {
     expect(usualRangeCellText(root, 'Site C')).toBe('');
     expect(usualRangeCellText(root, 'Site D')).toBe('Usually 2–11 a week');
     expect(usualRangeCellText(root, 'Site B')).toBe('Usually 2–10 a week');
+  });
+
+  it('is captioned "Locations — most unusual first" (UI-03, C-32)', async () => {
+    const root = await renderTable([locationRow('Site A', withRange(7, 7, 5, 17, 'normal', 0))]);
+
+    const table = root.querySelector('table, [role="table"], [role="grid"]');
+    expect(table).not.toBeNull();
+    expect(tableAccessibleName(table as Element)).toBe('Locations — most unusual first');
+  });
+
+  it.each([
+    { location: 'Site A', statusText: '▲ Higher than usual' },
+    { location: 'Site B', statusText: '▼ Lower than usual' },
+    { location: 'Site C', statusText: 'Within usual range' },
+    { location: 'Site D', statusText: 'Not enough history yet (2 of 4 weeks needed)' },
+  ])('states $location status as "$statusText" exactly once, with any icon aria-hidden and adding no text (UI-05)', async ({ location, statusText }) => {
+    const root = await renderTable([
+      locationRow('Site A', withRange(20, 6, 2, 12, 'above', 3.1)),
+      locationRow('Site B', withRange(0, 7, 3, 13, 'below', -3.0)),
+      locationRow('Site C', withRange(6, 6, 2, 12, 'normal', 0)),
+      locationRow('Site D', withoutEnoughHistory(0, 2)),
+    ]);
+
+    const cell = statusCell(root, location);
+
+    expect(collapsedText(cell)).toBe(statusText);
+    expect(textReadByScreenReader(cell)).toBe(statusText);
+    expect(iconsNotHidden(cell)).toEqual([]);
   });
 });
