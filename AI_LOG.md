@@ -13,6 +13,7 @@ This file is the curated index: where the AI was accepted, rejected or redirecte
 | `cfcd6b64` | 17:42– | Brief playback again, seed-data profiling, design, battle-testing the plan, agent team |
 | `cfcd6b64/subagents/*` | | Battle-test agents: independent spec implementation, SQL Server check, adversarial plan review, statistician, industry survey |
 | `485c1256` | 18:45– | Session 2: four-agent design debate (statistician, product, architect, reviewer talking directly via `SendMessage`), user approval, PLAN §13 |
+| `74b25094` | 2026-09-29 | Session 3: design-first UI/UX redesign on a design canvas (designer agent), picker and footer follow-ups, /simplify, final docs |
 
 ## Decision and correction log
 
@@ -143,8 +144,59 @@ Legend: **ACCEPTED** (AI proposal taken as is) · **REDIRECTED** (human changed 
 43. **DEVIATION (architect)** — Applying the optional-inputs contract, the architect also edited the two templates, so the behaviour existed before its tests. Recorded rather than hidden;
     test-author then wrote the specs and proved each one fails against a deliberately broken implementation (8 mutations) before the merge.
 
+### Session 2 (late) — configuration, test prune, one-command start
+44. **USER DECIDED** — OS-agnostic local configuration: in Development the API loads the repo-root `.env` via DotNetEnv (no clobbering real environment variables); the EF design-time
+    factory was removed so `dotnet ef` resolves the context from the API host. Validated by the architect, recorded in PLAN §13.
+45. **USER DECIDED** — Test suite pruned to business value: backend 403 → 173 (business rules, SQL correctness, client-facing API behaviour, seeded goldens), web 243 → 124
+    (framework, pass-through and duplicate tests dropped; rule variants merged into tables). The four DotNetEnv startup tests went with it; the run steps document that behaviour.
+46. **ACCEPTED** — `scripts/dev.sh` starts the database, API and web with one command; review fixes added a re-entry guard on cleanup, fail-fast on busy ports and detection of a partial `npm ci`.
+47. **ACCEPTED** — A `designer` agent (mockups, design spec, UI library choice; never product code) so the redesign could be approved as a design before any Angular change.
+
+### Session 74b25094 — UI/UX redesign, design first
+48. **REDIRECTED** — While the designer was already drafting, the user: *"First run the application and take a look with playwright so you can first assess the current design"*. The
+    coordinator screenshotted every state (default, spike, insufficient data, empty, loading, error, 390px) and sent an eight-point assessment to the running designer, who mapped each
+    point to a fix in its handoff.
+49. **USER DECIDED (design review)** — Desktop only (no mobile work), no pagination, Instrument Serif replaced by *"something more professional"* (delegated → Geist 600 throughout),
+    "higher than usual" in light red instead of rust, the error-icon red allowed to share that family. Mockups published to the canvas and committed to `docs/design/`.
+50. **HUMAN CAUGHT** — *"Remember the specialized agent must work on its own worktree and sub agent session, leave the main session free"*: the coordinator had been running `npm ci` and
+    test runs on main after merges. From then on every build, install, test run, app launch and screenshot ran inside an agent's worktree; the coordinator only dispatched, merged and relayed.
+51. **AI CAUGHT (reviewer)** — Re-selecting the current week left the picker open (Material emits `selectedChange` only on a change). The user approved adding one test to the frozen
+    suite; fixed with MatCalendar's `_userSelection` output. The same review claimed a Material prerelease was installed; the implementer showed the lockfile was stable 22.2.0, the
+    reviewer retracted, and the versions were pinned exactly anyway.
+52. **USER DECIDED (review calls)** — Picker header "July 2026" (format override plus a one-line CSS fix for Material's forced upper case), weekday headers stay "M T W T F S S",
+    the 15px gap between the loading placeholder and the real week control fixed so nothing shifts on load.
+53. **ACCEPTED (explanation)** — User: *"i need to filter by appointments in order to see the red one? not in ALL activity, why?"* The coordinator checked the live API before answering:
+    Site M's 3 appointments vs usually 0–2 is flagged, but its 7 events vs usually 1–9 in the combined view is not, because combined totals vary more (PLAN D2: each view against its own
+    history). A per-type hint in "All activity" was offered as a future feature, not built.
+54. **USER DECIDED (against the recommendation)** — "Latest week" button in the picker footer. For weeks crossing months, the designer confirmed Material cannot show adjacent-month
+    days (angular/components #26768, #29549 open) and drew three options; the user kept Material (option A) rather than the recommended CDK week list.
+55. **USER DECIDED (against the recommendation)** — Footer option B (icon fact strip) rather than the recommended C, with green tiles and a more prominent "Data as of" tag. The user edited
+    the canvas live (moved the Leads state into its own piece); two publishes were refused as stale, and the coordinator re-read the live files and merged onto them instead of overwriting.
+56. **AI CAUGHT (reviewer)** — Frontend added a narrow-screen media query despite "desktop only" → removed. The component style budget was raised from 4 kB to 6 kB because the footer
+    must stay in `DashboardPage`; accepted as debt.
+57. **REDIRECTED (/simplify)** — Four reviewers (reuse, simplification, efficiency, altitude). Applied: picker overlay styles moved into the component, shared badge/card/control styles,
+    one status-icon helper, the picker filter reduced to `isMonday`, `CdkTrapFocus` instead of `A11yModule`, cached date formatters, Latin-only Geist (global CSS 19 → 12 kB). Before/after
+    screenshots of six views were pixel-identical. Skipped with reasons: anything that would change user-approved behaviour or visuals, architect-owned contracts, frozen tests.
+    The page style still measures 4.85 kB, so the 6 kB budget stays.
+58. **USER DECIDED** — Playwright e2e deferred; the `e2e-scaffold` branch stays unmerged (tooling and a placeholder; its "API must already be running" deviation never adopted).
+    Recorded in PLAN §13, the README and `docs/testing.md`.
+59. **AI CAUGHT (coordinator)** — The final export failed on one transcript: the `SA_PASSWORD` redaction pattern treated the backslash of a JSON `\n` escape as part of the key and left
+    an invalid `\<redacted>` escape. The pattern now accepts an escaped quote only as a whole `\"` pair; all 199 transcripts parse, and the secret, email and password-value leak counts are 0.
+
 ## Reflection
-_(written at the end)_
+- **Data and rules first paid off.** Profiling the seed before designing surfaced the traps (data-anchored "now", the 880-event spike, duplicates, the empty account), and every
+  number the UI shows traces to a PLAN golden or a live API read; nothing was invented for a mockup.
+- **Test-first with frozen suites kept the agents honest.** Implementers could not move the goalposts; when a real gap appeared (re-select, Latest week) the user approved each new test.
+- **The cross-model reviewer earned its place**, catching real defects (untested DST branch, unpinned request guard, re-select, scope creep), and it was also wrong at least once
+  (the prerelease claim). Its findings were verified before acting, never applied blindly.
+- **Design first was the right call for the UI.** Two review rounds on a canvas (font, colours, picker, footer) cost minutes; the same changes after implementation would have meant
+  rewriting tests. Where the user overruled a recommendation (picker A, footer B) the trade-off was stated and the decision recorded.
+- **What went wrong:** the coordinator leaked a secret into a log export once (entry 39) and ran work on the main session before the user corrected it (entry 50). Both became hard rules.
+- **Left for another day:** Playwright e2e, the per-type hint in "All activity", adjacent-month days in the picker, trimming `DashboardPage` styles back under 4 kB.
 
 ## Tools and models
-_(written at the end)_
+- **Claude Code** as the harness: one coordinator session dispatching one-shot subagents from `.claude/agents/`, each in its own git worktree, merged by the coordinator.
+- **Claude Opus 5.5** for the coordinator and the authoring agents (architect, backend, database, frontend, test-author, product, statistician, designer);
+  **Claude Sonnet** for the read-only `reviewer`, so reviews come from a different model than the code.
+- **A design canvas artifact** (claude.ai) for reviewable mockups; sources mirrored in `docs/design/`.
+- **Playwright** (from the e2e worktree) for screenshots and browser checks; **Testcontainers** SQL Server for SQL and golden tests; **Vitest** with Angular Material component harnesses for the web suite.

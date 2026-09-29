@@ -32,7 +32,7 @@ for project in "$projects_dir"/*Qualitara*; do
     REDACT_FILE="$redact_file" perl -pe '
       BEGIN { open my $fh, "<", $ENV{REDACT_FILE} or die; chomp(@secrets = grep { /\S/ } <$fh>); }
       for my $secret (@secrets) { s/\Q$secret\E/<redacted>/g }
-      s/(SA_PASSWORD[\\"=: ]+)[^\\"\s,]+/$1<redacted>/g;
+      s/(SA_PASSWORD(?:\\"|[=: "])+)[^\\"\s,]+/$1<redacted>/g;
     ' "$transcript" > "$target"
     rendered="$sessions_dir/${relative%.jsonl}.md"
     mkdir -p "$(dirname "$rendered")"
