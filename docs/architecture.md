@@ -38,7 +38,7 @@ src/
     Queries/               IActivityQueries, IAccountQueries (implemented in Infrastructure), ActivityType
   Relay.Infrastructure/
     Composition/           AddRelayInfrastructure (DbContext, connection string "Relay")
-    Persistence/           RelayDbContext, entity configurations, UTC converter, design-time factory
+    Persistence/           RelayDbContext, entity configurations, UTC converter
     Queries/               SqlActivityQueries, SqlAccountQueries — the hand-written counting SQL
     Migrations/            InitialCreate, LoadSeedData
   Relay.Api/
