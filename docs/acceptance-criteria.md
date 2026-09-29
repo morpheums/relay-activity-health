@@ -18,6 +18,7 @@ User: a customer admin of one Relay account, on Monday morning, who has to act o
 - **"Test suite pruned to business value"** (user decision 2026-09-29) removes the starter-file checksum test, the DotEnv startup tests and the options-wiring tests. DATA-40 is now enforced by the CLAUDE.md boundary rule, not by a test. It is cited below as §13 "Test suite pruned".
 - **UI/UX redesign** (user approval 2026-09-29: header, footer, footnotes moved to the footer, Material week picker, status colours). PLAN.md has no §13 entry for it yet, so it is cited below as "Redesign 2026-09-29". Copy C-24…C-32 and checks UI-46…UI-49 come from it, and it amends C-07, UI-03, UI-05, UI-06, UI-20 and UI-44 (each marked "amended by Redesign 2026-09-29").
 - **Week picker decisions** (user decisions 2026-09-29, after the redesign landed): keep the Material calendar (option A), and add a "Latest week" button to the picker footer. PLAN.md has no §13 entry for them yet, so they are cited below as "Picker decisions 2026-09-29". C-33 and UI-50 come from them.
+- **Footer option B** (user approval 2026-09-29): C-09, C-10 and C-11 become three fact items, and C-12 (plus C-14 when shown) moves to a list under a new subheading. "Data as of" sits next to the C-25 heading. Wording is unchanged. PLAN.md has no §13 entry for it yet, so it is cited below as "Footer B 2026-09-29". C-34 comes from it, and it amends UI-06.
 
 Everything else in PLAN.md still applies, including the §5.4 URL-state rules and the §7 Calendar, Grid and SQL edge cases. The rationale is in `docs/design-consensus.md`.
 
@@ -78,6 +79,7 @@ Rules on these strings (§13 §5.4 and §13 "Input handling and UI copy"):
 - The UI never recomputes X–Y. It prints the API's `low`/`high`.
 - Footnote and method lines are rendered with the first letter capitalised. The wording is otherwise exactly PLAN §13 §5.4 (§13 "Input handling and UI copy"). The strings above are already capitalised.
 - Since Redesign 2026-09-29, the footnote lines (C-09…C-14 and C-13) sit in the page footer under C-25, not under the table. Their wording is unchanged.
+- Since Footer B 2026-09-29, C-09, C-10 and C-11 are the fact items, and C-12 and C-14 sit under `Keep in mind` (C-34). Their wording is still unchanged.
 
 ### 0.1b Redesign copy (final)
 
@@ -95,6 +97,7 @@ Source: Redesign 2026-09-29, designer proposals finalised by product. The design
 | C-31 | Picker navigation (Material built-ins) | `Previous month`, `Next month`, `Choose month and year`. Material's other built-in labels are kept as they are | W-05, accepted (Material defaults, no override) |
 | C-32 | Location table caption | `Locations — most unusual first` | T-01, accepted |
 | C-33 | Picker footer button, under C-30. Its accessible name is the visible text, with nothing added | `Latest week` | L-01, accepted (Picker decisions 2026-09-29). Rejected: `Go to latest week` (longer, and every other control is a short noun phrase), `Latest complete week` (C-30 already shows the range ending at that week) |
+| C-34 | Footer subheading, above C-12 and C-14 (when shown), under the C-09…C-11 fact items | `Keep in mind` | F-06, accepted (Footer B 2026-09-29). Plain, short and sentence case like C-25 and C-27. It reads as a caveat without sounding like a warning, which fits lines that describe limits, not problems |
 
 ### 0.2 Proposed copy
 
@@ -280,7 +283,7 @@ Copy ids (C-xx, P-xx) refer to §0.
 | UI-03 | Same | The table caption reads `Locations — most unusual first` (C-32). The first table row is Site B: `2`, `Usually 3–12 a week`, `▼ Lower than usual`. The rows below it (C, A, D) each show `Within usual range` | GOLDEN; GOLDEN-P (PLAN §13 "Phase 0 decisions" promoted table) (order B, C, A, D); caption amended by Redesign 2026-09-29 |
 | UI-04 | Same, and every scenario in §4.2 | The rendered page text matches none of: `\bz\b`, `σ`, `±`, `\bmedian\b` (case-insensitive), `\btypical\b` (case-insensitive), `\bdeviation\b` (case-insensitive), and a standalone `\bNormal\b` (capital N, whole word, so `Within usual range` passes). | SPEC §13 §5.4 |
 | UI-05 | Same, plus UI-10 (every row tinted `above`) and UI-18 (a `below` row) | Status is readable with colours removed, e.g. by checking the DOM text or a greyscale screenshot. Every tinted row and filled badge also shows its symbol and text (C-01 / C-02); a tint never appears without them. `Within usual range` rows show C-03 as text; their icon is decorative, so a screen reader reads the status once | SPEC §13 §5.4; amended by Redesign 2026-09-29 (row tints, badges, icon) |
-| UI-06 | Same | The page footer, under `About these numbers` (C-25), contains C-09, C-10, C-11, C-12 and `Data as of Mon Jul 27, 2026`, each starting with a capital letter. None of these lines appears under the table any more. The summary carries C-08. C-14 is absent | SPEC §13 §5.4; SPEC §13 "Input handling and UI copy" (capitalisation, C-08); location amended by Redesign 2026-09-29 (was "footnote" under the table) |
+| UI-06 | Same | The page footer, under `About these numbers` (C-25), shows `Data as of Mon Jul 27, 2026` next to the heading. Below it, C-09, C-10 and C-11 are the three fact items. Below those, the subheading `Keep in mind` (C-34, a real heading, not just styling) holds C-12 only. C-14 is absent; when it is shown (UI-13) it is the second item under C-34, never a fact item. Every line starts with a capital letter, and none appears under the table any more. The summary carries C-08 | SPEC §13 §5.4; SPEC §13 "Input handling and UI copy" (capitalisation, C-08); location amended by Redesign 2026-09-29 (was "footnote" under the table); grouping amended by Footer B 2026-09-29; C-34. "Data as of" absence stays with UI-22 |
 | UI-07 | Same | `Next week ▶` is disabled (2026-07-20 = latestCompleteWeek); `◀ Previous week` is enabled | SPEC §5.4 stepper bounds |
 | UI-43 | Same, and every scenario in §4.2 and §4.3 (including the empty, loading and error states) | The page has exactly one `<h1>`, and its text is `Activity health` (C-23). The summary heading C-22 is not an `<h1>` | SPEC §13 "Phase 2 review decisions" (user decision 2026-09-28) |
 
