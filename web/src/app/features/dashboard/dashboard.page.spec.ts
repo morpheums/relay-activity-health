@@ -136,6 +136,14 @@ function getWeekPickerTrigger(root: HTMLElement): HTMLButtonElement {
   return trigger;
 }
 
+function getWeekPickerDialog(): Element {
+  const dialog = document.querySelector('[role="dialog"]');
+  if (!dialog) {
+    throw new Error('The week picker dialog is not open');
+  }
+  return dialog;
+}
+
 function landmarkOutsideMain(root: HTMLElement, landmarkSelector: string, landmarkName: string): HTMLElement {
   const landmark = Array.from(root.querySelectorAll<HTMLElement>(landmarkSelector)).find((candidate) => candidate.closest('main') === null);
   if (!landmark) {
@@ -493,6 +501,20 @@ describe('DashboardPage', () => {
       expect(navigations.at(-1)?.replaceUrl).toBe(false);
       expect(document.querySelector('[role="dialog"]')).toBeNull();
       expect(collapsedText(getWeekPickerTrigger(root))).toContain('Mon Jul 13 – Sun Jul 19, 2026');
+    });
+
+    it('"Latest week" in the week picker from week=2026-07-13 writes week=2026-07-20 as a new history entry and relabels the week (UI-50, C-33)', async () => {
+      const { root, navigations, harness } = await openPage('/dashboard?account=14&week=2026-07-13&type=all');
+
+      getWeekPickerTrigger(root).click();
+      await settle(harness);
+      getButton(getWeekPickerDialog(), 'Latest week').click();
+      await settle(harness);
+
+      expect(currentQueryParams()).toEqual({ account: '14', week: '2026-07-20', type: 'all' });
+      expect(navigations.at(-1)?.replaceUrl).toBe(false);
+      expect(document.querySelector('[role="dialog"]')).toBeNull();
+      expect(collapsedText(getWeekPickerTrigger(root))).toContain(DEFAULT_WEEK_LABEL);
     });
 
     it('selections made with the controls survive reopening the written URL (UI-30)', async () => {
