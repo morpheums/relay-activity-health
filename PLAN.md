@@ -580,3 +580,19 @@ Every §5.3 rule, §7 edge case and golden, and every §13 decision with observa
 - The starter-file SHA-256 guard (`StarterFileChecksumTests`, acceptance DATA-40) is removed; `db/schema.sql` and `db/seed.sql` stay unmodified by rule (CLAUDE.md), not by test.
 - Options-wiring tests (`…ComesFromOptions`) are removed; the default constants stay covered by the goldens.
 - Kept: migrate-on-start fail-fast for a missing connection string, `MigrateOnStartTests`, the seed de-duplication total 12,614, the row-order invariance test.
+
+### 2026-09-29 — UI/UX redesign (user decisions, validated by the architect)
+
+**Reason.** Session 3 redesigned the dashboard's look through the `designer` agent, and the user approved the mockups. Behaviour, approved copy and the API are unchanged. Adds to §5.4.
+- **Reference:** the approved mockups and design spec (`Spec`: tokens, type scale, states, picker anatomy) are the visual reference for `frontend`. A header and a footer are added.
+  The footnote lines move from under the table into a full-width footer, which stays in `DashboardPage`'s template (outside `<main>`). The page keeps exactly one `<h1>` (C-23).
+- **Week picker:** Angular Material `MatCalendar` in a CDK connected overlay, opened by our own trigger that shows C-17. Only Mondays from `earliestWeek` to `latestCompleteWeek`
+  are selectable, and a selection emits the existing `weekSelected`. Adapter: `provideDateFnsAdapter()` with the date-fns `enUS` locale and `weekStartsOn: 1`. Packages: `@angular/material`,
+  `@angular/cdk`, `@angular/material-date-fns-adapter`, `date-fns`. The ◀/▶ stepper and the native selects stay. Before a report loads, a same-width placeholder holds the week slot, so UI-44 still holds.
+- **Contract:** no API, TS-model or abstract-token change. One new presentational component, `WeekPicker` (`week`, `earliestWeek`, `latestCompleteWeek` → `weekSelected`),
+  rendered by `DashboardFilters`. The inputs and outputs of `DashboardFilters` are unchanged. The picker's disabled state is derived (`earliestWeek == latestCompleteWeek`).
+- **Visual system:** Geist is the only typeface (400/500/600). Colour only shows status direction: light red for higher and blue for lower, with the final tokens in the design spec. Status always keeps its symbol and text.
+  Decorative status icons are `aria-hidden` and add no text. Flagged rows are tinted, and the rendered text of every cell is unchanged.
+- **States:** loading keeps C-21 in `role=status` plus an `aria-hidden` skeleton. Error is a card with C-20 in `role=alert` and a primary "Try again" button. Account 20's C-07 is a centred card, with the week control disabled.
+- **Scope:** desktop only (no breakpoints) and no pagination. **Rejected:** R-01 (shortened "3–12" cells under a new header), so C-05 and C-19 stay.
+- **Order:** the Playwright e2e specs (§13 "End-to-end smoke layer") are written after the redesign lands. New copy (header, footer heading, picker labels, table caption) waits for `product`'s approval.
