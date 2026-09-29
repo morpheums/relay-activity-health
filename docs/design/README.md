@@ -19,3 +19,7 @@ Approved by the user on 2026-09-29: desktop only, no pagination, Geist type, lig
 - `Loading.dc.html`: first load state, week slot held.
 - `Error.dc.html`: load failed after a week change.
 - `Spec.dc.html`: design spec with tokens, badges, picker and library choice.
+- `PickerOptionA.dc.html`: week picker option A, keep MatCalendar. CHOSEN by the user on 2026-09-29.
+- `PickerOptionB.dc.html`: week picker option B. Rejected; kept for the record.
+- `PickerOptionC.dc.html`: week picker option C. Rejected; kept for the record.
+- `LatestWeekPlacement.dc.html`: where the "Latest week" shortcut goes. Chosen: the footer variant, so "Latest week" goes in the picker footer.
