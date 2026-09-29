@@ -13,8 +13,11 @@ const enUSWithMondayWeekStart = { ...enUS, options: { ...enUS.options, weekStart
 
 const DEFAULT_WEEK_LABEL = 'Mon Jul 20 – Sun Jul 26, 2026';
 const DEFAULT_TRIGGER_NAME = `${DEFAULT_WEEK_LABEL}, choose week`;
+const WEEK_BEFORE_LATEST_TRIGGER_NAME = 'Mon Jul 13 – Sun Jul 19, 2026, choose week';
 const DIALOG_NAME = 'Choose week';
 const WEEKS_RUN_HELPER = 'Weeks run Monday to Sunday.';
+const BEACON_RANGE_HELPER = 'Weeks from Mon Jan 26 to Mon Jul 20, 2026';
+const LATEST_WEEK = 'Latest week';
 
 interface PickerBounds {
   weekStart: string;
@@ -30,6 +33,7 @@ interface PickerUnderTest {
 }
 
 const BEACON_BOUNDS: PickerBounds = { weekStart: '2026-07-20', earliestWeek: '2026-01-26', latestCompleteWeek: LATEST_COMPLETE_WEEK };
+const BEACON_WEEK_BEFORE_LATEST_BOUNDS: PickerBounds = { weekStart: '2026-07-13', earliestWeek: '2026-01-26', latestCompleteWeek: LATEST_COMPLETE_WEEK };
 const LAKESIDE_BOUNDS: PickerBounds = { weekStart: '2026-07-20', earliestWeek: '2026-02-02', latestCompleteWeek: LATEST_COMPLETE_WEEK };
 const QUIET_HARBOR_BOUNDS: PickerBounds = { weekStart: '2026-07-20', earliestWeek: LATEST_COMPLETE_WEEK, latestCompleteWeek: LATEST_COMPLETE_WEEK };
 
@@ -80,6 +84,18 @@ function getDialog(): Element {
   return dialog;
 }
 
+function latestWeekButtonsInDialog(): HTMLButtonElement[] {
+  return Array.from(getDialog().querySelectorAll('button')).filter((button) => accessibleName(button) === LATEST_WEEK);
+}
+
+function getLatestWeekButton(): HTMLButtonElement {
+  const [latestWeekButton] = latestWeekButtonsInDialog();
+  if (!latestWeekButton) {
+    throw new Error(`No button named "${LATEST_WEEK}" in the week picker dialog: "${collapsedText(getDialog())}"`);
+  }
+  return latestWeekButton;
+}
+
 async function afterScheduledFocus(fixture: ComponentFixture<WeekPicker>): Promise<void> {
   for (let round = 0; round < 3; round++) {
     await new Promise<void>((resolve) => setTimeout(resolve, 0));
@@ -87,8 +103,8 @@ async function afterScheduledFocus(fixture: ComponentFixture<WeekPicker>): Promi
   }
 }
 
-async function openPicker(picker: PickerUnderTest): Promise<MatCalendarHarness> {
-  getTrigger(picker.root).click();
+async function openPicker(picker: PickerUnderTest, triggerName = DEFAULT_TRIGGER_NAME): Promise<MatCalendarHarness> {
+  getTrigger(picker.root, triggerName).click();
   await afterScheduledFocus(picker.fixture);
   return picker.overlayLoader.getHarness(MatCalendarHarness);
 }
@@ -176,7 +192,7 @@ describe('WeekPicker', () => {
     });
 
     it.each([
-      { account: 'account 14', bounds: BEACON_BOUNDS, rangeHelper: 'Weeks from Mon Jan 26 to Mon Jul 20, 2026' },
+      { account: 'account 14', bounds: BEACON_BOUNDS, rangeHelper: BEACON_RANGE_HELPER },
       { account: 'account 8', bounds: LAKESIDE_BOUNDS, rangeHelper: 'Weeks from Mon Feb 2 to Mon Jul 20, 2026' },
       {
         account: 'bounds in different years',
@@ -253,6 +269,44 @@ describe('WeekPicker', () => {
       expect(picker.selectedWeeks).toEqual(['2026-07-13']);
       expect(openDialogs()).toEqual([]);
       expect(document.activeElement).toBe(getTrigger(picker.root));
+    });
+  });
+
+  describe('"Latest week" button (UI-50, C-33)', () => {
+    it('with Mon Jul 13 selected shows one enabled native button named exactly "Latest week" under the range helper', async () => {
+      const picker = await renderPicker(BEACON_WEEK_BEFORE_LATEST_BOUNDS);
+      await openPicker(picker, WEEK_BEFORE_LATEST_TRIGGER_NAME);
+
+      const latestWeekButtons = latestWeekButtonsInDialog();
+      const dialogText = collapsedText(getDialog());
+
+      expect(latestWeekButtons).toHaveLength(1);
+      expect(latestWeekButtons[0].type).toBe('button');
+      expect(collapsedText(latestWeekButtons[0])).toBe(LATEST_WEEK);
+      expect(latestWeekButtons[0].disabled).toBe(false);
+      expect(dialogText.indexOf(LATEST_WEEK)).toBeGreaterThan(dialogText.indexOf(BEACON_RANGE_HELPER));
+    });
+
+    it('clicking it with Mon Jul 13 selected emits weekSelected "2026-07-20", closes the dialog and returns focus to the trigger', async () => {
+      const picker = await renderPicker(BEACON_WEEK_BEFORE_LATEST_BOUNDS);
+      await openPicker(picker, WEEK_BEFORE_LATEST_TRIGGER_NAME);
+
+      getLatestWeekButton().click();
+      await afterScheduledFocus(picker.fixture);
+
+      expect(picker.selectedWeeks).toEqual([LATEST_COMPLETE_WEEK]);
+      expect(openDialogs()).toEqual([]);
+      expect(document.activeElement).toBe(getTrigger(picker.root, WEEK_BEFORE_LATEST_TRIGGER_NAME));
+    });
+
+    it('with Mon Jul 20 selected is still shown but natively disabled', async () => {
+      const picker = await renderPicker(BEACON_BOUNDS);
+      await openPicker(picker);
+
+      const latestWeekButton = getLatestWeekButton();
+
+      expect(latestWeekButton.disabled).toBe(true);
+      expect(collapsedText(latestWeekButton)).toBe(LATEST_WEEK);
     });
   });
 
